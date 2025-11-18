@@ -141,6 +141,7 @@
 - 2025-11-18: WS1 完了 — Node/TS/Express 基盤、lint/format、ロガー/エラーハンドラ、Docker Compose/.env を整備
 - 2025-11-18: WS2 データレイヤ完了 — Prisma schema/migration/seed、Prisma Client ヘルパー、README を更新
 - 2025-11-18: WS3 認証/認可基盤完了 — bcrypt/JWT ベースのサインアップ/ログイン/自己参照 API と RBAC ミドルウェアを実装
+- 2025-11-18: WS4 フェーズ1 完了 — Account/Contact の CRUD API・検索・ソフトデリート・README 反映を実装
 
 ## Surprises & Discoveries
 - (未記入)

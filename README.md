@@ -146,3 +146,27 @@ Docker Compose では `.env` の値が `api` サービスに渡され、`db` サ
 | `GET` | `/api/auth/me` | Bearer JWT を用いた現在ユーザー情報取得 |
 
 `Authorization: Bearer <token>` ヘッダーが必要なルートでは、サーバー側でロールを検証した上で `req.user` に `{ id, email, role }` を格納する。
+
+### アカウント / コンタクト API（WS4 範囲）
+
+#### Accounts
+
+| Method | Path | 説明 |
+| --- | --- | --- |
+| `GET` | `/api/accounts` | クエリ `search`, `status`, `page`, `pageSize` をサポートする一覧取得 |
+| `GET` | `/api/accounts/:id` | 単一アカウント詳細 |
+| `POST` | `/api/accounts` | 企業情報の作成 (名前必須、その他任意) |
+| `PUT` | `/api/accounts/:id` | 企業情報の更新 (部分更新可) |
+| `DELETE` | `/api/accounts/:id` | ソフトデリート ( `deletedAt` を設定 ) |
+
+#### Contacts
+
+| Method | Path | 説明 |
+| --- | --- | --- |
+| `GET` | `/api/contacts` | クエリ `search`, `accountId`, `page`, `pageSize` をサポートする一覧取得 |
+| `GET` | `/api/contacts/:id` | 単一コンタクト詳細 (関連アカウント含む) |
+| `POST` | `/api/contacts` | アカウント紐付け必須でコンタクト作成 |
+| `PUT` | `/api/contacts/:id` | コンパクトな部分更新、アカウント再割当も可 |
+| `DELETE` | `/api/contacts/:id` | ソフトデリート |
+
+両エンドポイントとも JWT 認証必須で、レスポンスは `data`+`meta` (一覧時) を含む統一フォーマット。
