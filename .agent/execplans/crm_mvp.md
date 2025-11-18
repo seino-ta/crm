@@ -143,6 +143,7 @@
 - 2025-11-18: WS3 認証/認可基盤完了 — bcrypt/JWT ベースのサインアップ/ログイン/自己参照 API と RBAC ミドルウェアを実装
 - 2025-11-18: WS4 フェーズ1 完了 — Account/Contact の CRUD API・検索・ソフトデリート・README 反映を実装
 - 2025-11-18: WS4 フェーズ2 完了 — PipelineStage/Opportunity API (検索, ステージ更新, 監査ログ) を実装
+- 2025-11-18: WS4 フェーズ3 完了 — AuditLog 参照 API、共通テスト基盤 (Jest) とユニットテストを追加
 
 ## Surprises & Discoveries
 - (未記入)

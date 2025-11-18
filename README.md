@@ -189,4 +189,18 @@ Docker Compose では `.env` の値が `api` サービスに渡され、`db` サ
 | `PUT` | `/api/opportunities/:id` | 部分更新 (ステージ変更時は監査ログを記録し、必要なら status/probability を自動更新) |
 | `DELETE` | `/api/opportunities/:id` | ソフトデリート。監査ログ `DELETE` を記録 |
 
+#### Audit Logs
+
+| Method | Path | 説明 |
+| --- | --- | --- |
+| `GET` | `/api/audit-logs` | `entityType`, `entityId`, `userId`, `opportunityId`, `action`, `from`, `to`, `page`, `pageSize` でフィルタ可能。管理者/マネージャーのみアクセス可 |
+
 すべてのビジネス系 API は JWT 認証必須で、一覧応答は `data` と `meta` (ページング情報) を持つ統一フォーマットです。
+
+## 🧪 テスト
+
+```
+npm run test
+```
+
+`test` スクリプトは ESLint と Jest (ts-jest) を実行します。ユニットテストは `tests/` 以下に TypeScript で配置します。

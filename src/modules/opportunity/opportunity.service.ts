@@ -125,7 +125,7 @@ export async function createOpportunity(payload: CreateOpportunityInput) {
 }
 
 function serializeChanges(changes: Record<string, unknown>): Prisma.InputJsonValue {
-  return JSON.parse(JSON.stringify(changes));
+  return JSON.parse(JSON.stringify(changes)) as Prisma.InputJsonValue;
 }
 
 async function recordAudit(opportunityId: string, action: AuditAction, changes: Record<string, unknown>) {

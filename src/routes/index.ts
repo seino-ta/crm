@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import accountsRouter from './accounts';
+import auditLogsRouter from './audit-logs';
 import authRouter from './auth';
 import contactsRouter from './contacts';
 import healthRouter from './health';
@@ -14,6 +15,7 @@ router.use('/accounts', accountsRouter);
 router.use('/contacts', contactsRouter);
 router.use('/opportunities', opportunitiesRouter);
 router.use('/pipeline-stages', pipelineStagesRouter);
+router.use('/audit-logs', auditLogsRouter);
 router.use('/auth', authRouter);
 
 export default router;
