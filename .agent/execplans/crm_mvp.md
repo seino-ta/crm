@@ -139,6 +139,7 @@
 ## Progress
 - 2025-11-18: ExecPlan v1.0 作成 (Codex)
 - 2025-11-18: WS1 完了 — Node/TS/Express 基盤、lint/format、ロガー/エラーハンドラ、Docker Compose/.env を整備
+- 2025-11-18: WS2 データレイヤ完了 — Prisma schema/migration/seed、Prisma Client ヘルパー、README を更新
 
 ## Surprises & Discoveries
 - (未記入)
@@ -147,6 +148,8 @@
 - 2025-11-18: API は TypeScript + Express の REST で実装し、Prisma を ORM とする
 - 2025-11-18: MVP 認証は Email/Password + JWT で開始し、OAUTH は後続に回す
 - 2025-11-18: ローカル開発は ts-node-dev + ESLint Flat Config を採用し、pino-http ベースの構造化ログと Docker Compose(api+db) を標準とする
+- 2025-11-18: Prisma モデルは UUID 主キーとソフトデリート対応 (Account/Contact/Opportunity) とし、AccountAssignment 経由で多対多を表現する
+- 2025-11-18: Prisma マイグレーションは `migrate diff` で生成し、`prisma/seed.ts` で決定的 ID を用いたシードデータを提供する
 
 ## Outcomes & Retrospective
 - (未記入)

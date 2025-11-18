@@ -111,6 +111,24 @@ docker compose up --build
 | `PORT` | API ポート | `4000` |
 | `LOG_LEVEL` | pino ログレベル | `debug` |
 | `DATABASE_URL` | PostgreSQL 接続 URL | `postgresql://crm_user:crm_pass@localhost:5432/crm_db?schema=public` |
+| `SHADOW_DATABASE_URL` | Prisma マイグレーションの Shadow DB (任意) | `postgresql://crm_user:crm_pass@localhost:5432/crm_db_shadow?schema=public` |
 | `JWT_SECRET` | 認証トークン用シークレット (後続 WS で使用) | `please-change-me` |
 
 Docker Compose では `.env` の値が `api` サービスに渡され、`db` サービスは定義済みの資格情報 (ユーザー/パスワード) を利用する。
+
+## 🗄️ Prisma / Database ワークフロー
+
+1. `docker compose up -d db` で PostgreSQL を起動 (初回は `postgres_data` ボリュームが作成される)。
+2. `npm run db:migrate` でローカル DB にマイグレーションを適用。
+3. `npm run db:seed` でサンプルユーザー/アカウント/案件データを投入。
+4. Prisma Studio を確認したい場合は `npm run db:studio`。
+
+### マイグレーションの生成
+
+- 新しいスキーマを記述したら `npm run db:migrate -- --name <migration_name>` を実行し、PostgreSQL が起動していることを確認する。
+- DB を起動せずにスクリプトだけ生成したい場合は `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/<timestamp>_<name>/migration.sql` を使用できる。
+
+### シードデータ
+
+- `prisma/seed.ts` は Prisma Client を使ってパイプラインステージ、管理者/マネージャーユーザー、代表的なアカウント・案件・活動・タスクを作成する。
+- Prisma の `package.json` 設定を通じて `npm run db:seed` が `ts-node --project tsconfig.prisma.json prisma/seed.ts` を実行する。

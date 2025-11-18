@@ -1,0 +1,254 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  REP
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  PROSPECT
+  ARCHIVED
+}
+
+enum AccountAssignmentRole {
+  OWNER
+  COLLABORATOR
+  VIEWER
+}
+
+enum OpportunityStatus {
+  OPEN
+  WON
+  LOST
+  ARCHIVED
+}
+
+enum ActivityType {
+  CALL
+  EMAIL
+  MEETING
+  NOTE
+  OTHER
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  STATUS_CHANGE
+  STAGE_CHANGE
+}
+
+model User {
+  id           String              @id @default(uuid()) @db.Uuid
+  email        String              @unique
+  passwordHash String
+  firstName    String?
+  lastName     String?
+  title        String?
+  phone        String?
+  role         UserRole            @default(REP)
+  isActive     Boolean             @default(true)
+  accounts     AccountAssignment[]
+  ownedDeals   Opportunity[]       @relation("OpportunityOwner")
+  activities   Activity[]
+  tasks        Task[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model Account {
+  id            String              @id @default(uuid()) @db.Uuid
+  name          String
+  domain        String?
+  industry      String?
+  website       String?
+  size          Int?
+  description   String?
+  annualRevenue Decimal?            @db.Decimal(18, 2)
+  phone         String?
+  status        AccountStatus       @default(ACTIVE)
+  contacts      Contact[]
+  opportunities Opportunity[]
+  activities    Activity[]
+  tasks         Task[]
+  assignments   AccountAssignment[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  deletedAt     DateTime?
+}
+
+model AccountAssignment {
+  id        String                @id @default(uuid()) @db.Uuid
+  accountId String                @db.Uuid
+  userId    String                @db.Uuid
+  role      AccountAssignmentRole @default(OWNER)
+  createdAt DateTime              @default(now())
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, userId])
+  @@index([userId])
+}
+
+model Contact {
+  id        String    @id @default(uuid()) @db.Uuid
+  accountId String    @db.Uuid
+  firstName String
+  lastName  String
+  email     String    @unique
+  phone     String?
+  jobTitle  String?
+  linkedin  String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  account    Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  deals      Opportunity[]
+  activities Activity[]
+  tasks      Task[]
+}
+
+model PipelineStage {
+  id            String        @id @default(uuid()) @db.Uuid
+  name          String
+  order         Int
+  probability   Int           @default(0)
+  isWon         Boolean       @default(false)
+  isLost        Boolean       @default(false)
+  description   String?
+  opportunities Opportunity[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([name])
+  @@unique([order])
+}
+
+model Opportunity {
+  id                String            @id @default(uuid()) @db.Uuid
+  name              String
+  accountId         String            @db.Uuid
+  ownerId           String            @db.Uuid
+  stageId           String            @db.Uuid
+  contactId         String?           @db.Uuid
+  amount            Decimal?          @db.Decimal(18, 2)
+  currency          String            @default("USD")
+  probability       Int?
+  status            OpportunityStatus @default(OPEN)
+  expectedCloseDate DateTime?
+  description       String?
+  lostReason        String?
+  deletedAt         DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  account    Account       @relation(fields: [accountId], references: [id])
+  owner      User          @relation("OpportunityOwner", fields: [ownerId], references: [id])
+  stage      PipelineStage @relation(fields: [stageId], references: [id])
+  contact    Contact?      @relation(fields: [contactId], references: [id])
+  activities Activity[]
+  tasks      Task[]
+  auditLogs  AuditLog[]
+
+  @@index([accountId])
+  @@index([ownerId])
+  @@index([stageId])
+  @@index([status])
+}
+
+model Activity {
+  id            String       @id @default(uuid()) @db.Uuid
+  type          ActivityType
+  subject       String
+  description   String?
+  userId        String       @db.Uuid
+  accountId     String?      @db.Uuid
+  contactId     String?      @db.Uuid
+  opportunityId String?      @db.Uuid
+  occurredAt    DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id])
+  account     Account?     @relation(fields: [accountId], references: [id])
+  contact     Contact?     @relation(fields: [contactId], references: [id])
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id])
+  tasks       Task[]
+
+  @@index([accountId])
+  @@index([contactId])
+  @@index([opportunityId])
+}
+
+model Task {
+  id            String       @id @default(uuid()) @db.Uuid
+  title         String
+  description   String?
+  status        TaskStatus   @default(OPEN)
+  priority      TaskPriority @default(MEDIUM)
+  dueDate       DateTime?
+  completedAt   DateTime?
+  ownerId       String       @db.Uuid
+  activityId    String?      @db.Uuid
+  accountId     String?      @db.Uuid
+  opportunityId String?      @db.Uuid
+  contactId     String?      @db.Uuid
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  owner       User         @relation(fields: [ownerId], references: [id])
+  activity    Activity?    @relation(fields: [activityId], references: [id])
+  account     Account?     @relation(fields: [accountId], references: [id])
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id])
+  contact     Contact?     @relation(fields: [contactId], references: [id])
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model AuditLog {
+  id            String      @id @default(uuid()) @db.Uuid
+  entityType    String
+  entityId      String
+  action        AuditAction
+  changes       Json?
+  userId        String?     @db.Uuid
+  opportunityId String?     @db.Uuid
+  createdAt     DateTime    @default(now())
+
+  user        User?        @relation(fields: [userId], references: [id])
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([userId])
+}
