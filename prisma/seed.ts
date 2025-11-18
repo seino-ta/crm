@@ -1,4 +1,5 @@
 import { Prisma, PrismaClient, UserRole, OpportunityStatus, TaskPriority, TaskStatus, ActivityType, AccountStatus, AccountAssignmentRole, AuditAction } from '@prisma/client';
+import { hashSync } from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -13,6 +14,9 @@ const IDS = {
   auditLog: '00000000-0000-0000-0000-000000000601',
   assignment: '00000000-0000-0000-0000-000000000701',
 };
+
+const DEFAULT_PASSWORD = process.env.SEED_USER_PASSWORD || 'ChangeMe123!';
+const SALT_ROUNDS = Number(process.env.BCRYPT_SALT_ROUNDS || 12);
 
 async function seedPipelineStages() {
   const stageData = [
@@ -36,7 +40,7 @@ async function main() {
     create: {
       id: IDS.admin,
       email: 'admin@crm.local',
-      passwordHash: 'admin-hash-placeholder',
+      passwordHash: hashSync(DEFAULT_PASSWORD, SALT_ROUNDS),
       firstName: 'Aiko',
       lastName: 'Admin',
       role: UserRole.ADMIN,
@@ -49,7 +53,7 @@ async function main() {
     create: {
       id: IDS.manager,
       email: 'manager@crm.local',
-      passwordHash: 'manager-hash-placeholder',
+      passwordHash: hashSync(DEFAULT_PASSWORD, SALT_ROUNDS),
       firstName: 'Makoto',
       lastName: 'Manager',
       role: UserRole.MANAGER,
@@ -178,6 +182,7 @@ async function main() {
   });
 
   console.log('✅ Prisma seed data created.');
+  console.log('   Sample credentials -> email: admin@crm.local / manager@crm.local, password:', DEFAULT_PASSWORD);
 }
 
 main()

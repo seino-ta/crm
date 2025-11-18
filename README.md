@@ -113,6 +113,9 @@ docker compose up --build
 | `DATABASE_URL` | PostgreSQL 接続 URL | `postgresql://crm_user:crm_pass@localhost:5432/crm_db?schema=public` |
 | `SHADOW_DATABASE_URL` | Prisma マイグレーションの Shadow DB (任意) | `postgresql://crm_user:crm_pass@localhost:5432/crm_db_shadow?schema=public` |
 | `JWT_SECRET` | 認証トークン用シークレット (後続 WS で使用) | `please-change-me` |
+| `JWT_EXPIRES_IN` | JWT の有効期限 | `1d` |
+| `BCRYPT_SALT_ROUNDS` | パスワードハッシュの cost | `12` |
+| `SEED_USER_PASSWORD` | シードユーザーの平文パスワード | `ChangeMe123!` |
 
 Docker Compose では `.env` の値が `api` サービスに渡され、`db` サービスは定義済みの資格情報 (ユーザー/パスワード) を利用する。
 
@@ -131,4 +134,15 @@ Docker Compose では `.env` の値が `api` サービスに渡され、`db` サ
 ### シードデータ
 
 - `prisma/seed.ts` は Prisma Client を使ってパイプラインステージ、管理者/マネージャーユーザー、代表的なアカウント・案件・活動・タスクを作成する。
-- Prisma の `package.json` 設定を通じて `npm run db:seed` が `ts-node --project tsconfig.prisma.json prisma/seed.ts` を実行する。
+- `prisma.config.ts` の設定により `npm run db:seed` で `ts-node --project tsconfig.prisma.json prisma/seed.ts` が実行される。
+- サンプル認証情報: `admin@crm.local` / `manager@crm.local` （共通パスワードは `SEED_USER_PASSWORD` で上書き可、デフォルトは `ChangeMe123!`）。
+
+### 認証 API エンドポイント
+
+| Method | Path | 説明 |
+| --- | --- | --- |
+| `POST` | `/api/auth/signup` | 新規ユーザー登録 (email/password/任意の氏名) |
+| `POST` | `/api/auth/login` | 既存ユーザーのログイン。JWT を返却 |
+| `GET` | `/api/auth/me` | Bearer JWT を用いた現在ユーザー情報取得 |
+
+`Authorization: Bearer <token>` ヘッダーが必要なルートでは、サーバー側でロールを検証した上で `req.user` に `{ id, email, role }` を格納する。

@@ -140,6 +140,7 @@
 - 2025-11-18: ExecPlan v1.0 作成 (Codex)
 - 2025-11-18: WS1 完了 — Node/TS/Express 基盤、lint/format、ロガー/エラーハンドラ、Docker Compose/.env を整備
 - 2025-11-18: WS2 データレイヤ完了 — Prisma schema/migration/seed、Prisma Client ヘルパー、README を更新
+- 2025-11-18: WS3 認証/認可基盤完了 — bcrypt/JWT ベースのサインアップ/ログイン/自己参照 API と RBAC ミドルウェアを実装
 
 ## Surprises & Discoveries
 - (未記入)
@@ -150,6 +151,7 @@
 - 2025-11-18: ローカル開発は ts-node-dev + ESLint Flat Config を採用し、pino-http ベースの構造化ログと Docker Compose(api+db) を標準とする
 - 2025-11-18: Prisma モデルは UUID 主キーとソフトデリート対応 (Account/Contact/Opportunity) とし、AccountAssignment 経由で多対多を表現する
 - 2025-11-18: Prisma マイグレーションは `migrate diff` で生成し、`prisma/seed.ts` で決定的 ID を用いたシードデータを提供する
+- 2025-11-18: 認証には bcryptjs + JWT (HS256) を採用し、Zod でバリデーション、ミドルウェアでロールチェックを行う
 
 ## Outcomes & Retrospective
 - (未記入)
