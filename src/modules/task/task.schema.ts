@@ -1,14 +1,14 @@
 import { TaskPriority, TaskStatus } from '@prisma/client';
 import { z } from 'zod';
 
-const uuid = () => z.string().uuid();
+const id = () => z.string().regex(/^[0-9a-fA-F-]{36}$/, 'Invalid ID format');
 
 export const taskFilterSchema = z.object({
   status: z.nativeEnum(TaskStatus).optional(),
-  ownerId: uuid().optional(),
-  accountId: uuid().optional(),
-  opportunityId: uuid().optional(),
-  activityId: uuid().optional(),
+  ownerId: id().optional(),
+  accountId: id().optional(),
+  opportunityId: id().optional(),
+  activityId: id().optional(),
   dueBefore: z.coerce.date().optional(),
   dueAfter: z.coerce.date().optional(),
   page: z.coerce.number().int().positive().optional(),
@@ -21,11 +21,11 @@ export const createTaskSchema = z.object({
   status: z.nativeEnum(TaskStatus).optional(),
   priority: z.nativeEnum(TaskPriority).optional(),
   dueDate: z.coerce.date().optional(),
-  ownerId: uuid(),
-  activityId: uuid().optional(),
-  accountId: uuid().optional(),
-  opportunityId: uuid().optional(),
-  contactId: uuid().optional(),
+  ownerId: id(),
+  activityId: id().optional(),
+  accountId: id().optional(),
+  opportunityId: id().optional(),
+  contactId: id().optional(),
 });
 
 export const updateTaskSchema = createTaskSchema.partial();
