@@ -142,6 +142,7 @@
 - 2025-11-18: WS2 データレイヤ完了 — Prisma schema/migration/seed、Prisma Client ヘルパー、README を更新
 - 2025-11-18: WS3 認証/認可基盤完了 — bcrypt/JWT ベースのサインアップ/ログイン/自己参照 API と RBAC ミドルウェアを実装
 - 2025-11-18: WS4 フェーズ1 完了 — Account/Contact の CRUD API・検索・ソフトデリート・README 反映を実装
+- 2025-11-18: WS4 フェーズ2 完了 — PipelineStage/Opportunity API (検索, ステージ更新, 監査ログ) を実装
 
 ## Surprises & Discoveries
 - (未記入)
@@ -153,6 +154,7 @@
 - 2025-11-18: Prisma モデルは UUID 主キーとソフトデリート対応 (Account/Contact/Opportunity) とし、AccountAssignment 経由で多対多を表現する
 - 2025-11-18: Prisma マイグレーションは `migrate diff` で生成し、`prisma/seed.ts` で決定的 ID を用いたシードデータを提供する
 - 2025-11-18: 認証には bcryptjs + JWT (HS256) を採用し、Zod でバリデーション、ミドルウェアでロールチェックを行う
+- 2025-11-18: Opportunity のステージ変更時に確率/ステータス自動調整と監査ログ記録を行う
 
 ## Outcomes & Retrospective
 - (未記入)

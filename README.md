@@ -169,4 +169,24 @@ Docker Compose では `.env` の値が `api` サービスに渡され、`db` サ
 | `PUT` | `/api/contacts/:id` | コンパクトな部分更新、アカウント再割当も可 |
 | `DELETE` | `/api/contacts/:id` | ソフトデリート |
 
-両エンドポイントとも JWT 認証必須で、レスポンスは `data`+`meta` (一覧時) を含む統一フォーマット。
+#### Pipeline Stages
+
+| Method | Path | 説明 |
+| --- | --- | --- |
+| `GET` | `/api/pipeline-stages` | ステージ一覧 (order 昇順) |
+| `POST` | `/api/pipeline-stages` | ステージの新規作成 (name/order/probability 等) |
+| `GET` | `/api/pipeline-stages/:id` | 単一ステージ詳細 |
+| `PUT` | `/api/pipeline-stages/:id` | ステージの部分更新 (probability/isWon/isLost など) |
+| `DELETE` | `/api/pipeline-stages/:id` | 依存する案件がない場合のみ削除 |
+
+#### Opportunities
+
+| Method | Path | 説明 |
+| --- | --- | --- |
+| `GET` | `/api/opportunities` | クエリ `search`, `status`, `stageId`, `ownerId`, `accountId`, `page`, `pageSize` をサポート |
+| `GET` | `/api/opportunities/:id` | 取引詳細 (Account/Owner/Stage/Contact を含む) |
+| `POST` | `/api/opportunities` | Account+Owner+Stage を必須として案件作成。Stage から status/probability を推測 |
+| `PUT` | `/api/opportunities/:id` | 部分更新 (ステージ変更時は監査ログを記録し、必要なら status/probability を自動更新) |
+| `DELETE` | `/api/opportunities/:id` | ソフトデリート。監査ログ `DELETE` を記録 |
+
+すべてのビジネス系 API は JWT 認証必須で、一覧応答は `data` と `meta` (ページング情報) を持つ統一フォーマットです。
