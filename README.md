@@ -189,6 +189,8 @@ Docker Compose では `.env` の値が `api` サービスに渡され、`db` サ
 | `PUT` | `/api/opportunities/:id` | 部分更新 (ステージ変更時は監査ログを記録し、必要なら status/probability を自動更新) |
 | `DELETE` | `/api/opportunities/:id` | ソフトデリート。監査ログ `DELETE` を記録 |
 
+ステージ変更時には自動で Activity (type: NOTE) と follow-up Task (3 日後の期限) が作成され、営業担当にリマインダーを通知します。
+
 #### Activities
 
 | Method | Path | 説明 |
@@ -214,6 +216,13 @@ Docker Compose では `.env` の値が `api` サービスに渡され、`db` サ
 | Method | Path | 説明 |
 | --- | --- | --- |
 | `GET` | `/api/audit-logs` | `entityType`, `entityId`, `userId`, `opportunityId`, `action`, `from`, `to`, `page`, `pageSize` でフィルタ可能。管理者/マネージャーのみアクセス可 |
+
+#### Reports
+
+| Method | Path | 説明 |
+| --- | --- | --- |
+| `GET` | `/api/reports/pipeline-stage` | ステージごとの案件数・金額合計。管理者/マネージャー限定 |
+| `GET` | `/api/reports/owner` | 担当者ごとのパイプライン合計と件数。管理者/マネージャー限定 |
 
 すべてのビジネス系 API は JWT 認証必須で、一覧応答は `data` と `meta` (ページング情報) を持つ統一フォーマットです。
 

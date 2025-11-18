@@ -1,4 +1,4 @@
-import { AuditAction, OpportunityStatus, Prisma } from '@prisma/client';
+import { ActivityType, AuditAction, OpportunityStatus, Prisma, TaskPriority, TaskStatus } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
@@ -128,6 +128,12 @@ function serializeChanges(changes: Record<string, unknown>): Prisma.InputJsonVal
   return JSON.parse(JSON.stringify(changes)) as Prisma.InputJsonValue;
 }
 
+function addDays(date: Date, days: number) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
 async function recordAudit(opportunityId: string, action: AuditAction, changes: Record<string, unknown>) {
   await prisma.auditLog.create({
     data: {
@@ -136,6 +142,37 @@ async function recordAudit(opportunityId: string, action: AuditAction, changes: 
       action,
       changes: serializeChanges(changes),
       opportunityId,
+    },
+  });
+}
+
+async function handleStageChangeAutomation(opportunity: Prisma.OpportunityGetPayload<{
+  include: { account: true; owner: true; stage: true; contact: true };
+}>) {
+  await prisma.activity.create({
+    data: {
+      type: ActivityType.NOTE,
+      subject: `Stage changed to ${opportunity.stage.name}`,
+      description: `Opportunity ${opportunity.name} moved to ${opportunity.stage.name}.`,
+      occurredAt: new Date(),
+      user: { connect: { id: opportunity.ownerId } },
+      account: { connect: { id: opportunity.accountId } },
+      opportunity: { connect: { id: opportunity.id } },
+      ...(opportunity.contactId ? { contact: { connect: { id: opportunity.contactId } } } : {}),
+    },
+  });
+
+  await prisma.task.create({
+    data: {
+      title: `Follow up (${opportunity.stage.name})`,
+      description: `Plan next steps for "${opportunity.name}" in stage ${opportunity.stage.name}.`,
+      status: TaskStatus.OPEN,
+      priority: TaskPriority.MEDIUM,
+      dueDate: addDays(new Date(), 3),
+      owner: { connect: { id: opportunity.ownerId } },
+      account: { connect: { id: opportunity.accountId } },
+      opportunity: { connect: { id: opportunity.id } },
+      ...(opportunity.contactId ? { contact: { connect: { id: opportunity.contactId } } } : {}),
     },
   });
 }
@@ -186,6 +223,7 @@ export async function updateOpportunity(id: string, payload: UpdateOpportunityIn
 
   if (payload.stageId && payload.stageId !== existing.stageId) {
     await recordAudit(id, AuditAction.STAGE_CHANGE, { from: existing.stageId, to: payload.stageId });
+    await handleStageChangeAutomation(updated);
   } else {
     await recordAudit(id, AuditAction.UPDATE, payload);
   }

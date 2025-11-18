@@ -145,6 +145,7 @@
 - 2025-11-18: WS4 フェーズ2 完了 — PipelineStage/Opportunity API (検索, ステージ更新, 監査ログ) を実装
 - 2025-11-18: WS4 フェーズ3 完了 — AuditLog 参照 API、共通テスト基盤 (Jest) とユニットテストを追加
 - 2025-11-18: WS5 フェーズ1 完了 — Activity/Task API とワークフロー基盤を実装
+- 2025-11-18: WS5 フェーズ2 完了 — Pipeline レポート API を追加し、ステージ変更時の自動 Activity/Task 副作用を実装
 
 ## Surprises & Discoveries
 - (未記入)
