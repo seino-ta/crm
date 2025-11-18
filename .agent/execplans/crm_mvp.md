@@ -144,6 +144,7 @@
 - 2025-11-18: WS4 フェーズ1 完了 — Account/Contact の CRUD API・検索・ソフトデリート・README 反映を実装
 - 2025-11-18: WS4 フェーズ2 完了 — PipelineStage/Opportunity API (検索, ステージ更新, 監査ログ) を実装
 - 2025-11-18: WS4 フェーズ3 完了 — AuditLog 参照 API、共通テスト基盤 (Jest) とユニットテストを追加
+- 2025-11-18: WS5 フェーズ1 完了 — Activity/Task API とワークフロー基盤を実装
 
 ## Surprises & Discoveries
 - (未記入)
@@ -156,6 +157,7 @@
 - 2025-11-18: Prisma マイグレーションは `migrate diff` で生成し、`prisma/seed.ts` で決定的 ID を用いたシードデータを提供する
 - 2025-11-18: 認証には bcryptjs + JWT (HS256) を採用し、Zod でバリデーション、ミドルウェアでロールチェックを行う
 - 2025-11-18: Opportunity のステージ変更時に確率/ステータス自動調整と監査ログ記録を行う
+- 2025-11-18: Activity/Task API は関連エンティティ存在チェックとページネーションを標準とし、タスク完了で `completedAt` を自動設定する
 
 ## Outcomes & Retrospective
 - (未記入)

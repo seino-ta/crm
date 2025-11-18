@@ -17,10 +17,10 @@ export async function listAuditLogs(filters: AuditLogFilter) {
   if (opportunityId) where.opportunityId = opportunityId;
   if (action) where.action = action;
   if (from || to) {
-    where.createdAt = {
-      gte: from,
-      lte: to,
-    };
+    const createdAt: Prisma.DateTimeFilter<'AuditLog'> = {};
+    if (from) createdAt.gte = from;
+    if (to) createdAt.lte = to;
+    where.createdAt = createdAt;
   }
 
   const [total, data] = await Promise.all([

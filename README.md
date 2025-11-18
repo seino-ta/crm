@@ -189,6 +189,26 @@ Docker Compose では `.env` の値が `api` サービスに渡され、`db` サ
 | `PUT` | `/api/opportunities/:id` | 部分更新 (ステージ変更時は監査ログを記録し、必要なら status/probability を自動更新) |
 | `DELETE` | `/api/opportunities/:id` | ソフトデリート。監査ログ `DELETE` を記録 |
 
+#### Activities
+
+| Method | Path | 説明 |
+| --- | --- | --- |
+| `GET` | `/api/activities` | `type`, `userId`, `accountId`, `contactId`, `opportunityId`, `from`, `to`, `page`, `pageSize` によるフィルタ |
+| `GET` | `/api/activities/:id` | 活動詳細 (user/account/contact/opportunity を含む) |
+| `POST` | `/api/activities` | 必須: `type`, `subject`, `userId`。関連エンティティが存在するか検証 |
+| `PUT` | `/api/activities/:id` | 部分更新、関連エンティティ差し替え可 |
+| `DELETE` | `/api/activities/:id` | 活動削除 |
+
+#### Tasks
+
+| Method | Path | 説明 |
+| --- | --- | --- |
+| `GET` | `/api/tasks` | `status`, `ownerId`, `accountId`, `opportunityId`, `activityId`, `dueBefore`, `dueAfter`, `page`, `pageSize` をサポート |
+| `GET` | `/api/tasks/:id` | タスク詳細 (owner/account/opportunity/activity/contact) |
+| `POST` | `/api/tasks` | タスク作成。owner 必須、関連エンティティ存在チェック、`status` 未指定なら OPEN |
+| `PUT` | `/api/tasks/:id` | 部分更新。`status` を COMPLETED にすると `completedAt` を自動で設定 |
+| `DELETE` | `/api/tasks/:id` | タスク削除 |
+
 #### Audit Logs
 
 | Method | Path | 説明 |

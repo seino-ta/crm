@@ -1,0 +1,190 @@
+import type { Prisma } from '@prisma/client';
+import { TaskStatus } from '@prisma/client';
+import createError from 'http-errors';
+
+import prisma from '../../lib/prisma';
+import { buildPaginationMeta, normalizePagination } from '../../utils/pagination';
+
+import type { CreateTaskInput, TaskFilterInput, UpdateTaskInput } from './task.schema';
+
+async function ensureUser(userId: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw createError(404, 'User not found');
+}
+
+async function ensureAccount(accountId?: string) {
+  if (!accountId) return;
+  const account = await prisma.account.findFirst({ where: { id: accountId, deletedAt: null } });
+  if (!account) throw createError(404, 'Account not found');
+}
+
+async function ensureOpportunity(opportunityId?: string) {
+  if (!opportunityId) return;
+  const opportunity = await prisma.opportunity.findFirst({ where: { id: opportunityId, deletedAt: null } });
+  if (!opportunity) throw createError(404, 'Opportunity not found');
+}
+
+async function ensureActivity(activityId?: string) {
+  if (!activityId) return;
+  const activity = await prisma.activity.findUnique({ where: { id: activityId } });
+  if (!activity) throw createError(404, 'Activity not found');
+}
+
+async function ensureContact(contactId?: string) {
+  if (!contactId) return;
+  const contact = await prisma.contact.findFirst({ where: { id: contactId, deletedAt: null } });
+  if (!contact) throw createError(404, 'Contact not found');
+}
+
+export async function listTasks(filters: TaskFilterInput) {
+  const { status, ownerId, accountId, opportunityId, activityId, dueBefore, dueAfter, page, pageSize } = filters;
+  const { page: normalizedPage, pageSize: normalizedPageSize, skip, take } = normalizePagination({ page, pageSize });
+
+  const where: Prisma.TaskWhereInput = {};
+
+  if (status) where.status = status;
+  if (ownerId) where.ownerId = ownerId;
+  if (accountId) where.accountId = accountId;
+  if (opportunityId) where.opportunityId = opportunityId;
+  if (activityId) where.activityId = activityId;
+  if (dueBefore || dueAfter) {
+    const dueDate: Prisma.DateTimeNullableFilter<'Task'> = {};
+    if (dueAfter) dueDate.gte = dueAfter;
+    if (dueBefore) dueDate.lte = dueBefore;
+    where.dueDate = dueDate;
+  }
+
+  const [total, data] = await Promise.all([
+    prisma.task.count({ where }),
+    prisma.task.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+      include: {
+        owner: true,
+        account: true,
+        opportunity: true,
+        activity: true,
+        contact: true,
+      },
+    }),
+  ]);
+
+  return {
+    data,
+    meta: buildPaginationMeta(total, normalizedPage, normalizedPageSize),
+  };
+}
+
+export async function getTaskById(id: string) {
+  const task = await prisma.task.findUnique({
+    where: { id },
+    include: {
+      owner: true,
+      account: true,
+      opportunity: true,
+      activity: true,
+      contact: true,
+    },
+  });
+
+  if (!task) throw createError(404, 'Task not found');
+  return task;
+}
+
+export async function createTask(payload: CreateTaskInput) {
+  await Promise.all([
+    ensureUser(payload.ownerId),
+    ensureAccount(payload.accountId),
+    ensureOpportunity(payload.opportunityId),
+    ensureActivity(payload.activityId),
+    ensureContact(payload.contactId),
+  ]);
+
+  const data: Prisma.TaskCreateInput = {
+    title: payload.title,
+    description: payload.description ?? null,
+    status: payload.status ?? TaskStatus.OPEN,
+    owner: { connect: { id: payload.ownerId } },
+  };
+
+  if (payload.priority !== undefined) data.priority = payload.priority;
+  if (payload.dueDate !== undefined) data.dueDate = payload.dueDate;
+
+  if (payload.activityId) data.activity = { connect: { id: payload.activityId } };
+  if (payload.accountId) data.account = { connect: { id: payload.accountId } };
+  if (payload.opportunityId) data.opportunity = { connect: { id: payload.opportunityId } };
+  if (payload.contactId) data.contact = { connect: { id: payload.contactId } };
+
+  return prisma.task.create({
+    data,
+    include: {
+      owner: true,
+      account: true,
+      opportunity: true,
+      activity: true,
+      contact: true,
+    },
+  });
+}
+
+export async function updateTask(id: string, payload: UpdateTaskInput) {
+  const existing = await getTaskById(id);
+
+  await Promise.all([
+    payload.ownerId && payload.ownerId !== existing.ownerId ? ensureUser(payload.ownerId) : Promise.resolve(),
+    payload.accountId && payload.accountId !== existing.accountId ? ensureAccount(payload.accountId) : Promise.resolve(),
+    payload.opportunityId && payload.opportunityId !== existing.opportunityId
+      ? ensureOpportunity(payload.opportunityId)
+      : Promise.resolve(),
+    payload.activityId && payload.activityId !== existing.activityId
+      ? ensureActivity(payload.activityId)
+      : Promise.resolve(),
+    payload.contactId && payload.contactId !== existing.contactId
+      ? ensureContact(payload.contactId)
+      : Promise.resolve(),
+  ]);
+
+  const data: Prisma.TaskUpdateInput = {};
+
+  if (payload.title !== undefined) data.title = payload.title;
+  if (payload.description !== undefined) data.description = payload.description ?? null;
+  if (payload.status !== undefined) data.status = payload.status;
+  if (payload.priority !== undefined) data.priority = payload.priority;
+  if (payload.dueDate !== undefined) data.dueDate = payload.dueDate;
+  if (payload.ownerId !== undefined) data.owner = { connect: { id: payload.ownerId } };
+  if (payload.activityId !== undefined) {
+    data.activity = payload.activityId ? { connect: { id: payload.activityId } } : { disconnect: true };
+  }
+  if (payload.accountId !== undefined) {
+    data.account = payload.accountId ? { connect: { id: payload.accountId } } : { disconnect: true };
+  }
+  if (payload.opportunityId !== undefined) {
+    data.opportunity = payload.opportunityId ? { connect: { id: payload.opportunityId } } : { disconnect: true };
+  }
+  if (payload.contactId !== undefined) {
+    data.contact = payload.contactId ? { connect: { id: payload.contactId } } : { disconnect: true };
+  }
+
+  if (payload.status !== undefined && payload.status === TaskStatus.COMPLETED && !existing.completedAt) {
+    data.completedAt = new Date();
+  }
+
+  return prisma.task.update({
+    where: { id },
+    data,
+    include: {
+      owner: true,
+      account: true,
+      opportunity: true,
+      activity: true,
+      contact: true,
+    },
+  });
+}
+
+export async function deleteTask(id: string) {
+  await getTaskById(id);
+  await prisma.task.delete({ where: { id } });
+}
