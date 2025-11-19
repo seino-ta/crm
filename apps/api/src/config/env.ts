@@ -1,9 +1,20 @@
+import fs from 'fs';
 import path from 'path';
 
 import dotenv from 'dotenv';
 
 const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
-dotenv.config({ path: path.resolve(process.cwd(), envFile) });
+
+const searchPaths = [
+  path.resolve(__dirname, '../../../../', envFile), // monorepo ルート
+  path.resolve(process.cwd(), envFile), // 実行ディレクトリ直下
+];
+
+for (const filePath of searchPaths) {
+  if (fs.existsSync(filePath)) {
+    dotenv.config({ path: filePath });
+  }
+}
 
 type NodeEnv = 'development' | 'test' | 'production';
 
