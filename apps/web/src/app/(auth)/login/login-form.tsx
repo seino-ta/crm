@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 
 import { loginAction } from '@/lib/actions/auth';
 import type { AuthFormState } from '@/lib/actions/auth';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export function LoginForm() {
-  const [state, action] = useFormState<AuthFormState | undefined, FormData>(loginAction, undefined);
+  const [state, action] = useActionState<AuthFormState | undefined, FormData>(loginAction, undefined);
 
   return (
     <form action={action} className="space-y-4" data-testid="login-form">
