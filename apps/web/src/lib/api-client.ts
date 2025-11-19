@@ -51,16 +51,7 @@ async function readToken() {
   return getter(TOKEN_COOKIE)?.value;
 }
 
-async function clearTokenCookie() {
-  const cookieStore = await getCookieStore();
-  const deleter = cookieStore && typeof cookieStore.delete === 'function' ? cookieStore.delete.bind(cookieStore) : null;
-  if (deleter) {
-    deleter(TOKEN_COOKIE);
-  }
-}
-
 async function handleUnauthorized() {
-  await clearTokenCookie();
   redirect(LOGIN_PATH);
 }
 

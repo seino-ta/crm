@@ -91,12 +91,15 @@
 - 2025-11-19: WS2 完了 — `apps/web` を Next.js 15 + App Router で初期化し、AppShell/Middleware/Server Actions ベースの認証フローと UI コンポーネント群を構築。
 - 2025-11-19: WS3 進行中 — ダッシュボード/アカウント/案件/活動/タスク/レポート画面と CRUD/ステージ更新/タスク完了フローを SSR+Client 組み合わせで実装（残り: 細部の UX 調整と README 反映）。
 - 2025-11-19: ログイン後にリダイレクトできない回帰を修正 (Server Action の `redirect` 例外を適切に再スローし、`apiFetch` の `skipAuth` 向け 401 ハンドリングを調整) し、README と `.env.local.example` を更新。
+- 2025-11-19: Server Action で CRUD 後に `redirect()` を行うよう Accounts/Opportunities/Activities/Tasks を更新し、Playwright 主要シナリオ (ログイン→各メニュー CRUD) が通ることを確認。
+- 2025-11-19: Prisma seed の固定 ID を RFC 4122 準拠の UUID に差し替え、DB リセット (`npx prisma migrate reset` → `npm --prefix apps/api run db:seed`) 手順を README に追記。
 - (予定) WS4 完了: Playwright e2e & スクショ。
 - (予定) WS5 完了: CI 反映。
 
 ## Surprises & Discoveries
 - 2025-11-19: Next.js 16 の `next lint` コマンドが提供されず `next <dir>` 解釈になり lint が失敗。`apps/web` 側で直接 ESLint CLI (`eslint . --ext .ts,.tsx`) を使うワークアラウンドに変更。
 - 2025-11-19: `loginAction` の try/catch が `redirect()` (内部的には `NEXT_REDIRECT` 例外) を飲み込んでしまい、ログイン成功時もエラーメッセージになることを確認。`isRedirectError` で検出して再スローする必要がある。
+- 2025-11-19: API 側の Zod `uuid()` が RFC 4122 のバージョン/variant を厳密に検証するため、旧シード ID (`0000...`) では CRUD が 422 になる問題が判明。シード ID を v4 準拠に変更し、既存 DB は migrate reset → seed で更新する方針に統一。
 
 ## Decision Log
 - 2025-11-18: Next.js 15 App Router + TypeScript を採用。
@@ -105,6 +108,8 @@
 - 2025-11-19: Monorepo の npm scripts は `npm --prefix <app>` 形式に揃え、`lint`/`test`/`dev`/`build` を並列実行できるよう `npm-run-all` を採用。
 - 2025-11-19: `apps/web` の lint は Next.js CLI ではなく ESLint CLI を直接使用し、`tsconfig.base.json` + Flat Config をルート共有とする。
 - 2025-11-19: `apiFetch` では `skipAuth` オプション使用時に 401 応答で即リダイレクトせず `ApiError` を投げ、フォームでバリデーションエラー表示ができるようにする。
+- 2025-11-19: Accounts/Opportunities/Activities/Tasks の作成 Server Action は成功時に `redirect()` で該当ページをリフレッシュし、Playwright でも CRUD 反映を即確認できるようにする。
+- 2025-11-19: シード ID を RFC 4122 準拠に更新し、DB リセット時は `npx prisma migrate reset --force` → `npm --prefix apps/api run db:seed` を案内する。
 
 ## Outcomes & Retrospective
 - (未記入)

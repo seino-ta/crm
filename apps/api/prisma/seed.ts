@@ -4,15 +4,15 @@ import { hashSync } from 'bcryptjs';
 const prisma = new PrismaClient();
 
 const IDS = {
-  admin: '00000000-0000-0000-0000-000000000001',
-  manager: '00000000-0000-0000-0000-000000000002',
-  account: '00000000-0000-0000-0000-000000000101',
-  contact: '00000000-0000-0000-0000-000000000201',
-  opportunity: '00000000-0000-0000-0000-000000000301',
-  activity: '00000000-0000-0000-0000-000000000401',
-  task: '00000000-0000-0000-0000-000000000501',
-  auditLog: '00000000-0000-0000-0000-000000000601',
-  assignment: '00000000-0000-0000-0000-000000000701',
+  admin: '11111111-1111-4111-8111-111111111111',
+  manager: '22222222-2222-4222-8222-222222222222',
+  account: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  contact: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  opportunity: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+  activity: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  task: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+  auditLog: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+  assignment: '99999999-9999-4999-8999-999999999999',
 };
 
 const DEFAULT_PASSWORD = process.env.SEED_USER_PASSWORD || 'ChangeMe123!';

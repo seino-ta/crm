@@ -166,20 +166,21 @@ Docker Compose では `.env` の値が `api` サービスに渡され、`db` サ
 ## 🗄️ Prisma / Database ワークフロー
 
 1. `docker compose up -d db` で PostgreSQL を起動 (初回は `postgres_data` ボリュームが作成される)。
-2. `npm run db:migrate` でローカル DB にマイグレーションを適用。
-3. `npm run db:seed` でサンプルユーザー/アカウント/案件データを投入。
-4. Prisma Studio を確認したい場合は `npm run db:studio`。
+2. `npm --prefix apps/api run db:migrate` でローカル DB にマイグレーションを適用。
+3. `npm --prefix apps/api run db:seed` でサンプルユーザー/アカウント/案件データを投入。
+4. Prisma Studio を確認したい場合は `npm --prefix apps/api run db:studio`。
 
 ### マイグレーションの生成
 
-- 新しいスキーマを記述したら `npm run db:migrate -- --name <migration_name>` を実行し、PostgreSQL が起動していることを確認する。
+- 新しいスキーマを記述したら `npm --prefix apps/api run db:migrate -- --name <migration_name>` を実行し、PostgreSQL が起動していることを確認する。
 - DB を起動せずにスクリプトだけ生成したい場合は `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/<timestamp>_<name>/migration.sql` を使用できる。
 
 ### シードデータ
 
 - `prisma/seed.ts` は Prisma Client を使ってパイプラインステージ、管理者/マネージャーユーザー、代表的なアカウント・案件・活動・タスクを作成する。
-- `prisma.config.ts` の設定により `npm run db:seed` で `ts-node --project tsconfig.prisma.json prisma/seed.ts` が実行される。
+- `prisma.config.ts` の設定により `npm --prefix apps/api run db:seed` で `ts-node --project tsconfig.prisma.json prisma/seed.ts` が実行される。
 - サンプル認証情報: `admin@crm.local` / `manager@crm.local` （共通パスワードは `SEED_USER_PASSWORD` で上書き可、デフォルトは `ChangeMe123!`）。
+- 2025-11-19 以降のシードでは RFC 4122 準拠の UUID (例: `11111111-1111-4111-8111-111111111111`) を割り当てているため、既存 DB に旧 ID が残っている場合は `cd apps/api && npx prisma migrate reset --force` → `npm --prefix apps/api run db:seed` で初期化してから利用する。
 
 ### 認証 API エンドポイント
 

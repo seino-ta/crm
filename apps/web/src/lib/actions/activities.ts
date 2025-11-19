@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { apiFetch } from '../api-client';
@@ -29,7 +30,7 @@ export async function createActivityAction(_state: { error?: string } | undefine
     });
     revalidatePath('/activities');
     revalidatePath('/tasks');
-    return { ok: true };
+    redirect('/activities');
   } catch (error) {
     console.error(error);
     return { error: '活動の記録に失敗しました。' };

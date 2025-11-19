@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { apiFetch } from '../api-client';
@@ -44,7 +45,7 @@ export async function createOpportunityAction(_state: { error?: string } | undef
       body: JSON.stringify(parsed.data),
     });
     revalidatePath('/opportunities');
-    return { ok: true };
+    redirect('/opportunities');
   } catch (error) {
     console.error(error);
     return { error: '案件の作成に失敗しました。' };

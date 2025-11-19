@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { apiFetch } from '../api-client';
@@ -28,7 +29,7 @@ export async function createTaskAction(_state: { error?: string } | undefined, f
       body: JSON.stringify(parsed.data),
     });
     revalidatePath('/tasks');
-    return { ok: true };
+    redirect('/tasks');
   } catch (error) {
     console.error(error);
     return { error: 'タスクの作成に失敗しました。' };
