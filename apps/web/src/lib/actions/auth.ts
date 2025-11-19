@@ -7,6 +7,14 @@ import { z } from 'zod';
 import { apiFetch } from '../api-client';
 import { DASHBOARD_PATH, LOGIN_PATH, TOKEN_COOKIE } from '../constants';
 
+async function getCookieStore() {
+  try {
+    return await cookies();
+  } catch {
+    return null;
+  }
+}
+
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
@@ -33,8 +41,8 @@ export async function loginAction(_prevState: AuthFormState | undefined, formDat
       skipAuth: true,
     });
 
-    const cookieStore = cookies();
-    cookieStore.set(TOKEN_COOKIE, data.token, {
+    const cookieStore = await getCookieStore();
+    cookieStore?.set?.(TOKEN_COOKIE, data.token, {
       httpOnly: true,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
@@ -50,7 +58,7 @@ export async function loginAction(_prevState: AuthFormState | undefined, formDat
 }
 
 export async function logoutAction() {
-  const cookieStore = cookies();
-  cookieStore.delete(TOKEN_COOKIE);
+  const cookieStore = await getCookieStore();
+  cookieStore?.delete?.(TOKEN_COOKIE);
   redirect(LOGIN_PATH);
 }
