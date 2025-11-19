@@ -36,23 +36,23 @@ type FetchOptions = RequestInit & {
   parse?: boolean;
 };
 
-function getCookieStore() {
+async function getCookieStore() {
   try {
-    return cookies();
+    return await cookies();
   } catch {
     return null;
   }
 }
 
-function readToken() {
-  const cookieStore = getCookieStore();
+async function readToken() {
+  const cookieStore = await getCookieStore();
   const getter = cookieStore && typeof cookieStore.get === 'function' ? cookieStore.get.bind(cookieStore) : null;
   if (!getter) return undefined;
   return getter(TOKEN_COOKIE)?.value;
 }
 
-function clearTokenCookie() {
-  const cookieStore = getCookieStore();
+async function clearTokenCookie() {
+  const cookieStore = await getCookieStore();
   const deleter = cookieStore && typeof cookieStore.delete === 'function' ? cookieStore.delete.bind(cookieStore) : null;
   if (deleter) {
     deleter(TOKEN_COOKIE);
@@ -60,12 +60,12 @@ function clearTokenCookie() {
 }
 
 async function handleUnauthorized() {
-  clearTokenCookie();
+  await clearTokenCookie();
   redirect(LOGIN_PATH);
 }
 
 export async function apiFetch<T>(path: string, init: FetchOptions = {}): Promise<{ data: T; meta?: ApiMeta }> {
-  const token = init.skipAuth ? undefined : readToken();
+  const token = init.skipAuth ? undefined : await readToken();
 
   if (!init.skipAuth && !token) {
     await handleUnauthorized();
