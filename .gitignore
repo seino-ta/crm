@@ -3,6 +3,9 @@ dist
 apps/api/dist
 apps/web/.next
 apps/web/out
+apps/web/tests/e2e/report
+apps/web/tests/e2e/screenshots
+test-results
 coverage
 .env
 .env.*

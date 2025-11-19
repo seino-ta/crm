@@ -9,7 +9,6 @@ import type { User } from './types';
 export const getCurrentUser = cache(async () => {
   const { data } = await apiFetch<{ user: User | null }>('/auth/me');
   if (!data.user) {
-    cookies().delete(TOKEN_COOKIE);
     redirect(LOGIN_PATH);
   }
   return data.user;

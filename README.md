@@ -78,6 +78,50 @@ This repository is prepared so that:
 
 ---
 
+## 🧭 Monorepo (apps/api + apps/web)
+
+- `apps/api`: Express + Prisma + PostgreSQL で REST API を提供。`npm --prefix apps/api run dev` で単体起動、ポートは `4000`。
+- `apps/web`: Next.js 16 (App Router) + React 19 で SSR/CSR ハイブリッド UI を提供。`npm --prefix apps/web run dev` で単体起動、ポートは `3000`。
+- ルートの npm scripts (`npm run dev`, `npm run lint`, `npm run test`, `npm run test:e2e` など) は npm workspaces 経由で API/Web を同時に操作する。
+
+### セットアップ (API + Web)
+
+1. Node.js 20 系と npm 10+ を用意する。
+2. `cp .env.example .env` でルート環境ファイルを作成し、`DATABASE_URL`、`JWT_SECRET`、`SEED_USER_PASSWORD` などを設定する。
+3. `cp apps/web/.env.local.example apps/web/.env.local` を実行し、`NEXT_PUBLIC_API_BASE_URL` (例: `http://localhost:4000/api`) や `API_BASE_URL`、`WEB_PORT` を必要に応じて変更する。
+4. `npm install` でワークスペース全体の依存関係を解決する。
+5. `npm run dev` で API (http://localhost:4000) と Web (http://localhost:3000) を同時起動する。`.env` / `apps/web/.env.local` が揃っていれば `crm_token` クッキー発行まで確認できる。
+
+### 認証とログインフロー
+
+- シードユーザー: `admin@crm.local` / `ChangeMe123!`、`manager@crm.local` / `ChangeMe123!` (ともに `.env` の `SEED_USER_PASSWORD` を変更すると再シード時に更新される)。
+- `/login` フォーム送信は Server Action (`loginAction`) を経由し、成功時に HttpOnly の `crm_token` クッキーを 12 時間保存 → Dashboard (`/dashboard`) へ `redirect()`。
+- Next.js の `middleware.ts` が `crm_token` の有無で `/login` と `/dashboard` 配下を制御する。ログアウト (`logoutAction`) はクッキー削除後に `/login` へ戻す。
+
+### npm Scripts / DB マイグレーション
+
+- `npm run dev` — API + Web を並列起動。
+- `npm run lint` / `npm run lint:web` / `npm run lint:api` — ESLint (Flat config)。
+- `npm run test` — API (Jest) + Web (lint) をまとめて実行。
+- `npm run test:api` / `npm --prefix apps/api run test` — API ユニットテスト。
+- `npm run test:e2e` — Playwright で Web フローを検証。
+- `npm --prefix apps/api run db:migrate` / `npm --prefix apps/api run db:seed` — Prisma でマイグレーション & シードを実行 (必要に応じて `DATABASE_URL=...` を前置)。
+
+### Playwright / UI スナップショット
+
+- `npm run test:e2e` — ログイン → 主要 CRM 画面を自動操作。スクリーンショットやビデオは `test-results/`、`apps/web/tests/e2e/screenshots/` に保存される。
+- `npm run ui:snapshots` — `@snapshot` タグ付きテストのみ実行し、UI の diff を確認。
+- `npm run playwright:codegen` — `PLAYWRIGHT_BASE_URL` (デフォルト `http://localhost:3000`) を基にブラウザ操作を記録。
+- HTML レポート: `npx playwright show-report apps/web/tests/e2e/report`。テストが失敗した場合は `npx playwright show-trace test-results/<run>/trace.zip` で詳細を確認。
+
+### トラブルシュート
+
+- `cookies()` の使用制限: Server Action / Route Handler / Middleware 以外 (例: `'use client'` コンポーネント) では `cookies()` を呼び出せない。クライアントからクッキーを操作したい場合は Server Action を経由して処理する。
+- ポート競合 (`EADDRINUSE: 3000` など): `lsof -ti tcp:3000 | xargs kill -9` で既存プロセスを終了するか、`.env.local` の `WEB_PORT` を変更した上で `npm run dev` を再実行する。
+- Playwright 失敗時: `test-results/<spec>/` にスクリーンショット・動画・トレースが保存される。`npx playwright show-report apps/web/tests/e2e/report` や `npx playwright show-trace test-results/.../trace.zip` で原因を特定する。
+
+---
+
 ## 🧑‍💻 開発セットアップ
 
 1. Node.js 20+ / npm 10+ を用意する (推奨: `nvm` で 20.x を選択)。

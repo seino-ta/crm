@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,7 +26,7 @@ type AccountFormProps = {
 };
 
 export function AccountForm({ action, submitLabel, initialValues }: AccountFormProps) {
-  const [state, formAction] = useFormState(action, undefined);
+  const [state, formAction] = useActionState(action, undefined);
 
   return (
     <form action={formAction} className="space-y-4" data-testid="account-form">

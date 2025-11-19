@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 
 import { loginAction } from '@/lib/actions/auth';
 import type { AuthFormState } from '@/lib/actions/auth';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 
 export function LoginForm() {
   const [state, action] = useActionState<AuthFormState | undefined, FormData>(loginAction, undefined);
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <form action={action} className="space-y-4" data-testid="login-form">
@@ -22,7 +23,60 @@ export function LoginForm() {
         <label htmlFor="password" className="text-sm font-medium text-slate-600">
           パスワード
         </label>
-        <Input type="password" id="password" name="password" required placeholder="••••••••" data-testid="login-password" />
+        <div className="relative">
+          <Input
+            type={showPassword ? 'text' : 'password'}
+            id="password"
+            name="password"
+            required
+            placeholder="••••••••"
+            data-testid="login-password"
+            className="pr-10"
+          />
+          <button
+            type="button"
+            aria-label={showPassword ? 'パスワードを非表示にする' : 'パスワードを表示する'}
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-700"
+            onClick={() => setShowPassword((prev) => !prev)}
+            data-testid="password-toggle"
+          >
+            {showPassword ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="h-5 w-5"
+                aria-hidden
+              >
+                <path d="M3 3l18 18" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M9.88 9.88a3 3 0 004.24 4.24M6.1 6.3C4.53 7.34 3.2 8.86 2.25 10.75c2.3 4.6 6.12 7.25 9.75 7.25 1.34 0 2.63-.28 3.84-.81M17.9 17.7c1.57-1.04 2.9-2.56 3.85-4.45-2.3-4.6-6.12-7.25-9.75-7.25-1.27 0-2.49.25-3.6.72"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="h-5 w-5"
+                aria-hidden
+              >
+                <path
+                  d="M2.25 12c2.3-4.6 6.12-7.25 9.75-7.25s7.45 2.65 9.75 7.25c-2.3 4.6-6.12 7.25-9.75 7.25S4.55 16.6 2.25 12z"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
       {state?.error && <p className="text-sm text-rose-600" data-testid="login-error">{state.error}</p>}
       <Button type="submit" className="w-full" data-testid="login-submit">

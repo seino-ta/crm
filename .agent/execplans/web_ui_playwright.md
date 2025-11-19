@@ -90,11 +90,13 @@
 - 2025-11-19: WS1 完了 — `apps/api` への再配置、workspaces 化、共通 tsconfig/eslint/.env 拡張、`docker-compose.yml`/スクリプト更新。
 - 2025-11-19: WS2 完了 — `apps/web` を Next.js 15 + App Router で初期化し、AppShell/Middleware/Server Actions ベースの認証フローと UI コンポーネント群を構築。
 - 2025-11-19: WS3 進行中 — ダッシュボード/アカウント/案件/活動/タスク/レポート画面と CRUD/ステージ更新/タスク完了フローを SSR+Client 組み合わせで実装（残り: 細部の UX 調整と README 反映）。
+- 2025-11-19: ログイン後にリダイレクトできない回帰を修正 (Server Action の `redirect` 例外を適切に再スローし、`apiFetch` の `skipAuth` 向け 401 ハンドリングを調整) し、README と `.env.local.example` を更新。
 - (予定) WS4 完了: Playwright e2e & スクショ。
 - (予定) WS5 完了: CI 反映。
 
 ## Surprises & Discoveries
 - 2025-11-19: Next.js 16 の `next lint` コマンドが提供されず `next <dir>` 解釈になり lint が失敗。`apps/web` 側で直接 ESLint CLI (`eslint . --ext .ts,.tsx`) を使うワークアラウンドに変更。
+- 2025-11-19: `loginAction` の try/catch が `redirect()` (内部的には `NEXT_REDIRECT` 例外) を飲み込んでしまい、ログイン成功時もエラーメッセージになることを確認。`isRedirectError` で検出して再スローする必要がある。
 
 ## Decision Log
 - 2025-11-18: Next.js 15 App Router + TypeScript を採用。
@@ -102,6 +104,7 @@
 - 2025-11-18: 認証トークンは HttpOnly Cookie + Next.js Server Actions で扱い、Playwright テストは seeded admin 資格情報を利用。
 - 2025-11-19: Monorepo の npm scripts は `npm --prefix <app>` 形式に揃え、`lint`/`test`/`dev`/`build` を並列実行できるよう `npm-run-all` を採用。
 - 2025-11-19: `apps/web` の lint は Next.js CLI ではなく ESLint CLI を直接使用し、`tsconfig.base.json` + Flat Config をルート共有とする。
+- 2025-11-19: `apiFetch` では `skipAuth` オプション使用時に 401 応答で即リダイレクトせず `ApiError` を投げ、フォームでバリデーションエラー表示ができるようにする。
 
 ## Outcomes & Retrospective
 - (未記入)

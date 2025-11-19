@@ -98,7 +98,7 @@ export async function apiFetch<T>(path: string, init: FetchOptions = {}): Promis
   }
 
   if (!response.ok) {
-    if (response.status === 401) {
+    if (response.status === 401 && !init.skipAuth) {
       await handleUnauthorized();
     }
     const message = !payload || 'error' in payload === false ? 'リクエストに失敗しました' : payload.error.message;

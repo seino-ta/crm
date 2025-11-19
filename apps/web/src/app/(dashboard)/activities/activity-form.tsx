@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 
 import { createActivityAction } from '@/lib/actions/activities';
 import { Select } from '@/components/ui/select';
@@ -17,7 +17,7 @@ type ActivityFormProps = {
 };
 
 export function ActivityForm({ accounts, opportunities, userId }: ActivityFormProps) {
-  const [state, formAction] = useFormState(createActivityAction, undefined);
+  const [state, formAction] = useActionState(createActivityAction, undefined);
 
   return (
     <form action={formAction} className="space-y-4" data-testid="activity-form">

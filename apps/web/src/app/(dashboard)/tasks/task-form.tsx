@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 
 import { createTaskAction } from '@/lib/actions/tasks';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ type TaskFormProps = {
 };
 
 export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
-  const [state, formAction] = useFormState(createTaskAction, undefined);
+  const [state, formAction] = useActionState(createTaskAction, undefined);
 
   return (
     <form action={formAction} className="space-y-4" data-testid="task-form">

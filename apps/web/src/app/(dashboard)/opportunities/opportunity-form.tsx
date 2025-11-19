@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 
 import { createOpportunityAction } from '@/lib/actions/opportunities';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ export type OpportunityFormProps = {
 };
 
 export function OpportunityForm({ accounts, stages, contacts, ownerId }: OpportunityFormProps) {
-  const [state, formAction] = useFormState(createOpportunityAction, undefined);
+  const [state, formAction] = useActionState(createOpportunityAction, undefined);
 
   return (
     <form action={formAction} className="space-y-4" data-testid="opportunity-form">
