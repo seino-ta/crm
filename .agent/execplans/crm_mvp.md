@@ -16,9 +16,9 @@
 3. JWT 認証を備えた REST API を実装し、主要 CRUD + 検索/フィルタを提供する。
 4. ビジネスワークフロー (案件ステージ管理、活動ログ、自動状態更新) を API レベルで実装する。
 5. 自動テスト (unit/integration)・lint・シードデータ・運用ガイドを提供し、再現可能なローカル環境を整備する。
+6. バックエンドと同一リポジトリ内にフロントエンド SPA を実装し、主要 CRM ワークフローを UI から操作できるようにする。
 
 ## 非ゴール (MVP では扱わない)
-- SPA/モバイルなどフロントエンド実装
 - 外部サービス連携 (メール送信、3rd party カレンダー等)
 - 高度な分析ダッシュボードやML予測
 - マルチテナント/課金/組織管理
@@ -31,6 +31,7 @@
 - 認証・認可ミドルウェア、エラーハンドラ
 - Jest + Supertest による主要 API テスト
 - 開発/運用ドキュメント (README 追加セクション)
+- `apps/api` (既存バックエンド) と `apps/web` (新規フロントエンド) を含む単一リポジトリ構成、共通 lint/test スクリプト
 
 ## 前提・制約
 - ランタイム: Node.js 20.x, npm 10+ (nvm 推奨)
@@ -101,6 +102,13 @@
 - OpenAPI 仕様生成、README 更新
 - 指標: カバレッジ 70% 以上、lint/test npm script
 
+### WS6: フロントエンド (Week 5-6)
+- リポジトリを monorepo（例: `apps/api`, `apps/web`, `packages/*`）に整理し、共通 lint/test/ビルドスクリプトを整備
+- Next.js + React + TypeScript + Tailwind/Chakra などを用いた SPA を構築し、主要エンティティ (Accounts/Contacts/Opportunities/Activities/Tasks) の CRUD UI とグローバルナビゲーションを実装
+- Auth フロー（ログインフォーム、JWT 保存、API 呼び出しラッパ）とロールに応じた表示制御
+- レポート/ダッシュボードの簡易カード (stage summary, owner pipeline) を実装し、API 連携を検証
+- E2E/統合テスト (Playwright など) を追加し、バックエンド API と合わせて CI で実行
+
 ## マイルストーン
 1. **M1 (週1)**: WS1 完了。ローカル環境でサーバ起動、ヘルスチェック API 動作
 2. **M2 (週2)**: WS2 + Prisma マイグレーション安定
@@ -146,6 +154,7 @@
 - 2025-11-18: WS4 フェーズ3 完了 — AuditLog 参照 API、共通テスト基盤 (Jest) とユニットテストを追加
 - 2025-11-18: WS5 フェーズ1 完了 — Activity/Task API とワークフロー基盤を実装
 - 2025-11-18: WS5 フェーズ2 完了 — Pipeline レポート API を追加し、ステージ変更時の自動 Activity/Task 副作用を実装
+- 2025-11-19: WS6 着手 — monorepo へ再構成し、Next.js + Playwright によるフロントエンド実装を開始（`apps/web` 追加、主要画面の UI を構築中）
 
 ## Surprises & Discoveries
 - (未記入)
@@ -159,6 +168,7 @@
 - 2025-11-18: 認証には bcryptjs + JWT (HS256) を採用し、Zod でバリデーション、ミドルウェアでロールチェックを行う
 - 2025-11-18: Opportunity のステージ変更時に確率/ステータス自動調整と監査ログ記録を行う
 - 2025-11-18: Activity/Task API は関連エンティティ存在チェックとページネーションを標準とし、タスク完了で `completedAt` を自動設定する
+- 2025-11-18: リポジトリはバックエンドとフロントエンドを同居させ、共通の lint/test/CI を適用する monorepo 方針とする
 
 ## Outcomes & Retrospective
 - (未記入)

@@ -1,0 +1,37 @@
+{
+  "name": "@crm/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Next.js CRM UI for the monorepo",
+  "scripts": {
+    "dev": "next dev -p ${WEB_PORT:-3000}",
+    "build": "next build",
+    "start": "next start -p ${WEB_PORT:-3000}",
+    "lint": "eslint . --ext .ts,.tsx",
+    "test": "npm run lint",
+    "test:e2e": "playwright test -c ../../playwright.config.ts",
+    "test:e2e:headed": "playwright test -c ../../playwright.config.ts --headed",
+    "ui:snapshots": "playwright test -c ../../playwright.config.ts --grep @snapshot",
+    "playwright:codegen": "PLAYWRIGHT_BASE_URL=\"${PLAYWRIGHT_BASE_URL:-http://localhost:3000}\" playwright codegen $PLAYWRIGHT_BASE_URL"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "next": "16.0.3",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "recharts": "^2.12.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^20.14.15",
+    "@types/react": "^19.0.5",
+    "@types/react-dom": "^19.0.2",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "16.0.3",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.9.3"
+  }
+}
