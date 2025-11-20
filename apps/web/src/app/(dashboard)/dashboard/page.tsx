@@ -3,6 +3,13 @@ import { PipelineChart } from '@/components/charts/pipeline-chart';
 import { OwnerChart } from '@/components/charts/owner-chart';
 import { formatCurrency, formatDateTime, formatUserName } from '@/lib/formatters';
 import {
+  getActivityTypeLabel,
+  getOpportunityStatusMeta,
+  getPipelineStageLabel,
+  getTaskStatusMeta,
+} from '@/lib/labels';
+import { StatusBadge } from '@/components/ui/status-badge';
+import {
   getOwnerReport,
   getStageReport,
   listActivities,
@@ -11,6 +18,7 @@ import {
   listPipelineStages,
   listTasks,
 } from '@/lib/data';
+import { getCurrencyScale } from '@/lib/chart-scale';
 
 export default async function DashboardPage() {
   const [accounts, opportunities, tasks, activities, stageReport, ownerReport, stages] = await Promise.all([
@@ -23,11 +31,18 @@ export default async function DashboardPage() {
     listPipelineStages(),
   ]);
 
-  const stageMap = new Map(stages.map((stage) => [stage.id, stage.name] as const));
-  const pipelineChart = stageReport.map((row) => ({
+  const stageMap = new Map(stages.map((stage) => [stage.id, getPipelineStageLabel(stage.name)] as const));
+  const pipelineChartRaw = stageReport.map((row) => ({
     stage: stageMap.get(row.stageId) ?? '未定義',
     amount: Number(row._sum.amount ?? 0),
     deals: row._count._all,
+  }));
+  const maxPipelineAmount = pipelineChartRaw.reduce((max, item) => Math.max(max, item.amount), 0);
+  const { divisor: amountDivisor, label: amountUnit } = getCurrencyScale(maxPipelineAmount);
+  const pipelineChart = pipelineChartRaw.map((item) => ({
+    stage: item.stage,
+    value: Number((item.amount / amountDivisor).toFixed(2)),
+    deals: item.deals,
   }));
 
   const ownerNameMap = new Map<string, string>();
@@ -55,7 +70,10 @@ export default async function DashboardPage() {
         <Card>
           <p className="text-xs uppercase tracking-wide text-slate-500">開いている案件</p>
           <p className="mt-2 text-3xl font-bold">{openDeals}</p>
-          <p className="text-xs text-slate-400">すべてのパイプラインにおける OPEN ステータス</p>
+          {(() => {
+            const { label } = getOpportunityStatusMeta('OPEN');
+            return <p className="text-xs text-slate-400">すべてのパイプラインにおける {label} 案件</p>;
+          })()}
         </Card>
         <Card>
           <p className="text-xs uppercase tracking-wide text-slate-500">パイプライン総額</p>
@@ -76,22 +94,25 @@ export default async function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="min-w-0">
               <h2 className="text-lg font-semibold">ステージ別金額</h2>
-              <p className="text-sm text-slate-500">Pipeline Stage Summary</p>
+              <p className="text-sm text-slate-500">ステージ別サマリー</p>
+              <p className="text-xs text-slate-400">単位: {amountUnit}</p>
             </div>
-            <span className="text-2xl font-bold text-blue-600">{formatCurrency(pipelineChart.reduce((acc, item) => acc + item.amount, 0))}</span>
+            <span className="whitespace-nowrap text-2xl font-bold text-blue-600">
+              {formatCurrency(pipelineChartRaw.reduce((acc, item) => acc + item.amount, 0))}
+            </span>
           </div>
-          <div className="mt-6">
-            <PipelineChart data={pipelineChart} />
+          <div className="mt-6 min-w-0 overflow-x-auto">
+            <PipelineChart data={pipelineChart} unitLabel={amountUnit} />
           </div>
         </Card>
         <Card>
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold">担当者別パイプライン</h2>
-              <p className="text-sm text-slate-500">Owner Pipeline Report</p>
+              <p className="text-sm text-slate-500">担当者別サマリー</p>
             </div>
           </div>
           <div className="mt-6">
@@ -113,7 +134,7 @@ export default async function DashboardPage() {
               <div key={activity.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900" data-testid="dashboard-activity">
                 <p className="text-sm font-semibold">{activity.subject}</p>
                 <p className="text-xs text-slate-500">
-                  {activity.type} ・ {formatDateTime(activity.occurredAt)} ・ {formatUserName(activity.user?.firstName, activity.user?.lastName, activity.user?.email)}
+                  {getActivityTypeLabel(activity.type)} ・ {formatDateTime(activity.occurredAt)} ・ {formatUserName(activity.user?.firstName, activity.user?.lastName, activity.user?.email)}
                 </p>
                 {activity.account && <p className="text-xs text-slate-400">{activity.account.name}</p>}
               </div>
@@ -133,9 +154,15 @@ export default async function DashboardPage() {
                 <p className="font-medium" data-testid="dashboard-task">
                   {task.title}
                 </p>
-                <p className="text-xs text-slate-500">
-                  {task.status} ・ {task.dueDate ? `期限 ${formatDateTime(task.dueDate)}` : '期限未設定'}
-                </p>
+                {(() => {
+                  const { label, tone } = getTaskStatusMeta(task.status);
+                  return (
+                    <div className="text-xs text-slate-500">
+                      <StatusBadge label={label} tone={tone} className="mr-2" />
+                      {task.dueDate ? `期限 ${formatDateTime(task.dueDate)}` : '期限未設定'}
+                    </div>
+                  );
+                })()}
               </li>
             ))}
           </ul>

@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { apiFetch } from '../api-client';
@@ -30,9 +29,15 @@ export async function createActivityAction(_state: { error?: string } | undefine
     });
     revalidatePath('/activities');
     revalidatePath('/tasks');
-    redirect('/activities');
+    return { ok: true };
   } catch (error) {
     console.error(error);
     return { error: '活動の記録に失敗しました。' };
   }
+}
+
+export async function deleteActivityAction(activityId: string) {
+  await apiFetch(`/activities/${activityId}`, { method: 'DELETE' });
+  revalidatePath('/activities');
+  revalidatePath('/tasks');
 }

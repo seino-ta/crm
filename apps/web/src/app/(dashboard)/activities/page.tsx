@@ -2,6 +2,8 @@ import { ActivityForm } from './activity-form';
 import { getCurrentUser } from '@/lib/auth';
 import { listAccounts, listActivities, listOpportunities } from '@/lib/data';
 import { formatDateTime, formatUserName } from '@/lib/formatters';
+import { getActivityTypeLabel } from '@/lib/labels';
+import { DeleteActivityButton } from '@/components/activities/delete-activity-button';
 import { Card } from '@/components/ui/card';
 
 export default async function ActivitiesPage() {
@@ -24,11 +26,16 @@ export default async function ActivitiesPage() {
           <div className="mt-4 space-y-4">
             {activities.data.map((activity) => (
               <div key={activity.id} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900" data-testid="activity-row">
-                <p className="text-sm font-semibold">{activity.subject}</p>
-                <p className="text-xs text-slate-500">
-                  {activity.type} ・ {formatDateTime(activity.occurredAt)} ・ {formatUserName(activity.user?.firstName, activity.user?.lastName, activity.user?.email)}
-                </p>
-                {activity.account && <p className="text-xs text-slate-400">{activity.account.name}</p>}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold">{activity.subject}</p>
+                    <p className="text-xs text-slate-500">
+                      {getActivityTypeLabel(activity.type)} ・ {formatDateTime(activity.occurredAt)} ・ {formatUserName(activity.user?.firstName, activity.user?.lastName, activity.user?.email)}
+                    </p>
+                    {activity.account && <p className="text-xs text-slate-400">{activity.account.name}</p>}
+                  </div>
+                  <DeleteActivityButton activityId={activity.id} />
+                </div>
                 {activity.description && <p className="mt-2 text-sm text-slate-600">{activity.description}</p>}
               </div>
             ))}

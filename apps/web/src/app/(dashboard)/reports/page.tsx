@@ -3,6 +3,7 @@ import { PipelineChart } from '@/components/charts/pipeline-chart';
 import { OwnerChart } from '@/components/charts/owner-chart';
 import { formatCurrency } from '@/lib/formatters';
 import { getOwnerReport, getStageReport, listOpportunities, listPipelineStages } from '@/lib/data';
+import { getCurrencyScale } from '@/lib/chart-scale';
 
 export default async function ReportsPage() {
   const [stageReport, ownerReport, stages, opportunities] = await Promise.all([
@@ -32,16 +33,25 @@ export default async function ReportsPage() {
     deals: row._count._all,
   }));
 
+  const maxStageAmount = stageRows.reduce((max, row) => Math.max(max, row.amount), 0);
+  const { divisor: stageDivisor, label: stageUnit } = getCurrencyScale(maxStageAmount);
+  const stageChart = stageRows.map((row) => ({
+    stage: row.name,
+    value: Number((row.amount / stageDivisor).toFixed(2)),
+    deals: row.deals,
+  }));
+
   return (
     <div className="space-y-10" data-testid="reports-page">
       <div className="page-header">
         <h1>レポート</h1>
-        <p>Playwright でスクリーンショットを取得する対象ページです。</p>
+        <p>ステージ/担当者別の金額・件数を把握し、パイプラインの偏りを分析できます。</p>
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <h2 className="text-lg font-semibold">ステージ別</h2>
-          <PipelineChart data={stageRows.map((row) => ({ stage: row.name, amount: row.amount, deals: row.deals }))} />
+          <p className="text-xs text-slate-400">単位: {stageUnit}</p>
+          <PipelineChart data={stageChart} unitLabel={stageUnit} />
           <table className="mt-4 w-full text-sm">
             <thead>
               <tr className="text-xs uppercase text-slate-500">

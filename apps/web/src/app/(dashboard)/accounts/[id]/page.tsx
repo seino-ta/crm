@@ -2,11 +2,19 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { AccountForm } from '../account-form';
-import { deleteAccountAction, updateAccountAction } from '@/lib/actions/accounts';
+import { updateAccountAction } from '@/lib/actions/accounts';
 import { getAccount, listActivities, listOpportunities, listTasks } from '@/lib/data';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { DeleteAccountButton } from '@/components/accounts/delete-account-button';
+import { StatusBadge } from '@/components/ui/status-badge';
+import {
+  getAccountStatusMeta,
+  getActivityTypeLabel,
+  getPipelineStageLabel,
+  getTaskStatusMeta,
+} from '@/lib/labels';
 
 export default async function AccountDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -31,11 +39,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
         <Card>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">基本情報</h2>
-            <form action={deleteAccountAction.bind(null, account.id)}>
-              <Button type="submit" variant="ghost">
-                削除
-              </Button>
-            </form>
+            <DeleteAccountButton accountId={account.id} />
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
@@ -52,7 +56,10 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
             </div>
             <div>
               <p className="text-xs text-slate-500">ステータス</p>
-              <p className="text-base">{account.status}</p>
+              {(() => {
+                const { label, tone } = getAccountStatusMeta(account.status);
+                return <StatusBadge label={label} tone={tone} />;
+              })()}
             </div>
           </div>
           <div className="mt-6">
@@ -79,7 +86,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
             {activities.data.map((activity) => (
               <div key={activity.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900">
                 <p className="text-sm font-medium">{activity.subject}</p>
-                <p className="text-xs text-slate-500">{activity.type} ・ {formatDateTime(activity.occurredAt)}</p>
+                <p className="text-xs text-slate-500">{getActivityTypeLabel(activity.type)} ・ {formatDateTime(activity.occurredAt)}</p>
               </div>
             ))}
           </div>
@@ -104,7 +111,7 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
                   <td className="px-2 py-2">
                     <Link href={`/opportunities/${opp.id}`} className="text-blue-600">{opp.name}</Link>
                   </td>
-                  <td className="px-2 py-2">{opp.stage?.name ?? '—'}</td>
+                  <td className="px-2 py-2">{getPipelineStageLabel(opp.stage?.name)}</td>
                   <td className="px-2 py-2 text-right">{formatCurrency(opp.amount)}</td>
                 </tr>
               ))}
@@ -117,7 +124,15 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
             {tasks.data.map((task) => (
               <div key={task.id} className="rounded-xl border border-slate-100 p-3 dark:border-slate-800" data-testid="account-task">
                 <p className="text-sm font-medium">{task.title}</p>
-                <p className="text-xs text-slate-500">{task.status} ・ {task.dueDate ? formatDateTime(task.dueDate) : '期限未設定'}</p>
+                {(() => {
+                  const { label, tone } = getTaskStatusMeta(task.status);
+                  return (
+                    <p className="text-xs text-slate-500">
+                      <StatusBadge label={label} tone={tone} className="mr-2" />
+                      {task.dueDate ? formatDateTime(task.dueDate) : '期限未設定'}
+                    </p>
+                  );
+                })()}
               </div>
             ))}
           </div>

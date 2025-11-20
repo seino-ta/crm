@@ -2,9 +2,12 @@ import { TaskForm } from './task-form';
 import { getCurrentUser } from '@/lib/auth';
 import { listAccounts, listOpportunities, listTasks } from '@/lib/data';
 import { formatDateTime, formatUserName } from '@/lib/formatters';
+import { getTaskStatusMeta } from '@/lib/labels';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { toggleTaskStatusAction } from '@/lib/actions/tasks';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { DeleteTaskButton } from '@/components/tasks/delete-task-button';
 
 export default async function TasksPage() {
   const user = await getCurrentUser();
@@ -31,18 +34,32 @@ export default async function TasksPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-semibold">{task.title}</p>
-                      <p className="text-xs text-slate-500">
-                        {task.status} ・ {task.dueDate ? formatDateTime(task.dueDate) : '期限未設定'}
-                      </p>
+                      {(() => {
+                        const { label, tone } = getTaskStatusMeta(task.status);
+                        return (
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                            <StatusBadge label={label} tone={tone} />
+                            <span>{task.dueDate ? formatDateTime(task.dueDate) : '期限未設定'}</span>
+                          </div>
+                        );
+                      })()}
                       <p className="text-xs text-slate-400">
                         {formatUserName(task.owner?.firstName, task.owner?.lastName, task.owner?.email)}
                       </p>
                     </div>
-                    <form action={toggle}>
-                      <Button type="submit" variant={task.status === 'COMPLETED' ? 'ghost' : 'secondary'} data-testid="task-toggle">
-                        {task.status === 'COMPLETED' ? '再オープン' : '完了'}
-                      </Button>
-                    </form>
+                    <div className="flex items-center gap-2">
+                      <form action={toggle}>
+                        <Button
+                          type="submit"
+                          size="sm"
+                          variant={task.status === 'COMPLETED' ? 'secondary' : 'primary'}
+                          data-testid="task-toggle"
+                        >
+                          {task.status === 'COMPLETED' ? '再オープン' : '完了にする'}
+                        </Button>
+                      </form>
+                      <DeleteTaskButton taskId={task.id} />
+                    </div>
                   </div>
                   {task.description && <p className="mt-2 text-sm text-slate-600">{task.description}</p>}
                 </div>

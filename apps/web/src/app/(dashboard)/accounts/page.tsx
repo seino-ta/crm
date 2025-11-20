@@ -7,6 +7,8 @@ import { formatCurrency } from '@/lib/formatters';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { getAccountStatusMeta } from '@/lib/labels';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 export default async function AccountsPage({
   searchParams,
@@ -55,7 +57,10 @@ export default async function AccountsPage({
                     <td className="px-4 py-3">{account.industry ?? '—'}</td>
                     <td className="px-4 py-3">{formatCurrency(account.annualRevenue)}</td>
                     <td className="px-4 py-3">
-                      <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium">{account.status}</span>
+                      {(() => {
+                        const { label, tone } = getAccountStatusMeta(account.status);
+                        return <StatusBadge label={label} tone={tone} />;
+                      })()}
                     </td>
                   </tr>
                 ))}

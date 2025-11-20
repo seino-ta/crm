@@ -7,6 +7,13 @@ import { updateOpportunityStageAction } from '@/lib/actions/opportunities';
 import { Card } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { StatusBadge } from '@/components/ui/status-badge';
+import {
+  getActivityTypeLabel,
+  getOpportunityStatusMeta,
+  getPipelineStageLabel,
+  getTaskStatusMeta,
+} from '@/lib/labels';
 
 export default async function OpportunityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,7 +29,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
     <div className="space-y-8" data-testid="opportunity-detail-page">
       <div className="page-header">
         <h1>{opportunity.name}</h1>
-        <p>{opportunity.account?.name ?? 'アカウント未設定'} ・ {opportunity.stage?.name ?? 'ステージ不明'}</p>
+        <p>{opportunity.account?.name ?? 'アカウント未設定'} ・ {getPipelineStageLabel(opportunity.stage?.name)}</p>
       </div>
       <div className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
         <Card>
@@ -38,12 +45,12 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
               <Select name="stageId" defaultValue={opportunity.stageId}>
                 {stages.map((stage) => (
                   <option key={stage.id} value={stage.id}>
-                    {stage.name}
+                    {getPipelineStageLabel(stage.name)}
                   </option>
                 ))}
               </Select>
-              <Button type="submit" variant="secondary" className="w-full">
-                ステージ更新
+              <Button type="submit" variant="primary" size="sm" className="w-full">
+                ステージを更新
               </Button>
             </form>
           </div>
@@ -58,7 +65,10 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
             </div>
             <div>
               <p className="text-xs text-slate-500">ステータス</p>
-              <p className="text-base">{opportunity.status}</p>
+              {(() => {
+                const { label, tone } = getOpportunityStatusMeta(opportunity.status);
+                return <StatusBadge label={label} tone={tone} />;
+              })()}
             </div>
             <div>
               <p className="text-xs text-slate-500">最終更新</p>
@@ -85,7 +95,15 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
               {tasks.data.map((task) => (
                 <li key={task.id} className="rounded-xl border border-slate-100 p-3 text-sm dark:border-slate-800">
                   <p className="font-medium">{task.title}</p>
-                  <p className="text-xs text-slate-500">{task.status} ・ {task.dueDate ? formatDateTime(task.dueDate) : '期限未設定'}</p>
+                  {(() => {
+                    const { label, tone } = getTaskStatusMeta(task.status);
+                    return (
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <StatusBadge label={label} tone={tone} />
+                        <span>{task.dueDate ? formatDateTime(task.dueDate) : '期限未設定'}</span>
+                      </div>
+                    );
+                  })()}
                 </li>
               ))}
             </ul>
@@ -99,7 +117,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
             <div key={activity.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm font-semibold">{activity.subject}</p>
               <p className="text-xs text-slate-500">
-                {activity.type} ・ {formatDateTime(activity.occurredAt)} ・ {formatUserName(activity.user?.firstName, activity.user?.lastName, activity.user?.email)}
+                {getActivityTypeLabel(activity.type)} ・ {formatDateTime(activity.occurredAt)} ・ {formatUserName(activity.user?.firstName, activity.user?.lastName, activity.user?.email)}
               </p>
             </div>
           ))}

@@ -1,12 +1,15 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { createOpportunityAction } from '@/lib/actions/opportunities';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { getPipelineStageLabel } from '@/lib/labels';
+import { RequiredMark } from '@/components/ui/required-mark';
 
 export type OpportunityFormProps = {
   accounts: { id: string; name: string }[];
@@ -16,32 +19,54 @@ export type OpportunityFormProps = {
 };
 
 export function OpportunityForm({ accounts, stages, contacts, ownerId }: OpportunityFormProps) {
-  const [state, formAction] = useActionState(createOpportunityAction, undefined);
+  const router = useRouter();
+  const [state, formAction] = useActionState<{ ok?: boolean; error?: string } | undefined, FormData>(createOpportunityAction, undefined);
+
+  useEffect(() => {
+    if (state?.ok) {
+      router.refresh();
+    }
+  }, [state, router]);
 
   return (
     <form action={formAction} className="space-y-4" data-testid="opportunity-form">
-      <Input name="name" placeholder="案件名" required />
+      <div className="space-y-1">
+        <label htmlFor="opportunity-name" className="text-sm font-medium text-slate-600">
+          案件名<RequiredMark />
+        </label>
+        <Input id="opportunity-name" name="name" placeholder="案件名" required />
+      </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Select name="accountId" required defaultValue="">
-          <option value="" disabled>
-            アカウントを選択
-          </option>
-          {accounts.map((account) => (
-            <option key={account.id} value={account.id}>
-              {account.name}
+        <div className="space-y-1">
+          <label htmlFor="opportunity-account" className="text-sm font-medium text-slate-600">
+            アカウント<RequiredMark />
+          </label>
+          <Select id="opportunity-account" name="accountId" required defaultValue="">
+            <option value="" disabled>
+              アカウントを選択
             </option>
-          ))}
-        </Select>
-        <Select name="stageId" required defaultValue="">
-          <option value="" disabled>
-            ステージを選択
-          </option>
-          {stages.map((stage) => (
-            <option key={stage.id} value={stage.id}>
-              {stage.name}
+            {accounts.map((account) => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="opportunity-stage" className="text-sm font-medium text-slate-600">
+            ステージ<RequiredMark />
+          </label>
+          <Select id="opportunity-stage" name="stageId" required defaultValue="">
+            <option value="" disabled>
+              ステージを選択
             </option>
-          ))}
-        </Select>
+            {stages.map((stage) => (
+              <option key={stage.id} value={stage.id}>
+                {getPipelineStageLabel(stage.name)}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Input name="amount" type="number" min={0} placeholder="金額" />

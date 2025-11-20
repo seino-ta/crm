@@ -23,13 +23,22 @@ const opportunitySchema = z.object({
   amount: z
     .preprocess((val) => (val === '' || val === null ? undefined : Number(val)), z.number().nonnegative().optional())
     .optional(),
-  currency: z.string().min(3).max(10).default('USD'),
+  currency: z.string().min(3).max(10).default('JPY'),
   probability: z
     .preprocess((val) => (val === '' || val === null ? undefined : Number(val)), z.number().min(0).max(100).optional())
     .optional(),
   status: z.string().optional(),
   expectedCloseDate: z
-    .preprocess((val) => (val === '' || val === null ? undefined : val), z.string().datetime({ offset: false }).optional())
+    .preprocess((val) => {
+      if (val === '' || val === null) return undefined;
+      if (typeof val === 'string') {
+        const date = new Date(val);
+        if (!Number.isNaN(date.getTime())) {
+          return date.toISOString();
+        }
+      }
+      return val;
+    }, z.string().datetime({ offset: false }).optional())
     .optional(),
   description: z.string().max(4000).optional().or(z.literal('')).transform((val) => (val ? val : undefined)),
 });
@@ -45,7 +54,7 @@ export async function createOpportunityAction(_state: { error?: string } | undef
       body: JSON.stringify(parsed.data),
     });
     revalidatePath('/opportunities');
-    redirect('/opportunities');
+    return { ok: true };
   } catch (error) {
     console.error(error);
     return { error: '案件の作成に失敗しました。' };
@@ -61,6 +70,7 @@ export async function updateOpportunityStageAction(opportunityId: string, formDa
     });
     revalidatePath('/opportunities');
     revalidatePath(`/opportunities/${opportunityId}`);
+    redirect(`/opportunities/${opportunityId}`);
   } catch (error) {
     console.error(error);
     return { error: 'ステージ更新に失敗しました。' };

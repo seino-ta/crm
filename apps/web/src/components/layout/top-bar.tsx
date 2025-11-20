@@ -16,7 +16,7 @@ export function TopBar({ user, actions }: { user: User; actions?: ReactNode }) {
       <div className="flex items-center gap-3">
         {actions}
         <form action={logoutAction}>
-          <Button type="submit" variant="ghost">
+          <Button type="submit" variant="secondary" size="sm">
             ログアウト
           </Button>
         </form>

@@ -6,6 +6,7 @@ import { loginAction } from '@/lib/actions/auth';
 import type { AuthFormState } from '@/lib/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { RequiredMark } from '@/components/ui/required-mark';
 
 export function LoginForm() {
   const [state, action] = useActionState<AuthFormState | undefined, FormData>(loginAction, undefined);
@@ -15,13 +16,13 @@ export function LoginForm() {
     <form action={action} className="space-y-4" data-testid="login-form">
       <div>
         <label htmlFor="email" className="text-sm font-medium text-slate-600">
-          メールアドレス
+          メールアドレス<RequiredMark />
         </label>
         <Input type="email" id="email" name="email" required placeholder="admin@crm.local" autoFocus data-testid="login-email" />
       </div>
       <div>
         <label htmlFor="password" className="text-sm font-medium text-slate-600">
-          パスワード
+          パスワード<RequiredMark />
         </label>
         <div className="relative">
           <Input

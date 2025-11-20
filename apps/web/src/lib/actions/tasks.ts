@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { apiFetch } from '../api-client';
@@ -29,7 +28,7 @@ export async function createTaskAction(_state: { error?: string } | undefined, f
       body: JSON.stringify(parsed.data),
     });
     revalidatePath('/tasks');
-    redirect('/tasks');
+    return { ok: true };
   } catch (error) {
     console.error(error);
     return { error: 'タスクの作成に失敗しました。' };
@@ -43,4 +42,10 @@ export async function toggleTaskStatusAction(taskId: string, currentStatus: stri
     body: JSON.stringify({ status: nextStatus }),
   });
   revalidatePath('/tasks');
+}
+
+export async function deleteTaskAction(taskId: string) {
+  await apiFetch(`/tasks/${taskId}`, { method: 'DELETE' });
+  revalidatePath('/tasks');
+  revalidatePath('/activities');
 }

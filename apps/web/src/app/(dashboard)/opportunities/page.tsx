@@ -1,8 +1,11 @@
+import Link from 'next/link';
+
 import { OpportunityForm } from './opportunity-form';
 import { getCurrentUser } from '@/lib/auth';
 import { listAccounts, listContacts, listOpportunities, listPipelineStages } from '@/lib/data';
 import { formatCurrency, formatDate, formatUserName } from '@/lib/formatters';
 import { Card } from '@/components/ui/card';
+import { getPipelineStageLabel } from '@/lib/labels';
 
 export default async function OpportunitiesPage() {
   const user = await getCurrentUser();
@@ -32,12 +35,12 @@ export default async function OpportunitiesPage() {
             {grouped.map(({ stage, items }) => (
               <div key={stage.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900" data-testid="opportunity-stage">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold">{stage.name}</p>
+                  <p className="text-sm font-semibold">{getPipelineStageLabel(stage.name)}</p>
                   <span className="text-xs text-slate-500">{items.length} 件</span>
                 </div>
                 <div className="mt-3 space-y-3">
                   {items.map((opp) => (
-                    <div key={opp.id} className="rounded-xl bg-white p-3 shadow-sm dark:bg-slate-950">
+                    <Link key={opp.id} href={`/opportunities/${opp.id}`} className="block rounded-xl bg-white p-3 shadow-sm transition hover:ring-2 hover:ring-blue-200 dark:bg-slate-950">
                       <p className="text-sm font-semibold text-blue-600">{opp.name}</p>
                       <p className="text-xs text-slate-500">
                         {opp.account?.name ?? '未設定'} ・ {formatCurrency(opp.amount)}
@@ -45,7 +48,7 @@ export default async function OpportunitiesPage() {
                       <p className="text-xs text-slate-400">
                         {formatUserName(opp.owner?.firstName, opp.owner?.lastName, opp.owner?.email)}
                       </p>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -86,7 +89,7 @@ export default async function OpportunitiesPage() {
                   </td>
                   <td className="px-2 py-2">{opp.account?.name ?? '—'}</td>
                   <td className="px-2 py-2">{formatUserName(opp.owner?.firstName, opp.owner?.lastName, opp.owner?.email)}</td>
-                  <td className="px-2 py-2">{opp.stage?.name ?? '—'}</td>
+                  <td className="px-2 py-2">{getPipelineStageLabel(opp.stage?.name)}</td>
                   <td className="px-2 py-2 text-right">{formatCurrency(opp.amount)}</td>
                   <td className="px-2 py-2">{formatDate(opp.expectedCloseDate)}</td>
                 </tr>

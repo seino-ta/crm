@@ -1,10 +1,16 @@
 import { format, parseISO } from 'date-fns';
 
-export function formatCurrency(value?: string | number | null, currency = 'USD') {
+export function formatCurrency(value?: string | number | null, currency = 'JPY') {
   if (value === undefined || value === null) return '—';
   const amount = typeof value === 'string' ? Number(value) : value;
   if (Number.isNaN(amount)) return '—';
-  return new Intl.NumberFormat('ja-JP', { style: 'currency', currency }).format(amount);
+  const isJPY = currency === 'JPY';
+  return new Intl.NumberFormat('ja-JP', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: isJPY ? 0 : undefined,
+    maximumFractionDigits: isJPY ? 0 : undefined,
+  }).format(amount);
 }
 
 export function formatPercent(value?: number | null) {

@@ -1,14 +1,15 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { createTaskAction } from '@/lib/actions/tasks';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-
-const priorities = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+import { TASK_PRIORITY_OPTIONS } from '@/lib/labels';
+import { RequiredMark } from '@/components/ui/required-mark';
 
 type TaskFormProps = {
   accounts: { id: string; name: string }[];
@@ -17,19 +18,36 @@ type TaskFormProps = {
 };
 
 export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
-  const [state, formAction] = useActionState(createTaskAction, undefined);
+  const router = useRouter();
+  const [state, formAction] = useActionState<{ ok?: boolean; error?: string } | undefined, FormData>(createTaskAction, undefined);
+
+  useEffect(() => {
+    if (state?.ok) {
+      router.refresh();
+    }
+  }, [state, router]);
 
   return (
     <form action={formAction} className="space-y-4" data-testid="task-form">
-      <Input name="title" placeholder="タスク名" required />
+      <div className="space-y-1">
+        <label htmlFor="task-title" className="text-sm font-medium text-slate-600">
+          タスク名<RequiredMark />
+        </label>
+        <Input id="task-title" name="title" placeholder="タスク名" required />
+      </div>
       <Textarea name="description" rows={3} placeholder="詳細" />
-      <Select name="priority" defaultValue="MEDIUM">
-        {priorities.map((priority) => (
-          <option key={priority} value={priority}>
-            {priority}
-          </option>
-        ))}
-      </Select>
+      <div className="space-y-1">
+        <label htmlFor="task-priority" className="text-sm font-medium text-slate-600">
+          優先度<RequiredMark />
+        </label>
+        <Select id="task-priority" name="priority" defaultValue="MEDIUM">
+          {TASK_PRIORITY_OPTIONS.map((priority) => (
+            <option key={priority.value} value={priority.value}>
+              {priority.label}
+            </option>
+          ))}
+        </Select>
+      </div>
       <Input name="dueDate" type="date" />
       <Select name="accountId" defaultValue="">
         <option value="">アカウントなし</option>

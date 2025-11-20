@@ -37,7 +37,7 @@ export async function createAccountAction(_state: { error?: string } | undefined
       body: JSON.stringify(parsed.data),
     });
     revalidatePath('/accounts');
-    redirect('/accounts');
+    return { ok: true };
   } catch (error) {
     console.error(error);
     return { error: 'アカウントの作成に失敗しました。' };

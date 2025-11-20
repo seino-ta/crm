@@ -1,14 +1,15 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { createActivityAction } from '@/lib/actions/activities';
 import { Select } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-
-const types = ['CALL', 'EMAIL', 'MEETING', 'NOTE', 'OTHER'];
+import { ACTIVITY_TYPE_OPTIONS } from '@/lib/labels';
+import { RequiredMark } from '@/components/ui/required-mark';
 
 type ActivityFormProps = {
   accounts: { id: string; name: string }[];
@@ -17,18 +18,35 @@ type ActivityFormProps = {
 };
 
 export function ActivityForm({ accounts, opportunities, userId }: ActivityFormProps) {
-  const [state, formAction] = useActionState(createActivityAction, undefined);
+  const router = useRouter();
+  const [state, formAction] = useActionState<{ ok?: boolean; error?: string } | undefined, FormData>(createActivityAction, undefined);
+
+  useEffect(() => {
+    if (state?.ok) {
+      router.refresh();
+    }
+  }, [state, router]);
 
   return (
     <form action={formAction} className="space-y-4" data-testid="activity-form">
-      <Select name="type" defaultValue="CALL">
-        {types.map((type) => (
-          <option key={type} value={type}>
-            {type}
-          </option>
-        ))}
-      </Select>
-      <Input name="subject" placeholder="件名" required />
+      <div className="space-y-1">
+        <label htmlFor="activity-type" className="text-sm font-medium text-slate-600">
+          活動タイプ<RequiredMark />
+        </label>
+        <Select id="activity-type" name="type" defaultValue="CALL">
+          {ACTIVITY_TYPE_OPTIONS.map((type) => (
+            <option key={type.value} value={type.value}>
+              {type.label}
+            </option>
+          ))}
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <label htmlFor="activity-subject" className="text-sm font-medium text-slate-600">
+          件名<RequiredMark />
+        </label>
+        <Input id="activity-subject" name="subject" placeholder="件名" required />
+      </div>
       <Textarea name="description" rows={3} placeholder="詳細" />
       <Select name="accountId" defaultValue="">
         <option value="">アカウントなし</option>
