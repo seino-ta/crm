@@ -8,7 +8,7 @@ import { Select } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { SuccessModal } from '@/components/ui/success-modal';
+import { SuccessToast } from '@/components/ui/success-modal';
 import { ACTIVITY_TYPE_OPTIONS } from '@/lib/labels';
 import { RequiredMark } from '@/components/ui/required-mark';
 
@@ -70,7 +70,7 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
         ))}
       </Select>
       <input type="hidden" name="userId" value={userId} />
-      <SuccessModal open={showModal} message="活動を追加しました。" />
+      <SuccessToast open={showModal} message="活動を追加しました。" />
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full">
         活動を追加

@@ -23,7 +23,7 @@ export function Sidebar({ role }: { role: UserRole }) {
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col gap-6 border-r border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-blue-600">CRM</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">CRM</p>
         <p className="text-xl font-bold text-slate-900 dark:text-white">Revenue Desk</p>
       </div>
       <nav className="flex-1">
@@ -50,7 +50,7 @@ export function Sidebar({ role }: { role: UserRole }) {
         </ul>
         {role === 'ADMIN' && (
           <div className="mt-8 space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">管理者メニュー</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">管理者メニュー</p>
             <ul className="space-y-1">
               {adminNavItems.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);

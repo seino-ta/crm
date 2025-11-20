@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { PipelineStage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
-import { SuccessModal } from '@/components/ui/success-modal';
+import { SuccessToast } from '@/components/ui/success-modal';
 
 export function StageUpdateForm({
   action,
@@ -42,7 +42,7 @@ export function StageUpdateForm({
       <Button type="submit" variant="primary" size="sm" className="w-full">
         ステージを更新
       </Button>
-      <SuccessModal open={showModal} message="ステージを更新しました。" />
+      <SuccessToast open={showModal} message="ステージを更新しました。" />
       {state?.error && <p className="text-xs text-rose-600 text-center">{state.error}</p>}
     </form>
   );

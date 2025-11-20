@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { SuccessModal } from '@/components/ui/success-modal';
+import { SuccessToast } from '@/components/ui/success-modal';
 import { getPipelineStageLabel } from '@/lib/labels';
 import { RequiredMark } from '@/components/ui/required-mark';
 
@@ -90,7 +90,7 @@ export function OpportunityForm({ accounts, stages, contacts, ownerId }: Opportu
       </div>
       <Textarea name="description" rows={3} placeholder="メモ" />
       <input type="hidden" name="ownerId" value={ownerId} />
-      <SuccessModal open={showModal} message="案件を登録しました。" />
+      <SuccessToast open={showModal} message="案件を登録しました。" />
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full">
         案件を登録

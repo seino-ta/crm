@@ -61,8 +61,19 @@ export async function createOpportunityAction(_state: { error?: string } | undef
   }
 }
 
-export async function updateOpportunityStageAction(opportunityId: string, formData: FormData) {
+export async function updateOpportunityStageAction(
+  opportunityId: string,
+  _prevState: { ok?: boolean; error?: string } | undefined,
+  formData: FormData | undefined
+) {
+  if (!(formData instanceof FormData)) {
+    return { error: 'ステージ情報を受信できませんでした。' };
+  }
+
   const stageId = formData.get('stageId');
+  if (!stageId || typeof stageId !== 'string') {
+    return { error: 'ステージを選択してください。' };
+  }
   try {
     await apiFetch(`/opportunities/${opportunityId}`, {
       method: 'PUT',

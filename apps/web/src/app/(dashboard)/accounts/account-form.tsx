@@ -9,7 +9,7 @@ import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ACCOUNT_STATUS_OPTIONS } from '@/lib/labels';
 import { RequiredMark } from '@/components/ui/required-mark';
-import { SuccessModal } from '@/components/ui/success-modal';
+import { SuccessToast } from '@/components/ui/success-modal';
 
 type AccountFormProps = {
   action: (state: { error?: string } | undefined, formData: FormData) => Promise<{ ok?: boolean; error?: string } | void>;
@@ -74,7 +74,7 @@ export function AccountForm({ action, submitLabel, initialValues }: AccountFormP
         </Select>
       </div>
       <Textarea name="description" rows={3} defaultValue={initialValues?.description ?? ''} placeholder="概要" aria-label="概要" />
-      <SuccessModal open={showModal} message="アカウントを保存しました。" />
+      <SuccessToast open={showModal} message="アカウントを保存しました。" />
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full" data-testid="account-submit">
         {submitLabel}

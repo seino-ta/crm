@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { SuccessModal } from '@/components/ui/success-modal';
+import { SuccessToast } from '@/components/ui/success-modal';
 import { TASK_PRIORITY_OPTIONS } from '@/lib/labels';
 import { RequiredMark } from '@/components/ui/required-mark';
 
@@ -71,7 +71,7 @@ export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
         ))}
       </Select>
       <input type="hidden" name="ownerId" value={ownerId} />
-      <SuccessModal open={showModal} message="タスクを追加しました。" />
+      <SuccessToast open={showModal} message="タスクを追加しました。" />
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full">
         タスクを追加
