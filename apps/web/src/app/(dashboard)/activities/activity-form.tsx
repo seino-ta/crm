@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { createActivityAction } from '@/lib/actions/activities';
@@ -23,7 +23,10 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
 
   useEffect(() => {
     if (state?.ok) {
+      setShowModal(true);
+      const timer = setTimeout(() => setShowModal(false), 2000);
       router.refresh();
+      return () => clearTimeout(timer);
     }
   }, [state, router]);
 
@@ -65,7 +68,11 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
         ))}
       </Select>
       <input type="hidden" name="userId" value={userId} />
-      {state?.ok && <p className="text-sm text-emerald-600">保存しました。</p>}
+      {showModal && (
+        <div className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
+          活動を追加しました。
+        </div>
+      )}
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full">
         活動を追加

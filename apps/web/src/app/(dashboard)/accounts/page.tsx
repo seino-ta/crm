@@ -29,8 +29,9 @@ export default async function AccountsPage({
         <Card>
           <div className="mb-4 flex items-center justify-between gap-4">
             <form className="flex flex-1 items-center gap-2" action="/accounts" method="get">
+              
               <Input name="search" placeholder="キーワード検索" defaultValue={search} />
-              <Button type="submit" variant="secondary">
+              <Button type="submit" variant="primary" size="sm">
                 検索
               </Button>
             </form>

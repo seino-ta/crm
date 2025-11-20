@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { createOpportunityAction } from '@/lib/actions/opportunities';
@@ -24,7 +24,10 @@ export function OpportunityForm({ accounts, stages, contacts, ownerId }: Opportu
 
   useEffect(() => {
     if (state?.ok) {
+      setShowModal(true);
+      const timer = setTimeout(() => setShowModal(false), 2000);
       router.refresh();
+      return () => clearTimeout(timer);
     }
   }, [state, router]);
 
@@ -85,7 +88,11 @@ export function OpportunityForm({ accounts, stages, contacts, ownerId }: Opportu
       </div>
       <Textarea name="description" rows={3} placeholder="メモ" />
       <input type="hidden" name="ownerId" value={ownerId} />
-      {state?.ok && <p className="text-sm text-emerald-600">登録しました。</p>}
+      {showModal && (
+        <div className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
+          案件を登録しました。
+        </div>
+      )}
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full">
         案件を登録

@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { createTaskAction } from '@/lib/actions/tasks';
@@ -23,7 +23,10 @@ export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
 
   useEffect(() => {
     if (state?.ok) {
+      setShowModal(true);
+      const timer = setTimeout(() => setShowModal(false), 2000);
       router.refresh();
+      return () => clearTimeout(timer);
     }
   }, [state, router]);
 
@@ -66,7 +69,11 @@ export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
         ))}
       </Select>
       <input type="hidden" name="ownerId" value={ownerId} />
-      {state?.ok && <p className="text-sm text-emerald-600">保存しました。</p>}
+      {showModal && (
+        <div className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
+          タスクを追加しました。
+        </div>
+      )}
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full">
         タスクを追加
