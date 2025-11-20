@@ -91,7 +91,7 @@ export async function getOpportunityById(id: string) {
   return opportunity;
 }
 
-export async function createOpportunity(payload: CreateOpportunityInput) {
+export async function createOpportunity(payload: CreateOpportunityInput, actorId?: string) {
   await ensureAccount(payload.accountId);
   await ensureOwner(payload.ownerId);
   const stage = await ensureStage(payload.stageId);
@@ -119,31 +119,22 @@ export async function createOpportunity(payload: CreateOpportunityInput) {
     include: { account: true, owner: true, stage: true, contact: true },
   });
 
-  await recordAudit(opportunity.id, AuditAction.CREATE, { id: opportunity.id });
+  await createAuditLogEntry({
+    entityType: 'Opportunity',
+    entityId: opportunity.id,
+    action: AuditAction.CREATE,
+    actorId,
+    opportunityId: opportunity.id,
+    changes: payload,
+  });
 
   return opportunity;
-}
-
-function serializeChanges(changes: Record<string, unknown>): Prisma.InputJsonValue {
-  return JSON.parse(JSON.stringify(changes)) as Prisma.InputJsonValue;
 }
 
 function addDays(date: Date, days: number) {
   const result = new Date(date);
   result.setDate(result.getDate() + days);
   return result;
-}
-
-async function recordAudit(opportunityId: string, action: AuditAction, changes: Record<string, unknown>) {
-  await prisma.auditLog.create({
-    data: {
-      entityType: 'Opportunity',
-      entityId: opportunityId,
-      action,
-      changes: serializeChanges(changes),
-      opportunityId,
-    },
-  });
 }
 
 async function handleStageChangeAutomation(opportunity: Prisma.OpportunityGetPayload<{
@@ -177,7 +168,7 @@ async function handleStageChangeAutomation(opportunity: Prisma.OpportunityGetPay
   });
 }
 
-export async function updateOpportunity(id: string, payload: UpdateOpportunityInput) {
+export async function updateOpportunity(id: string, payload: UpdateOpportunityInput, actorId?: string) {
   const existing = await prisma.opportunity.findFirst({ where: { id, deletedAt: null } });
   if (!existing) throw createError(404, 'Opportunity not found');
 
@@ -222,19 +213,39 @@ export async function updateOpportunity(id: string, payload: UpdateOpportunityIn
   });
 
   if (payload.stageId && payload.stageId !== existing.stageId) {
-    await recordAudit(id, AuditAction.STAGE_CHANGE, { from: existing.stageId, to: payload.stageId });
+    await createAuditLogEntry({
+      entityType: 'Opportunity',
+      entityId: id,
+      action: AuditAction.STAGE_CHANGE,
+      actorId,
+      opportunityId: id,
+      changes: { from: existing.stageId, to: payload.stageId },
+    });
     await handleStageChangeAutomation(updated);
   } else {
-    await recordAudit(id, AuditAction.UPDATE, payload);
+    await createAuditLogEntry({
+      entityType: 'Opportunity',
+      entityId: id,
+      action: AuditAction.UPDATE,
+      actorId,
+      opportunityId: id,
+      changes: payload,
+    });
   }
 
   return updated;
 }
 
-export async function softDeleteOpportunity(id: string) {
+export async function softDeleteOpportunity(id: string, actorId?: string) {
   const existing = await prisma.opportunity.findFirst({ where: { id, deletedAt: null } });
   if (!existing) throw createError(404, 'Opportunity not found');
 
   await prisma.opportunity.update({ where: { id }, data: { deletedAt: new Date() } });
-  await recordAudit(id, AuditAction.DELETE, {});
+  await createAuditLogEntry({
+    entityType: 'Opportunity',
+    entityId: id,
+    action: AuditAction.DELETE,
+    actorId,
+    opportunityId: id,
+  });
 }

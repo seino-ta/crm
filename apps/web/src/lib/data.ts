@@ -12,6 +12,7 @@ import type {
   OwnerReportRow,
   Task,
   TaskStatus,
+  AuditLog,
 } from './types';
 
 function toQuery(params: Record<string, string | number | boolean | undefined | null>) {
@@ -101,4 +102,17 @@ export async function getStageReport() {
 export async function getOwnerReport() {
   const { data } = await apiFetch<OwnerReportRow[]>(`/reports/owner`);
   return data;
+}
+
+export async function listAuditLogs(params?: {
+  page?: number;
+  pageSize?: number;
+  entityType?: string;
+  action?: string;
+  from?: string;
+  to?: string;
+}) {
+  const query = toQuery(params ?? {});
+  const { data, meta } = await apiFetch<AuditLog[]>(`/audit-logs${query}`);
+  return { data, meta: meta as ApiMeta | undefined };
 }

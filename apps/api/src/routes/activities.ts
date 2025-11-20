@@ -50,7 +50,7 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', validateBody(createActivitySchema), async (req, res, next) => {
   try {
     const payload = req.body as CreateActivityInput;
-    const activity = await createActivity(payload);
+    const activity = await createActivity(payload, req.user?.id);
     res.status(201).json(successResponse(activity));
   } catch (error) {
     next(error);
@@ -61,7 +61,7 @@ router.put('/:id', validateBody(updateActivitySchema), async (req, res, next) =>
   try {
     const { id } = req.params as { id: string };
     const payload = req.body as UpdateActivityInput;
-    const activity = await updateActivity(id, payload);
+    const activity = await updateActivity(id, payload, req.user?.id);
     res.json(successResponse(activity));
   } catch (error) {
     next(error);
@@ -71,7 +71,7 @@ router.put('/:id', validateBody(updateActivitySchema), async (req, res, next) =>
 router.delete('/:id', async (req, res, next) => {
   try {
     const { id } = req.params as { id: string };
-    await deleteActivity(id);
+    await deleteActivity(id, req.user?.id);
     res.status(204).send();
   } catch (error) {
     next(error);

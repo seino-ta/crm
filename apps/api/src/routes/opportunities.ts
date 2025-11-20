@@ -50,7 +50,7 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', validateBody(createOpportunitySchema), async (req, res, next) => {
   try {
     const payload = req.body as CreateOpportunityInput;
-    const opportunity = await createOpportunity(payload);
+    const opportunity = await createOpportunity(payload, req.user?.id);
     res.status(201).json(successResponse(opportunity));
   } catch (error) {
     next(error);
@@ -61,7 +61,7 @@ router.put('/:id', validateBody(updateOpportunitySchema), async (req, res, next)
   try {
     const payload = req.body as UpdateOpportunityInput;
     const { id } = req.params as { id: string };
-    const opportunity = await updateOpportunity(id, payload);
+    const opportunity = await updateOpportunity(id, payload, req.user?.id);
     res.json(successResponse(opportunity));
   } catch (error) {
     next(error);
@@ -71,7 +71,7 @@ router.put('/:id', validateBody(updateOpportunitySchema), async (req, res, next)
 router.delete('/:id', async (req, res, next) => {
   try {
     const { id } = req.params as { id: string };
-    await softDeleteOpportunity(id);
+    await softDeleteOpportunity(id, req.user?.id);
     res.status(204).send();
   } catch (error) {
     next(error);

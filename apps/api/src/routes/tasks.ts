@@ -44,7 +44,7 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', validateBody(createTaskSchema), async (req, res, next) => {
   try {
     const payload = req.body as CreateTaskInput;
-    const task = await createTask(payload);
+    const task = await createTask(payload, req.user?.id);
     res.status(201).json(successResponse(task));
   } catch (error) {
     next(error);
@@ -55,7 +55,7 @@ router.put('/:id', validateBody(updateTaskSchema), async (req, res, next) => {
   try {
     const { id } = req.params as { id: string };
     const payload = req.body as UpdateTaskInput;
-    const task = await updateTask(id, payload);
+    const task = await updateTask(id, payload, req.user?.id);
     res.json(successResponse(task));
   } catch (error) {
     next(error);
@@ -65,7 +65,7 @@ router.put('/:id', validateBody(updateTaskSchema), async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     const { id } = req.params as { id: string };
-    await deleteTask(id);
+    await deleteTask(id, req.user?.id);
     res.status(204).send();
   } catch (error) {
     next(error);

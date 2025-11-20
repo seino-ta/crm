@@ -37,7 +37,7 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', validateBody(createAccountSchema), async (req, res, next) => {
   try {
     const payload = req.body as CreateAccountInput;
-    const account = await createAccount(payload);
+    const account = await createAccount(payload, req.user?.id);
     res.status(201).json(successResponse(account));
   } catch (error) {
     next(error);
@@ -48,7 +48,7 @@ router.put('/:id', validateBody(updateAccountSchema), async (req, res, next) => 
   try {
     const payload = req.body as UpdateAccountInput;
     const { id } = req.params as { id: string };
-    const account = await updateAccount(id, payload);
+    const account = await updateAccount(id, payload, req.user?.id);
     res.json(successResponse(account));
   } catch (error) {
     next(error);
@@ -58,7 +58,7 @@ router.put('/:id', validateBody(updateAccountSchema), async (req, res, next) => 
 router.delete('/:id', async (req, res, next) => {
   try {
     const { id } = req.params as { id: string };
-    await softDeleteAccount(id);
+    await softDeleteAccount(id, req.user?.id);
     res.status(204).send();
   } catch (error) {
     next(error);

@@ -1,8 +1,9 @@
-import type { Prisma } from '@prisma/client';
+import { AuditAction, type Prisma } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
 import { buildPaginationMeta, normalizePagination } from '../../utils/pagination';
+import { createAuditLogEntry } from '../audit-log/audit-log.helper';
 
 import type {
   ActivityFilterInput,
@@ -99,7 +100,7 @@ export async function getActivityById(id: string) {
   return activity;
 }
 
-export async function createActivity(payload: CreateActivityInput) {
+export async function createActivity(payload: CreateActivityInput, actorId?: string) {
   await Promise.all([
     ensureUser(payload.userId),
     ensureAccount(payload.accountId),
@@ -119,13 +120,22 @@ export async function createActivity(payload: CreateActivityInput) {
   if (payload.contactId) data.contact = { connect: { id: payload.contactId } };
   if (payload.opportunityId) data.opportunity = { connect: { id: payload.opportunityId } };
 
-  return prisma.activity.create({
+  const activity = await prisma.activity.create({
     data,
     include: { user: true, account: true, contact: true, opportunity: true },
   });
+  await createAuditLogEntry({
+    entityType: 'Activity',
+    entityId: activity.id,
+    action: AuditAction.CREATE,
+    actorId,
+    opportunityId: activity.opportunityId ?? undefined,
+    changes: payload,
+  });
+  return activity;
 }
 
-export async function updateActivity(id: string, payload: UpdateActivityInput) {
+export async function updateActivity(id: string, payload: UpdateActivityInput, actorId?: string) {
   const existing = await getActivityById(id);
 
   await Promise.all([
@@ -154,14 +164,30 @@ export async function updateActivity(id: string, payload: UpdateActivityInput) {
     data.opportunity = payload.opportunityId ? { connect: { id: payload.opportunityId } } : { disconnect: true };
   }
 
-  return prisma.activity.update({
+  const activity = await prisma.activity.update({
     where: { id },
     data,
     include: { user: true, account: true, contact: true, opportunity: true },
   });
+  await createAuditLogEntry({
+    entityType: 'Activity',
+    entityId: id,
+    action: AuditAction.UPDATE,
+    actorId,
+    opportunityId: activity.opportunityId ?? undefined,
+    changes: payload,
+  });
+  return activity;
 }
 
-export async function deleteActivity(id: string) {
-  await getActivityById(id);
+export async function deleteActivity(id: string, actorId?: string) {
+  const existing = await getActivityById(id);
   await prisma.activity.delete({ where: { id } });
+  await createAuditLogEntry({
+    entityType: 'Activity',
+    entityId: id,
+    action: AuditAction.DELETE,
+    actorId,
+    opportunityId: existing.opportunityId ?? undefined,
+  });
 }

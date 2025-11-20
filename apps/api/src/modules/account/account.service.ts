@@ -1,8 +1,9 @@
-import { Prisma } from '@prisma/client';
+import { AuditAction, Prisma } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
 import { buildPaginationMeta, normalizePagination } from '../../utils/pagination';
+import { createAuditLogEntry } from '../audit-log/audit-log.helper';
 
 import type { AccountListQuery, CreateAccountInput, UpdateAccountInput } from './account.schema';
 
@@ -49,7 +50,7 @@ export async function getAccountById(id: string) {
   return account;
 }
 
-export async function createAccount(payload: CreateAccountInput) {
+export async function createAccount(payload: CreateAccountInput, actorId?: string) {
   const data: Prisma.AccountCreateInput = {
     name: payload.name,
     domain: payload.domain ?? null,
@@ -68,10 +69,18 @@ export async function createAccount(payload: CreateAccountInput) {
     data.annualRevenue = new Prisma.Decimal(payload.annualRevenue);
   }
 
-  return prisma.account.create({ data });
+  const account = await prisma.account.create({ data });
+  await createAuditLogEntry({
+    entityType: 'Account',
+    entityId: account.id,
+    action: AuditAction.CREATE,
+    actorId,
+    changes: payload,
+  });
+  return account;
 }
 
-export async function updateAccount(id: string, payload: UpdateAccountInput) {
+export async function updateAccount(id: string, payload: UpdateAccountInput, actorId?: string) {
   await getAccountById(id);
 
   const data: Prisma.AccountUpdateInput = {};
@@ -88,14 +97,28 @@ export async function updateAccount(id: string, payload: UpdateAccountInput) {
     data.annualRevenue = new Prisma.Decimal(payload.annualRevenue);
   }
 
-  return prisma.account.update({ where: { id }, data });
+  const account = await prisma.account.update({ where: { id }, data });
+  await createAuditLogEntry({
+    entityType: 'Account',
+    entityId: id,
+    action: AuditAction.UPDATE,
+    actorId,
+    changes: payload,
+  });
+  return account;
 }
 
-export async function softDeleteAccount(id: string) {
+export async function softDeleteAccount(id: string, actorId?: string) {
   await getAccountById(id);
 
   await prisma.account.update({
     where: { id },
     data: { deletedAt: new Date() },
+  });
+  await createAuditLogEntry({
+    entityType: 'Account',
+    entityId: id,
+    action: AuditAction.DELETE,
+    actorId,
   });
 }

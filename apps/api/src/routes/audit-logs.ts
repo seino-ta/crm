@@ -9,7 +9,7 @@ import { successResponse } from '../utils/response';
 
 const router = Router();
 
-router.use(authenticate([UserRole.ADMIN, UserRole.MANAGER]));
+router.use(authenticate([UserRole.ADMIN]));
 
 router.get('/', async (req, res, next) => {
   try {

@@ -1,9 +1,10 @@
 import type { Prisma } from '@prisma/client';
-import { TaskStatus } from '@prisma/client';
+import { AuditAction, TaskStatus } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
 import { buildPaginationMeta, normalizePagination } from '../../utils/pagination';
+import { createAuditLogEntry } from '../audit-log/audit-log.helper';
 
 import type { CreateTaskInput, TaskFilterInput, UpdateTaskInput } from './task.schema';
 
@@ -93,7 +94,7 @@ export async function getTaskById(id: string) {
   return task;
 }
 
-export async function createTask(payload: CreateTaskInput) {
+export async function createTask(payload: CreateTaskInput, actorId?: string) {
   await Promise.all([
     ensureUser(payload.ownerId),
     ensureAccount(payload.accountId),
@@ -117,7 +118,7 @@ export async function createTask(payload: CreateTaskInput) {
   if (payload.opportunityId) data.opportunity = { connect: { id: payload.opportunityId } };
   if (payload.contactId) data.contact = { connect: { id: payload.contactId } };
 
-  return prisma.task.create({
+  const task = await prisma.task.create({
     data,
     include: {
       owner: true,
@@ -127,9 +128,18 @@ export async function createTask(payload: CreateTaskInput) {
       contact: true,
     },
   });
+  await createAuditLogEntry({
+    entityType: 'Task',
+    entityId: task.id,
+    action: AuditAction.CREATE,
+    actorId,
+    opportunityId: task.opportunityId ?? undefined,
+    changes: payload,
+  });
+  return task;
 }
 
-export async function updateTask(id: string, payload: UpdateTaskInput) {
+export async function updateTask(id: string, payload: UpdateTaskInput, actorId?: string) {
   const existing = await getTaskById(id);
 
   await Promise.all([
@@ -171,7 +181,7 @@ export async function updateTask(id: string, payload: UpdateTaskInput) {
     data.completedAt = new Date();
   }
 
-  return prisma.task.update({
+  const task = await prisma.task.update({
     where: { id },
     data,
     include: {
@@ -182,9 +192,25 @@ export async function updateTask(id: string, payload: UpdateTaskInput) {
       contact: true,
     },
   });
+  await createAuditLogEntry({
+    entityType: 'Task',
+    entityId: id,
+    action: AuditAction.UPDATE,
+    actorId,
+    opportunityId: task.opportunityId ?? undefined,
+    changes: payload,
+  });
+  return task;
 }
 
-export async function deleteTask(id: string) {
-  await getTaskById(id);
+export async function deleteTask(id: string, actorId?: string) {
+  const existing = await getTaskById(id);
   await prisma.task.delete({ where: { id } });
+  await createAuditLogEntry({
+    entityType: 'Task',
+    entityId: id,
+    action: AuditAction.DELETE,
+    actorId,
+    opportunityId: existing.opportunityId ?? undefined,
+  });
 }

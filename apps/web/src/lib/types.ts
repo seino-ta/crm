@@ -132,3 +132,16 @@ export type OwnerReportRow = {
   _sum: { amount: string | null };
   _count: { _all: number };
 };
+
+export type AuditLog = {
+  id: string;
+  entityType: string;
+  entityId: string;
+  action: string;
+  changes: Record<string, unknown> | null;
+  userId: string;
+  opportunityId?: string | null;
+  createdAt: string;
+  user?: User | null;
+  opportunity?: Opportunity | null;
+};
