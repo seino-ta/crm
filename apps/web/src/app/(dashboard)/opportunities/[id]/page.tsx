@@ -5,9 +5,8 @@ import { listActivities, listPipelineStages, listTasks, getOpportunity } from '@
 import { formatCurrency, formatDate, formatDateTime, formatUserName } from '@/lib/formatters';
 import { updateOpportunityStageAction } from '@/lib/actions/opportunities';
 import { Card } from '@/components/ui/card';
-import { Select } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { StageUpdateForm } from './stage-update-form';
 import {
   getActivityTypeLabel,
   getOpportunityStatusMeta,
@@ -41,18 +40,11 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
                 予測確度 {opportunity.probability ?? 0}% ・ 予定日 {formatDate(opportunity.expectedCloseDate)}
               </p>
             </div>
-            <form action={updateOpportunityStageAction.bind(null, opportunity.id)} className="space-y-2" data-testid="opportunity-stage-form">
-              <Select name="stageId" defaultValue={opportunity.stageId}>
-                {stages.map((stage) => (
-                  <option key={stage.id} value={stage.id}>
-                    {getPipelineStageLabel(stage.name)}
-                  </option>
-                ))}
-              </Select>
-              <Button type="submit" variant="primary" size="sm" className="w-full">
-                ステージを更新
-              </Button>
-            </form>
+            <StageUpdateForm
+              action={updateOpportunityStageAction.bind(null, opportunity.id)}
+              stages={stages.map((stage) => ({ ...stage, name: getPipelineStageLabel(stage.name) }))}
+              defaultStageId={opportunity.stageId}
+            />
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div>

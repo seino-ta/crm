@@ -85,6 +85,7 @@ export function OpportunityForm({ accounts, stages, contacts, ownerId }: Opportu
       </div>
       <Textarea name="description" rows={3} placeholder="メモ" />
       <input type="hidden" name="ownerId" value={ownerId} />
+      {state?.ok && <p className="text-sm text-emerald-600">登録しました。</p>}
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full">
         案件を登録

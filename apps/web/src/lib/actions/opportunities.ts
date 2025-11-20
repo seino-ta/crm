@@ -38,7 +38,7 @@ const opportunitySchema = z.object({
         }
       }
       return val;
-    }, z.string().datetime({ offset: false }).optional())
+    }, z.string().datetime({ offset: true }).optional())
     .optional(),
   description: z.string().max(4000).optional().or(z.literal('')).transform((val) => (val ? val : undefined)),
 });
@@ -70,7 +70,7 @@ export async function updateOpportunityStageAction(opportunityId: string, formDa
     });
     revalidatePath('/opportunities');
     revalidatePath(`/opportunities/${opportunityId}`);
-    redirect(`/opportunities/${opportunityId}`);
+    return { ok: true };
   } catch (error) {
     console.error(error);
     return { error: 'ステージ更新に失敗しました。' };

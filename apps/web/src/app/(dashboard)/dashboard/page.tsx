@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { PipelineChart } from '@/components/charts/pipeline-chart';
 import { OwnerChart } from '@/components/charts/owner-chart';
-import { formatCurrency, formatDateTime, formatUserName } from '@/lib/formatters';
+import { formatCurrency, formatDateTime, formatNumber, formatUserName } from '@/lib/formatters';
 import {
   getActivityTypeLabel,
   getOpportunityStatusMeta,
@@ -69,7 +69,7 @@ export default async function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <p className="text-xs uppercase tracking-wide text-slate-500">開いている案件</p>
-          <p className="mt-2 text-3xl font-bold">{openDeals}</p>
+          <p className="mt-2 text-3xl font-bold">{formatNumber(openDeals)}</p>
           {(() => {
             const { label } = getOpportunityStatusMeta('OPEN');
             return <p className="text-xs text-slate-400">すべてのパイプラインにおける {label} 案件</p>;
@@ -82,12 +82,12 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <p className="text-xs uppercase tracking-wide text-slate-500">アクティブアカウント</p>
-          <p className="mt-2 text-3xl font-bold">{accounts.data.length}</p>
+          <p className="mt-2 text-3xl font-bold">{formatNumber(accounts.data.length)}</p>
           <p className="text-xs text-slate-400">最近取得した 8 件を表示中</p>
         </Card>
         <Card>
           <p className="text-xs uppercase tracking-wide text-slate-500">期限超過タスク</p>
-          <p className="mt-2 text-3xl font-bold text-rose-600">{overdueTasks.length}</p>
+          <p className="mt-2 text-3xl font-bold text-rose-600">{formatNumber(overdueTasks.length)}</p>
           <p className="text-xs text-slate-400">本日以前に期限を迎えたタスク</p>
         </Card>
       </div>

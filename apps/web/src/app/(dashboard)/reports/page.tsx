@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { PipelineChart } from '@/components/charts/pipeline-chart';
 import { OwnerChart } from '@/components/charts/owner-chart';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatNumber } from '@/lib/formatters';
 import { getOwnerReport, getStageReport, listOpportunities, listPipelineStages } from '@/lib/data';
 import { getCurrencyScale } from '@/lib/chart-scale';
 
@@ -65,7 +65,7 @@ export default async function ReportsPage() {
                 <tr key={row.name} className="border-t border-slate-100">
                   <td className="px-2 py-2">{row.name}</td>
                   <td className="px-2 py-2 text-right">{formatCurrency(row.amount)}</td>
-                  <td className="px-2 py-2 text-right">{row.deals}</td>
+                  <td className="px-2 py-2 text-right">{formatNumber(row.deals)}</td>
                 </tr>
               ))}
             </tbody>
@@ -87,7 +87,7 @@ export default async function ReportsPage() {
                 <tr key={row.name} className="border-t border-slate-100">
                   <td className="px-2 py-2">{row.name}</td>
                   <td className="px-2 py-2 text-right">{formatCurrency(row.amount)}</td>
-                  <td className="px-2 py-2 text-right">{row.deals}</td>
+                  <td className="px-2 py-2 text-right">{formatNumber(row.deals)}</td>
                 </tr>
               ))}
             </tbody>

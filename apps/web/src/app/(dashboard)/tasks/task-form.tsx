@@ -66,6 +66,7 @@ export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
         ))}
       </Select>
       <input type="hidden" name="ownerId" value={ownerId} />
+      {state?.ok && <p className="text-sm text-emerald-600">保存しました。</p>}
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full">
         タスクを追加

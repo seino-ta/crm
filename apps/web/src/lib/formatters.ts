@@ -13,6 +13,13 @@ export function formatCurrency(value?: string | number | null, currency = 'JPY')
   }).format(amount);
 }
 
+export function formatNumber(value?: number | string | null) {
+  if (value === undefined || value === null) return '—';
+  const num = typeof value === 'string' ? Number(value) : value;
+  if (Number.isNaN(num)) return '—';
+  return num.toLocaleString('ja-JP');
+}
+
 export function formatPercent(value?: number | null) {
   if (value === undefined || value === null) return '—';
   return `${value}%`;

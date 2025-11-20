@@ -13,7 +13,16 @@ const activitySchema = z.object({
   accountId: z.string().uuid().optional().or(z.literal('')).transform((val) => (val ? val : undefined)),
   opportunityId: z.string().uuid().optional().or(z.literal('')).transform((val) => (val ? val : undefined)),
   occurredAt: z
-    .preprocess((val) => (val === '' || val === null ? undefined : val), z.string().datetime({ offset: false }).optional())
+    .preprocess((val) => {
+      if (val === '' || val === null) return undefined;
+      if (typeof val === 'string') {
+        const date = new Date(val);
+        if (!Number.isNaN(date.getTime())) {
+          return date.toISOString();
+        }
+      }
+      return val;
+    }, z.string().datetime({ offset: true }).optional())
     .optional(),
 });
 

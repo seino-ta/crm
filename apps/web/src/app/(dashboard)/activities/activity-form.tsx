@@ -65,6 +65,7 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
         ))}
       </Select>
       <input type="hidden" name="userId" value={userId} />
+      {state?.ok && <p className="text-sm text-emerald-600">保存しました。</p>}
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full">
         活動を追加

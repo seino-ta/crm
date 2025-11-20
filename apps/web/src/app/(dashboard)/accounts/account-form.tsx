@@ -69,6 +69,7 @@ export function AccountForm({ action, submitLabel, initialValues }: AccountFormP
         </Select>
       </div>
       <Textarea name="description" rows={3} defaultValue={initialValues?.description ?? ''} placeholder="概要" aria-label="概要" />
+      {state?.ok && <p className="text-sm text-emerald-600">保存しました。</p>}
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full" data-testid="account-submit">
         {submitLabel}
