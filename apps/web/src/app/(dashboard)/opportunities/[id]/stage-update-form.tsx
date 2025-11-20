@@ -1,10 +1,12 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import type { PipelineStage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
+import { SuccessModal } from '@/components/ui/success-modal';
 
 export function StageUpdateForm({
   action,
@@ -15,7 +17,18 @@ export function StageUpdateForm({
   stages: PipelineStage[];
   defaultStageId: string;
 }) {
+  const router = useRouter();
   const [state, formAction] = useActionState(action, undefined);
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (state?.ok) {
+      setShowModal(true);
+      const timer = setTimeout(() => setShowModal(false), 2000);
+      router.refresh();
+      return () => clearTimeout(timer);
+    }
+  }, [state, router]);
 
   return (
     <form action={formAction} className="space-y-2" data-testid="opportunity-stage-form">
@@ -29,7 +42,7 @@ export function StageUpdateForm({
       <Button type="submit" variant="primary" size="sm" className="w-full">
         ステージを更新
       </Button>
-      {state?.ok && <p className="text-xs text-emerald-600 text-center">更新しました。</p>}
+      <SuccessModal open={showModal} message="ステージを更新しました。" />
       {state?.error && <p className="text-xs text-rose-600 text-center">{state.error}</p>}
     </form>
   );

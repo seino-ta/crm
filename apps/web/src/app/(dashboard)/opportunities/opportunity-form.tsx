@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { SuccessModal } from '@/components/ui/success-modal';
 import { getPipelineStageLabel } from '@/lib/labels';
 import { RequiredMark } from '@/components/ui/required-mark';
 
@@ -21,6 +22,7 @@ export type OpportunityFormProps = {
 export function OpportunityForm({ accounts, stages, contacts, ownerId }: OpportunityFormProps) {
   const router = useRouter();
   const [state, formAction] = useActionState<{ ok?: boolean; error?: string } | undefined, FormData>(createOpportunityAction, undefined);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (state?.ok) {
@@ -88,11 +90,7 @@ export function OpportunityForm({ accounts, stages, contacts, ownerId }: Opportu
       </div>
       <Textarea name="description" rows={3} placeholder="メモ" />
       <input type="hidden" name="ownerId" value={ownerId} />
-      {showModal && (
-        <div className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
-          案件を登録しました。
-        </div>
-      )}
+      <SuccessModal open={showModal} message="案件を登録しました。" />
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full">
         案件を登録

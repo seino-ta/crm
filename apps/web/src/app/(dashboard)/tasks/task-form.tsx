@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { SuccessModal } from '@/components/ui/success-modal';
 import { TASK_PRIORITY_OPTIONS } from '@/lib/labels';
 import { RequiredMark } from '@/components/ui/required-mark';
 
@@ -20,6 +21,7 @@ type TaskFormProps = {
 export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
   const router = useRouter();
   const [state, formAction] = useActionState<{ ok?: boolean; error?: string } | undefined, FormData>(createTaskAction, undefined);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (state?.ok) {
@@ -69,11 +71,7 @@ export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
         ))}
       </Select>
       <input type="hidden" name="ownerId" value={ownerId} />
-      {showModal && (
-        <div className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
-          タスクを追加しました。
-        </div>
-      )}
+      <SuccessModal open={showModal} message="タスクを追加しました。" />
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full">
         タスクを追加

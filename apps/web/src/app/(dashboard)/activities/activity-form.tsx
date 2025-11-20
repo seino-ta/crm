@@ -8,6 +8,7 @@ import { Select } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { SuccessModal } from '@/components/ui/success-modal';
 import { ACTIVITY_TYPE_OPTIONS } from '@/lib/labels';
 import { RequiredMark } from '@/components/ui/required-mark';
 
@@ -20,6 +21,7 @@ type ActivityFormProps = {
 export function ActivityForm({ accounts, opportunities, userId }: ActivityFormProps) {
   const router = useRouter();
   const [state, formAction] = useActionState<{ ok?: boolean; error?: string } | undefined, FormData>(createActivityAction, undefined);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (state?.ok) {
@@ -68,11 +70,7 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
         ))}
       </Select>
       <input type="hidden" name="userId" value={userId} />
-      {showModal && (
-        <div className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
-          活動を追加しました。
-        </div>
-      )}
+      <SuccessModal open={showModal} message="活動を追加しました。" />
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full">
         活動を追加

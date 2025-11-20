@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ACCOUNT_STATUS_OPTIONS } from '@/lib/labels';
 import { RequiredMark } from '@/components/ui/required-mark';
+import { SuccessModal } from '@/components/ui/success-modal';
 
 type AccountFormProps = {
   action: (state: { error?: string } | undefined, formData: FormData) => Promise<{ ok?: boolean; error?: string } | void>;
@@ -29,10 +30,14 @@ type AccountFormProps = {
 export function AccountForm({ action, submitLabel, initialValues }: AccountFormProps) {
   const router = useRouter();
   const [state, formAction] = useActionState<{ ok?: boolean; error?: string } | undefined, FormData>(action, undefined);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (state?.ok) {
+      setShowModal(true);
+      const timer = setTimeout(() => setShowModal(false), 2000);
       router.refresh();
+      return () => clearTimeout(timer);
     }
   }, [state, router]);
 
@@ -69,11 +74,7 @@ export function AccountForm({ action, submitLabel, initialValues }: AccountFormP
         </Select>
       </div>
       <Textarea name="description" rows={3} defaultValue={initialValues?.description ?? ''} placeholder="概要" aria-label="概要" />
-      {showModal && (
-        <div className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
-          アカウントを保存しました。
-        </div>
-      )}
+      <SuccessModal open={showModal} message="アカウントを保存しました。" />
       {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
       <Button type="submit" className="w-full" data-testid="account-submit">
         {submitLabel}
