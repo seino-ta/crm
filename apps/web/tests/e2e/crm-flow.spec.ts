@@ -52,7 +52,7 @@ test('主要 CRM フロー @snapshot', async ({ page }) => {
   await page.locator('form[data-testid="opportunity-form"] input[name="amount"]').fill('25000');
   await page.locator('form[data-testid="opportunity-form"] input[name="probability"]').fill('70');
   await page.getByTestId('opportunity-form').locator('button[type="submit"]').click();
-  await expect(page.getByRole('link', { name: opportunityName })).toBeVisible();
+  await expect(page.getByTestId('opportunity-link').filter({ hasText: opportunityName }).first()).toBeVisible();
   await capture(page, 'opportunities');
 
   await page.getByTestId('nav-活動ログ').click();
