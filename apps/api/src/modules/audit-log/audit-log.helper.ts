@@ -1,4 +1,4 @@
-import { AuditAction, type Prisma } from '@prisma/client';
+import type { AuditAction, Prisma } from '@prisma/client';
 
 import prisma from '../../lib/prisma';
 

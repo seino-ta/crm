@@ -3,6 +3,7 @@ import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
 import { buildPaginationMeta, normalizePagination } from '../../utils/pagination';
+import { createAuditLogEntry } from '../audit-log/audit-log.helper';
 
 import type {
   CreateOpportunityInput,
@@ -44,7 +45,7 @@ function inferStatusFromStage(
 }
 
 export async function listOpportunities(query: OpportunityFilterQuery) {
-  const { search, status, stageId, ownerId, accountId, page, pageSize } = query;
+  const { search, status, stageId, ownerId, accountId, accountArchived, page, pageSize } = query;
   const { page: normalizedPage, pageSize: normalizedPageSize, skip, take } = normalizePagination({ page, pageSize });
 
   const where: Prisma.OpportunityWhereInput = {
@@ -54,7 +55,13 @@ export async function listOpportunities(query: OpportunityFilterQuery) {
   if (status) where.status = status;
   if (stageId) where.stageId = stageId;
   if (ownerId) where.ownerId = ownerId;
-  if (accountId) where.accountId = accountId;
+  if (accountId) {
+    where.accountId = accountId;
+  } else if (accountArchived) {
+    where.account = { deletedAt: { not: null } };
+  } else {
+    where.account = { deletedAt: null };
+  }
   if (search) {
     where.name = { contains: search, mode: 'insensitive' };
   }

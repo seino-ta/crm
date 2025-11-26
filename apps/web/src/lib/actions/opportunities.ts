@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { apiFetch } from '../api-client';
@@ -43,10 +42,20 @@ const opportunitySchema = z.object({
   description: z.string().max(4000).optional().or(z.literal('')).transform((val) => (val ? val : undefined)),
 });
 
-export async function createOpportunityAction(_state: { error?: string } | undefined, formData: FormData) {
+export type OpportunityActionState = {
+  ok?: boolean;
+  error?: 'validation' | 'createFailed';
+};
+
+export type OpportunityStageActionState = {
+  ok?: boolean;
+  error?: 'stageLoadFailed' | 'stageMissing' | 'stageUpdateFailed';
+};
+
+export async function createOpportunityAction(_state: OpportunityActionState | undefined, formData: FormData): Promise<OpportunityActionState> {
   const parsed = opportunitySchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) {
-    return { error: '入力内容を確認してください。' };
+    return { error: 'validation' };
   }
   try {
     await apiFetch('/opportunities', {
@@ -57,22 +66,22 @@ export async function createOpportunityAction(_state: { error?: string } | undef
     return { ok: true };
   } catch (error) {
     console.error(error);
-    return { error: '案件の作成に失敗しました。' };
+    return { error: 'createFailed' };
   }
 }
 
 export async function updateOpportunityStageAction(
   opportunityId: string,
-  _prevState: { ok?: boolean; error?: string } | undefined,
-  formData: FormData | undefined
-) {
-  if (!(formData instanceof FormData)) {
-    return { error: 'ステージ情報を受信できませんでした。' };
+  _prevState: OpportunityStageActionState | undefined,
+  formData: FormData
+) : Promise<OpportunityStageActionState> {
+  if (!formData || typeof formData.get !== 'function') {
+    return { error: 'stageLoadFailed' };
   }
 
   const stageId = formData.get('stageId');
   if (!stageId || typeof stageId !== 'string') {
-    return { error: 'ステージを選択してください。' };
+    return { error: 'stageMissing' };
   }
   try {
     await apiFetch(`/opportunities/${opportunityId}`, {
@@ -84,6 +93,6 @@ export async function updateOpportunityStageAction(
     return { ok: true };
   } catch (error) {
     console.error(error);
-    return { error: 'ステージ更新に失敗しました。' };
+    return { error: 'stageUpdateFailed' };
   }
 }

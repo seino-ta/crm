@@ -7,8 +7,8 @@ const baseClasses = 'inline-flex items-center justify-center rounded-md font-med
 
 const variants: Record<'primary' | 'secondary' | 'ghost' | 'danger', string> = {
   primary: 'bg-blue-600 text-white hover:bg-blue-500 focus-visible:outline-blue-600',
-  secondary: 'bg-white text-slate-900 border border-slate-300 hover:border-slate-400 hover:bg-slate-50 dark:bg-slate-900 dark:text-white dark:border-slate-700 dark:hover:bg-slate-800 focus-visible:outline-slate-400',
-  ghost: 'bg-transparent text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800',
+  secondary: 'bg-white text-slate-900 border border-slate-300 hover:border-slate-400 hover:bg-white focus-visible:outline-slate-400',
+  ghost: 'bg-transparent text-slate-900 hover:bg-slate-100',
   danger: 'bg-rose-600 text-white hover:bg-rose-500 focus-visible:outline-rose-600',
 };
 

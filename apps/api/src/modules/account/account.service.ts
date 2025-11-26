@@ -9,12 +9,29 @@ import type { AccountListQuery, CreateAccountInput, UpdateAccountInput } from '.
 
 const DEFAULT_ORDER = { createdAt: 'desc' } as const;
 
+type AccountFetchOptions = {
+  includeDeleted?: boolean;
+};
+
+async function findAccountOrThrow(id: string, { includeDeleted }: AccountFetchOptions = {}) {
+  const where: Prisma.AccountWhereInput = { id };
+  if (!includeDeleted) {
+    where.deletedAt = null;
+  }
+
+  const account = await prisma.account.findFirst({ where });
+  if (!account) {
+    throw createError(404, 'Account not found');
+  }
+  return account;
+}
+
 export async function listAccounts(query: AccountListQuery) {
-  const { search, status, page, pageSize } = query;
+  const { search, status, archived, page, pageSize } = query;
   const { page: normalizedPage, pageSize: normalizedPageSize, skip, take } = normalizePagination({ page, pageSize });
 
   const where: Prisma.AccountWhereInput = {
-    deletedAt: null,
+    deletedAt: archived ? { not: null } : null,
   };
 
   if (status) {
@@ -40,14 +57,8 @@ export async function listAccounts(query: AccountListQuery) {
   };
 }
 
-export async function getAccountById(id: string) {
-  const account = await prisma.account.findFirst({ where: { id, deletedAt: null } });
-
-  if (!account) {
-    throw createError(404, 'Account not found');
-  }
-
-  return account;
+export async function getAccountById(id: string, options?: AccountFetchOptions) {
+  return findAccountOrThrow(id, options);
 }
 
 export async function createAccount(payload: CreateAccountInput, actorId?: string) {
@@ -81,7 +92,7 @@ export async function createAccount(payload: CreateAccountInput, actorId?: strin
 }
 
 export async function updateAccount(id: string, payload: UpdateAccountInput, actorId?: string) {
-  await getAccountById(id);
+  await findAccountOrThrow(id);
 
   const data: Prisma.AccountUpdateInput = {};
 
@@ -109,7 +120,7 @@ export async function updateAccount(id: string, payload: UpdateAccountInput, act
 }
 
 export async function softDeleteAccount(id: string, actorId?: string) {
-  await getAccountById(id);
+  await findAccountOrThrow(id);
 
   await prisma.account.update({
     where: { id },
@@ -121,4 +132,26 @@ export async function softDeleteAccount(id: string, actorId?: string) {
     action: AuditAction.DELETE,
     actorId,
   });
+}
+
+export async function restoreAccount(id: string, actorId?: string) {
+  const account = await findAccountOrThrow(id, { includeDeleted: true });
+  if (!account.deletedAt) {
+    throw createError(400, 'Account is not archived');
+  }
+
+  const restored = await prisma.account.update({
+    where: { id },
+    data: { deletedAt: null },
+  });
+
+  await createAuditLogEntry({
+    entityType: 'Account',
+    entityId: id,
+    action: AuditAction.UPDATE,
+    actorId,
+    changes: { restored: true },
+  });
+
+  return restored;
 }

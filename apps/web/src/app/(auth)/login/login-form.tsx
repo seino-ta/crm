@@ -7,22 +7,25 @@ import type { AuthFormState } from '@/lib/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RequiredMark } from '@/components/ui/required-mark';
+import { useI18n } from '@/components/providers/i18n-provider';
 
 export function LoginForm() {
   const [state, action] = useActionState<AuthFormState | undefined, FormData>(loginAction, undefined);
   const [showPassword, setShowPassword] = useState(false);
+  const { t } = useI18n('auth');
+  const { t: tErrors } = useI18n('auth.errors');
 
   return (
     <form action={action} className="space-y-4" data-testid="login-form">
       <div>
         <label htmlFor="email" className="text-sm font-medium text-slate-600">
-          メールアドレス<RequiredMark />
+          {t('email')}<RequiredMark />
         </label>
         <Input type="email" id="email" name="email" required placeholder="admin@crm.local" autoFocus data-testid="login-email" />
       </div>
       <div>
         <label htmlFor="password" className="text-sm font-medium text-slate-600">
-          パスワード<RequiredMark />
+          {t('password')}<RequiredMark />
         </label>
         <div className="relative">
           <Input
@@ -36,7 +39,7 @@ export function LoginForm() {
           />
           <button
             type="button"
-            aria-label={showPassword ? 'パスワードを非表示にする' : 'パスワードを表示する'}
+            aria-label={showPassword ? t('hide') : t('show')}
             className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-700"
             onClick={() => setShowPassword((prev) => !prev)}
             data-testid="password-toggle"
@@ -79,9 +82,9 @@ export function LoginForm() {
           </button>
         </div>
       </div>
-      {state?.error && <p className="text-sm text-rose-600" data-testid="login-error">{state.error}</p>}
+      {state?.error && <p className="text-sm text-rose-600" data-testid="login-error">{tErrors(state.error)}</p>}
       <Button type="submit" className="w-full" data-testid="login-submit">
-        サインイン
+        {t('submit')}
       </Button>
     </form>
   );

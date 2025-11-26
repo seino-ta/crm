@@ -1,23 +1,23 @@
 import { format, parseISO } from 'date-fns';
 
-export function formatCurrency(value?: string | number | null, currency = 'JPY') {
+export function formatCurrency(value?: string | number | null, currency = 'JPY', locale = 'ja-JP') {
   if (value === undefined || value === null) return '—';
   const amount = typeof value === 'string' ? Number(value) : value;
   if (Number.isNaN(amount)) return '—';
-  const isJPY = currency === 'JPY';
-  return new Intl.NumberFormat('ja-JP', {
+  const isZeroDecimal = currency === 'JPY';
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
-    minimumFractionDigits: isJPY ? 0 : undefined,
-    maximumFractionDigits: isJPY ? 0 : undefined,
+    minimumFractionDigits: isZeroDecimal ? 0 : undefined,
+    maximumFractionDigits: isZeroDecimal ? 0 : undefined,
   }).format(amount);
 }
 
-export function formatNumber(value?: number | string | null) {
+export function formatNumber(value?: number | string | null, locale = 'ja-JP') {
   if (value === undefined || value === null) return '—';
   const num = typeof value === 'string' ? Number(value) : value;
   if (Number.isNaN(num)) return '—';
-  return num.toLocaleString('ja-JP');
+  return num.toLocaleString(locale);
 }
 
 export function formatPercent(value?: number | null) {
@@ -45,5 +45,5 @@ export function formatDateTime(value?: string | null) {
 
 export function formatUserName(firstName?: string | null, lastName?: string | null, fallback?: string | null) {
   const name = [firstName, lastName].filter(Boolean).join(' ');
-  return name || fallback || '未設定';
+  return name || fallback || '—';
 }

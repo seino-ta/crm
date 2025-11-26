@@ -1,6 +1,10 @@
 import { OpportunityStatus } from '@prisma/client';
 import { z } from 'zod';
 
+const booleanQuery = z
+  .union([z.boolean(), z.literal('true'), z.literal('false')])
+  .transform((value) => (typeof value === 'boolean' ? value : value === 'true'));
+
 const uuid = () => z.string().uuid();
 
 const baseOpportunitySchema = z.object({
@@ -28,6 +32,7 @@ export const opportunityFilterSchema = z.object({
   stageId: uuid().optional(),
   ownerId: uuid().optional(),
   accountId: uuid().optional(),
+  accountArchived: booleanQuery.optional(),
   page: z.coerce.number().int().positive().optional(),
   pageSize: z.coerce.number().int().positive().optional(),
 });

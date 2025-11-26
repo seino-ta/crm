@@ -22,7 +22,7 @@ const loginSchema = z.object({
 });
 
 export type AuthFormState = {
-  error?: string;
+  error?: 'validation' | 'loginFailed';
 };
 
 export async function loginAction(_prevState: AuthFormState | undefined, formData: FormData): Promise<AuthFormState | void> {
@@ -32,7 +32,7 @@ export async function loginAction(_prevState: AuthFormState | undefined, formDat
   });
 
   if (!result.success) {
-    return { error: 'メールアドレスとパスワードを確認してください。' };
+    return { error: 'validation' };
   }
 
   try {
@@ -57,7 +57,7 @@ export async function loginAction(_prevState: AuthFormState | undefined, formDat
       throw error;
     }
     console.error(error);
-    return { error: 'ログインに失敗しました。資格情報を確認してください。' };
+    return { error: 'loginFailed' };
   }
 }
 

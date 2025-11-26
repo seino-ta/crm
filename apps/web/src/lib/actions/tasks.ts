@@ -5,6 +5,11 @@ import { z } from 'zod';
 
 import { apiFetch } from '../api-client';
 
+export type TaskActionState = {
+  ok?: boolean;
+  error?: 'validation' | 'createFailed';
+};
+
 const taskSchema = z.object({
   title: z.string().min(2),
   description: z.string().optional().or(z.literal('')).transform((val) => (val ? val : undefined)),
@@ -26,10 +31,10 @@ const taskSchema = z.object({
   opportunityId: z.string().uuid().optional().or(z.literal('')).transform((val) => (val ? val : undefined)),
 });
 
-export async function createTaskAction(_state: { error?: string } | undefined, formData: FormData) {
+export async function createTaskAction(_state: TaskActionState | undefined, formData: FormData): Promise<TaskActionState> {
   const parsed = taskSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) {
-    return { error: '入力内容を確認してください。' };
+    return { error: 'validation' };
   }
   try {
     await apiFetch('/tasks', {
@@ -40,7 +45,7 @@ export async function createTaskAction(_state: { error?: string } | undefined, f
     return { ok: true };
   } catch (error) {
     console.error(error);
-    return { error: 'タスクの作成に失敗しました。' };
+    return { error: 'createFailed' };
   }
 }
 

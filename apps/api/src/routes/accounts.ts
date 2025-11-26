@@ -4,7 +4,7 @@ import createError from 'http-errors';
 import { authenticate } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 import { accountFilterSchema, createAccountSchema, updateAccountSchema, type CreateAccountInput, type UpdateAccountInput } from '../modules/account/account.schema';
-import { createAccount, getAccountById, listAccounts, softDeleteAccount, updateAccount } from '../modules/account/account.service';
+import { createAccount, getAccountById, listAccounts, restoreAccount, softDeleteAccount, updateAccount } from '../modules/account/account.service';
 import { successResponse } from '../utils/response';
 
 const router = Router();
@@ -27,7 +27,7 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params as { id: string };
-    const account = await getAccountById(id);
+    const account = await getAccountById(id, { includeDeleted: true });
     res.json(successResponse(account));
   } catch (error) {
     next(error);
@@ -60,6 +60,16 @@ router.delete('/:id', async (req, res, next) => {
     const { id } = req.params as { id: string };
     await softDeleteAccount(id, req.user?.id);
     res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/:id/restore', async (req, res, next) => {
+  try {
+    const { id } = req.params as { id: string };
+    const account = await restoreAccount(id, req.user?.id);
+    res.json(successResponse(account));
   } catch (error) {
     next(error);
   }

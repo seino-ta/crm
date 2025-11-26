@@ -93,6 +93,10 @@
 - 2025-11-19: ログイン後にリダイレクトできない回帰を修正 (Server Action の `redirect` 例外を適切に再スローし、`apiFetch` の `skipAuth` 向け 401 ハンドリングを調整) し、README と `.env.local.example` を更新。
 - 2025-11-19: Server Action で CRUD 後に `redirect()` を行うよう Accounts/Opportunities/Activities/Tasks を更新し、Playwright 主要シナリオ (ログイン→各メニュー CRUD) が通ることを確認。
 - 2025-11-19: Prisma seed の固定 ID を RFC 4122 準拠の UUID に差し替え、DB リセット (`npx prisma migrate reset` → `npm --prefix apps/api run db:seed`) 手順を README に追記。
+- 2025-11-25: WS3 バグ修正 — Account 詳細フォーム保存後に Next.js が同一パスへ `router.replace` を繰り返して無限リロードになる回帰を特定し、成功ステートの重複処理を防ぎつつ同一パスの場合は `router.refresh` に切り替えて解消。
+- 2025-11-25: WS3 バグ修正 — Account 詳細フォーム保存後に Next.js が同一パスへ `router.replace` を繰り返して無限リロードになる回帰を特定し、成功ステートの重複処理を防ぎつつ同一パスの場合は `router.refresh` に切り替えて解消。
+- 2025-11-25: WS3 バグ修正 — ステータス変更など `router.refresh` を即時呼ぶフォームで SuccessToast が出ない問題を切り分け、トリガーをラッチして `requestAnimationFrame` 依存を排除し、即座にリフレッシュしてもトーストが表示されるよう改善。
+- 2025-11-25: WS3 バグ修正 — それでも `router.refresh` による再フェッチでトースト DOM 自体がアンマウントされる根本原因を特定し、`ToastProvider` + グローバルキューを実装してステータス更新・ステージ変更後もトーストが確実に表示されるようにした。
 - (予定) WS4 完了: Playwright e2e & スクショ。
 - (予定) WS5 完了: CI 反映。
 
@@ -100,6 +104,9 @@
 - 2025-11-19: Next.js 16 の `next lint` コマンドが提供されず `next <dir>` 解釈になり lint が失敗。`apps/web` 側で直接 ESLint CLI (`eslint . --ext .ts,.tsx`) を使うワークアラウンドに変更。
 - 2025-11-19: `loginAction` の try/catch が `redirect()` (内部的には `NEXT_REDIRECT` 例外) を飲み込んでしまい、ログイン成功時もエラーメッセージになることを確認。`isRedirectError` で検出して再スローする必要がある。
 - 2025-11-19: API 側の Zod `uuid()` が RFC 4122 のバージョン/variant を厳密に検証するため、旧シード ID (`0000...`) では CRUD が 422 になる問題が判明。シード ID を v4 準拠に変更し、既存 DB は migrate reset → seed で更新する方針に統一。
+- 2025-11-25: `useActionState` の結果が再マウント後も保持されるため、同一路径への `router.replace` がループを引き起こすことを確認。成功レスポンスごとに一度だけ処理するガードと同一路径判定が必要。
+- 2025-11-25: `router.refresh` を即時呼ぶと `SuccessToast` の `requestAnimationFrame` による表示がキャンセルされ、トーストが描画されないことを突き止め。SSR でも安全な isomorphic layout effect + パルス値でトリガーを検知する仕組みへ移行する必要がある。
+- 2025-11-25: Server Action 成功後にページ全体が更新されるとトーストコンポーネント自体が外れることを確認。UI フィードバックはルートレベルで管理する必要があり、グローバルトーストストアを用意しないと UX が担保できない。
 
 ## Decision Log
 - 2025-11-18: Next.js 15 App Router + TypeScript を採用。
@@ -110,6 +117,9 @@
 - 2025-11-19: `apiFetch` では `skipAuth` オプション使用時に 401 応答で即リダイレクトせず `ApiError` を投げ、フォームでバリデーションエラー表示ができるようにする。
 - 2025-11-19: Accounts/Opportunities/Activities/Tasks の作成 Server Action は成功時に `redirect()` で該当ページをリフレッシュし、Playwright でも CRUD 反映を即確認できるようにする。
 - 2025-11-19: シード ID を RFC 4122 準拠に更新し、DB リセット時は `npx prisma migrate reset --force` → `npm --prefix apps/api run db:seed` を案内する。
+- 2025-11-25: Account フォームの成功ハンドリングは `usePathname` と成功ステートの参照比較で一度だけ発火させ、同一路径では `router.refresh`、異なる遷移のみ `router.replace` を用いると定義。
+- 2025-11-25: SuccessToast は requestAnimationFrame を廃し、isomorphic layout effect で trigger を一度だけラッチ → パルスを増分し、どの再描画順でもトースト表示が保証される実装を採用。
+- 2025-11-25: トーストは `ToastProvider` に集約し、`SuccessToast`・`useSuccessToast` はコンテキスト経由でグローバルキューへ委譲する方針に変更。ページリフレッシュを跨いでもフィードバックを維持できる。
 
 ## Outcomes & Retrospective
 - (未記入)

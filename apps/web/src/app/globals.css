@@ -1,8 +1,12 @@
 @import 'tailwindcss';
 
 :root {
-  --background: #f8fafc;
+  --background: #ffffff;
   --foreground: #0f172a;
+  --muted-foreground: #64748b;
+  --chart-axis-color: #475569;
+  --chart-grid-color: #cbd5f5;
+  --color-slate-500: #708198;
 }
 
 @theme inline {
@@ -12,12 +16,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #020617;
-    --foreground: #e2e8f0;
-  }
-}
+/* Dark mode disabled */
 
 body {
   background: var(--background);
@@ -30,14 +29,7 @@ h2,
 h3,
 h4 {
   font-weight: 600;
-  color: #020617;
-}
-
-.dark h1,
-.dark h2,
-.dark h3,
-.dark h4 {
-  color: #f8fafc;
+  color: var(--foreground);
 }
 
 .page-header {
@@ -51,6 +43,40 @@ h4 {
 }
 
 .page-header p {
-  color: #64748b;
+  color: var(--muted-foreground);
   font-size: 0.95rem;
+}
+
+@layer components {
+  .app-form-label {
+    @apply text-sm font-medium text-slate-600;
+  }
+
+  .app-link-accent {
+    @apply text-blue-600 hover:text-blue-500;
+  }
+
+  .app-table-cell {
+    @apply text-slate-800;
+  }
+
+  .app-table-muted {
+    @apply text-slate-500;
+  }
+
+  .app-table-head {
+    @apply text-xs uppercase tracking-wide text-slate-600;
+  }
+
+  input.app-input:not(:placeholder-shown),
+  textarea.app-input:not(:placeholder-shown) {
+    @apply border-blue-500 bg-blue-50/70 text-slate-900;
+  }
+
+  input.app-input:-webkit-autofill,
+  textarea.app-input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px rgba(59, 130, 246, 0.08) inset;
+    -webkit-text-fill-color: var(--foreground);
+    transition: background-color 9999s ease-in-out 0s;
+  }
 }

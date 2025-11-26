@@ -11,7 +11,7 @@ const parsed = envSchema.safeParse({
 });
 
 if (!parsed.success) {
-  console.warn('環境変数の検証に失敗しました', parsed.error.flatten().fieldErrors);
+  console.warn('Failed to validate environment variables', parsed.error.flatten().fieldErrors);
 }
 
 const baseUrl = parsed.success

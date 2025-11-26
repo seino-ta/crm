@@ -34,6 +34,7 @@ export type Account = {
   annualRevenue: string | null;
   phone: string | null;
   status: AccountStatus;
+  deletedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 };

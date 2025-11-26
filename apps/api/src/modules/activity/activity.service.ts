@@ -60,6 +60,10 @@ export async function listActivities(filters: ActivityFilterInput) {
     where.occurredAt = occurredAt;
   }
 
+  if (!accountId) {
+    where.OR = [{ accountId: null }, { account: { deletedAt: null } }];
+  }
+
   const [total, data] = await Promise.all([
     prisma.activity.count({ where }),
     prisma.activity.findMany({

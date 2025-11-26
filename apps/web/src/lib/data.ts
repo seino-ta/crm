@@ -25,7 +25,7 @@ function toQuery(params: Record<string, string | number | boolean | undefined | 
   return query ? `?${query}` : '';
 }
 
-export async function listAccounts(params?: { search?: string; status?: string; page?: number; pageSize?: number }) {
+export async function listAccounts(params?: { search?: string; status?: string; page?: number; pageSize?: number; archived?: boolean }) {
   const query = toQuery(params ?? {});
   const { data, meta } = await apiFetch<Account[]>(`/accounts${query}`);
   return { data, meta: meta as ApiMeta | undefined };
@@ -53,6 +53,7 @@ export async function listOpportunities(params?: {
   stageId?: string;
   ownerId?: string;
   accountId?: string;
+  accountArchived?: boolean;
   page?: number;
   pageSize?: number;
 }) {

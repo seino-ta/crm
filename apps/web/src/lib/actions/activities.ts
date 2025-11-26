@@ -5,6 +5,11 @@ import { z } from 'zod';
 
 import { apiFetch } from '../api-client';
 
+export type ActivityActionState = {
+  ok?: boolean;
+  error?: 'validation' | 'createFailed';
+};
+
 const activitySchema = z.object({
   type: z.string(),
   subject: z.string().min(2),
@@ -26,10 +31,10 @@ const activitySchema = z.object({
     .optional(),
 });
 
-export async function createActivityAction(_state: { error?: string } | undefined, formData: FormData) {
+export async function createActivityAction(_state: ActivityActionState | undefined, formData: FormData): Promise<ActivityActionState> {
   const parsed = activitySchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) {
-    return { error: '入力内容を確認してください。' };
+    return { error: 'validation' };
   }
   try {
     await apiFetch('/activities', {
@@ -41,7 +46,7 @@ export async function createActivityAction(_state: { error?: string } | undefine
     return { ok: true };
   } catch (error) {
     console.error(error);
-    return { error: '活動の記録に失敗しました。' };
+    return { error: 'createFailed' };
   }
 }
 

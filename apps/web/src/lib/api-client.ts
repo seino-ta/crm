@@ -71,11 +71,22 @@ export async function apiFetch<T>(path: string, init: FetchOptions = {}): Promis
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers,
-    cache: 'no-store',
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers,
+      cache: 'no-store',
+    });
+  } catch (error) {
+    const nodeError = error as NodeJS.ErrnoException & { cause?: { code?: string } };
+    const code = nodeError?.code ?? nodeError?.cause?.code;
+    const isConnectionRefused = code === 'ECONNREFUSED';
+    const message = isConnectionRefused
+      ? 'Unable to reach the API server. Start the backend with npm run dev:api.'
+      : 'A network error occurred while calling the API.';
+    throw new ApiError(message, 503, error);
+  }
 
   if (response.status === 204) {
     return { data: undefined as T };
@@ -85,19 +96,19 @@ export async function apiFetch<T>(path: string, init: FetchOptions = {}): Promis
   try {
     payload = (await response.json()) as SuccessEnvelope<T> | ErrorEnvelope;
   } catch {
-    throw new ApiError('無効な API レスポンスです', response.status);
+    throw new ApiError('Received an invalid API response.', response.status);
   }
 
   if (!response.ok) {
     if (response.status === 401 && !init.skipAuth) {
       await handleUnauthorized();
     }
-    const message = !payload || 'error' in payload === false ? 'リクエストに失敗しました' : payload.error.message;
+    const message = !payload || 'error' in payload === false ? 'The request failed.' : payload.error.message;
     throw new ApiError(message, response.status, 'error' in (payload ?? {}) ? payload.error.details : undefined);
   }
 
   if (!payload?.success) {
-    throw new ApiError('API フォーマットが不正です', response.status);
+    throw new ApiError('Unexpected API payload format.', response.status);
   }
 
   return { data: payload.data, meta: payload.meta };

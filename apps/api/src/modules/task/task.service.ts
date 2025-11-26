@@ -55,6 +55,10 @@ export async function listTasks(filters: TaskFilterInput) {
     where.dueDate = dueDate;
   }
 
+  if (!accountId) {
+    where.OR = [{ accountId: null }, { account: { deletedAt: null } }];
+  }
+
   const [total, data] = await Promise.all([
     prisma.task.count({ where }),
     prisma.task.findMany({
