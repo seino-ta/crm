@@ -1,16 +1,18 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { createTaskAction } from '@/lib/actions/tasks';
+import { createTaskAction, type TaskActionState } from '@/lib/actions/tasks';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { SuccessToast } from '@/components/ui/success-modal';
-import { TASK_PRIORITY_OPTIONS } from '@/lib/labels';
+import { getTaskPriorityOptions } from '@/lib/labels';
 import { RequiredMark } from '@/components/ui/required-mark';
+import { useI18n } from '@/components/providers/i18n-provider';
+import { useFormSuccessToast } from '@/hooks/use-form-success-toast';
 
 type TaskFormProps = {
   accounts: { id: string; name: string }[];
@@ -20,61 +22,101 @@ type TaskFormProps = {
 
 export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
   const router = useRouter();
-  const [state, formAction] = useActionState<{ ok?: boolean; error?: string } | undefined, FormData>(createTaskAction, undefined);
-  const [showModal, setShowModal] = useState(false);
+  const [state, formAction] = useActionState<TaskActionState | undefined, FormData>(createTaskAction, undefined);
+  const { t: tToast } = useI18n('toasts');
+  const { t: tForm, locale } = useI18n('tasks.form');
+  const { t: tErrors } = useI18n('tasks.errors');
+  const priorityOptions = useMemo(() => getTaskPriorityOptions(locale), [locale]);
+  const initialSnapshot = useMemo(() => JSON.stringify({ ownerId }), [ownerId]);
+  const { toastTrigger, handleSubmitSnapshot, handleSuccessPersist, handleErrorCleanup, triggerImmediateToast } = useFormSuccessToast({
+    formId: 'tasks:create',
+    initialSnapshot,
+    matchInitialSnapshot: false,
+    message: tToast('taskCreated'),
+  });
+  const successToastTrigger = toastTrigger ?? undefined;
 
   useEffect(() => {
-    if (state?.ok) {
-      setShowModal(true);
-      const timer = setTimeout(() => setShowModal(false), 2000);
-      router.refresh();
-      return () => clearTimeout(timer);
+    if (!state) return;
+    if (state.ok) {
+      triggerImmediateToast();
+      handleSuccessPersist();
+      setTimeout(() => {
+        router.refresh();
+      }, 0);
+    } else if (state.error) {
+      handleErrorCleanup();
     }
-  }, [state, router]);
+  }, [state, router, handleSuccessPersist, handleErrorCleanup, triggerImmediateToast]);
 
   return (
-    <form action={formAction} className="space-y-4" data-testid="task-form">
+    <form
+      action={formAction}
+      className="space-y-4"
+      data-testid="task-form"
+      onSubmit={(event) => {
+        const snapshot = JSON.stringify(Object.fromEntries(new FormData(event.currentTarget).entries()));
+        handleSubmitSnapshot(snapshot);
+      }}
+    >
       <div className="space-y-1">
         <label htmlFor="task-title" className="text-sm font-medium text-slate-600">
-          タスク名<RequiredMark />
+          {tForm('nameLabel')}
+          <RequiredMark />
         </label>
-        <Input id="task-title" name="title" placeholder="タスク名" required />
+        <Input id="task-title" name="title" placeholder={tForm('namePlaceholder')} required aria-label={tForm('nameLabel')} />
       </div>
-      <Textarea name="description" rows={3} placeholder="詳細" />
+      <Textarea name="description" rows={3} placeholder={tForm('descriptionPlaceholder')} aria-label={tForm('descriptionPlaceholder')} />
       <div className="space-y-1">
         <label htmlFor="task-priority" className="text-sm font-medium text-slate-600">
-          優先度<RequiredMark />
+          {tForm('priorityLabel')}
+          <RequiredMark />
         </label>
-        <Select id="task-priority" name="priority" defaultValue="MEDIUM">
-          {TASK_PRIORITY_OPTIONS.map((priority) => (
+        <Select id="task-priority" name="priority" defaultValue="MEDIUM" aria-label={tForm('priorityLabel')}>
+          {priorityOptions.map((priority) => (
             <option key={priority.value} value={priority.value}>
               {priority.label}
             </option>
           ))}
         </Select>
       </div>
-      <Input name="dueDate" type="date" />
-      <Select name="accountId" defaultValue="">
-        <option value="">アカウントなし</option>
-        {accounts.map((account) => (
-          <option key={account.id} value={account.id}>
-            {account.name}
-          </option>
-        ))}
-      </Select>
-      <Select name="opportunityId" defaultValue="">
-        <option value="">案件なし</option>
-        {opportunities.map((opp) => (
-          <option key={opp.id} value={opp.id}>
-            {opp.name}
-          </option>
-        ))}
-      </Select>
+      <div className="space-y-1">
+        <label htmlFor="task-due" className="text-sm font-medium text-slate-600">
+          {tForm('dueLabel')}
+        </label>
+        <Input id="task-due" name="dueDate" type="date" aria-label={tForm('dueLabel')} />
+      </div>
+      <div className="space-y-1">
+        <label htmlFor="task-account" className="text-sm font-medium text-slate-600">
+          {tForm('accountLabel')}
+        </label>
+        <Select id="task-account" name="accountId" defaultValue="" aria-label={tForm('accountLabel')}>
+          <option value="">{tForm('accountPlaceholder')}</option>
+          {accounts.map((account) => (
+            <option key={account.id} value={account.id}>
+              {account.name}
+            </option>
+          ))}
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <label htmlFor="task-opportunity" className="text-sm font-medium text-slate-600">
+          {tForm('opportunityLabel')}
+        </label>
+        <Select id="task-opportunity" name="opportunityId" defaultValue="" aria-label={tForm('opportunityLabel')}>
+          <option value="">{tForm('opportunityPlaceholder')}</option>
+          {opportunities.map((opp) => (
+            <option key={opp.id} value={opp.id}>
+              {opp.name}
+            </option>
+          ))}
+        </Select>
+      </div>
       <input type="hidden" name="ownerId" value={ownerId} />
-      <SuccessToast open={showModal} message="タスクを追加しました。" />
-      {state?.error && <p className="text-sm text-rose-600">{state.error}</p>}
+      <SuccessToast trigger={successToastTrigger} message={tToast('taskCreated')} />
+      {state?.error && <p className="text-sm text-rose-600">{tErrors(state.error)}</p>}
       <Button type="submit" className="w-full">
-        タスクを追加
+        {tForm('submit')}
       </Button>
     </form>
   );

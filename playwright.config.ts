@@ -12,6 +12,7 @@ const env = process.env as Env;
 export default defineConfig({
   testDir: 'apps/web/tests/e2e',
   timeout: 90_000,
+  workers: 1,
   expect: {
     timeout: 10_000,
   },
