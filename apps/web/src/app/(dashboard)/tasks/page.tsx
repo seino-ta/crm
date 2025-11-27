@@ -31,7 +31,7 @@ export default async function TasksPage() {
             {tasks.data.length === 0 && <p className="text-sm text-slate-500">{t('list.empty')}</p>}
             {tasks.data.map((task) => {
               const { label, tone } = getTaskStatusMeta(task.status, locale);
-              const dueText = task.dueDate ? t('list.dueLabel', { date: formatDate(task.dueDate) }) : t('list.noDueLabel');
+              const dueText = task.dueDate ? t('list.dueLabel', { values: { date: formatDate(task.dueDate) } }) : t('list.noDueLabel');
               return (
                 <div key={task.id} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm " data-testid="task-row">
                   <div className="flex items-center justify-between">
