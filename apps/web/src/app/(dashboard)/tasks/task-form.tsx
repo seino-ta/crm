@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useMemo } from 'react';
+import { useActionState, useEffect, useEffectEvent, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { createTaskAction, type TaskActionState } from '@/lib/actions/tasks';
@@ -16,7 +16,7 @@ import { useFormSuccessToast } from '@/hooks/use-form-success-toast';
 
 type TaskFormProps = {
   accounts: { id: string; name: string }[];
-  opportunities: { id: string; name: string }[];
+  opportunities: { id: string; name: string; accountId: string }[];
   ownerId: string;
 };
 
@@ -35,6 +35,21 @@ export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
     message: tToast('taskCreated'),
   });
   const successToastTrigger = toastTrigger ?? undefined;
+  const [selectedAccountId, setSelectedAccountId] = useState('');
+  const [selectedOpportunityId, setSelectedOpportunityId] = useState('');
+  const filteredOpportunities = useMemo(() => {
+    if (!selectedAccountId) return opportunities;
+    return opportunities.filter((opp) => opp.accountId === selectedAccountId);
+  }, [opportunities, selectedAccountId]);
+  const resetSelectedOpportunity = useEffectEvent(() => {
+    setSelectedOpportunityId('');
+  });
+
+  useEffect(() => {
+    if (!selectedOpportunityId) return;
+    if (filteredOpportunities.some((opp) => opp.id === selectedOpportunityId)) return;
+    resetSelectedOpportunity();
+  }, [filteredOpportunities, selectedOpportunityId]);
 
   useEffect(() => {
     if (!state) return;
@@ -90,7 +105,13 @@ export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
         <label htmlFor="task-account" className="text-sm font-medium text-slate-600">
           {tForm('accountLabel')}
         </label>
-        <Select id="task-account" name="accountId" defaultValue="" aria-label={tForm('accountLabel')}>
+        <Select
+          id="task-account"
+          name="accountId"
+          value={selectedAccountId}
+          onChange={(event) => setSelectedAccountId(event.target.value)}
+          aria-label={tForm('accountLabel')}
+        >
           <option value="">{tForm('accountPlaceholder')}</option>
           {accounts.map((account) => (
             <option key={account.id} value={account.id}>
@@ -103,9 +124,16 @@ export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
         <label htmlFor="task-opportunity" className="text-sm font-medium text-slate-600">
           {tForm('opportunityLabel')}
         </label>
-        <Select id="task-opportunity" name="opportunityId" defaultValue="" aria-label={tForm('opportunityLabel')}>
+        <Select
+          id="task-opportunity"
+          name="opportunityId"
+          value={selectedOpportunityId}
+          onChange={(event) => setSelectedOpportunityId(event.target.value)}
+          aria-label={tForm('opportunityLabel')}
+          disabled={selectedAccountId !== '' && filteredOpportunities.length === 0}
+        >
           <option value="">{tForm('opportunityPlaceholder')}</option>
-          {opportunities.map((opp) => (
+          {filteredOpportunities.map((opp) => (
             <option key={opp.id} value={opp.id}>
               {opp.name}
             </option>

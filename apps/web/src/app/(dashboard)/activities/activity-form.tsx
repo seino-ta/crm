@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useMemo } from 'react';
+import { useActionState, useEffect, useEffectEvent, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { createActivityAction, type ActivityActionState } from '@/lib/actions/activities';
@@ -17,7 +17,7 @@ import { useFormSuccessToast } from '@/hooks/use-form-success-toast';
 
 type ActivityFormProps = {
   accounts: { id: string; name: string }[];
-  opportunities: { id: string; name: string }[];
+  opportunities: { id: string; name: string; accountId: string }[];
   userId: string;
 };
 
@@ -36,6 +36,21 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
     message: tToast('activityCreated'),
   });
   const successToastTrigger = toastTrigger ?? undefined;
+  const [selectedAccountId, setSelectedAccountId] = useState('');
+  const [selectedOpportunityId, setSelectedOpportunityId] = useState('');
+  const filteredOpportunities = useMemo(() => {
+    if (!selectedAccountId) return opportunities;
+    return opportunities.filter((opp) => opp.accountId === selectedAccountId);
+  }, [opportunities, selectedAccountId]);
+  const resetSelectedOpportunity = useEffectEvent(() => {
+    setSelectedOpportunityId('');
+  });
+
+  useEffect(() => {
+    if (!selectedOpportunityId) return;
+    if (filteredOpportunities.some((opp) => opp.id === selectedOpportunityId)) return;
+    resetSelectedOpportunity();
+  }, [filteredOpportunities, selectedOpportunityId]);
 
   useEffect(() => {
     if (!state) return;
@@ -79,7 +94,13 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
         <Input id="activity-subject" name="subject" placeholder={t('subjectPlaceholder')} required />
       </div>
       <Textarea name="description" rows={3} placeholder={t('descriptionPlaceholder')} />
-      <Select name="accountId" defaultValue="">
+      <Select
+        name="accountId"
+        value={selectedAccountId}
+        onChange={(event) => {
+          setSelectedAccountId(event.target.value);
+        }}
+      >
         <option value="">{t('accountPlaceholder')}</option>
         {accounts.map((account) => (
           <option key={account.id} value={account.id}>
@@ -87,9 +108,14 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
           </option>
         ))}
       </Select>
-      <Select name="opportunityId" defaultValue="">
-        <option value="">{t('opportunityPlaceholder')}</option>
-        {opportunities.map((opp) => (
+      <Select
+        name="opportunityId"
+        value={selectedOpportunityId}
+        onChange={(event) => setSelectedOpportunityId(event.target.value)}
+        disabled={selectedAccountId !== '' && filteredOpportunities.length === 0}
+      >
+        <option value="">{selectedAccountId ? t('opportunityPlaceholder') : t('opportunityPlaceholder')}</option>
+        {filteredOpportunities.map((opp) => (
           <option key={opp.id} value={opp.id}>
             {opp.name}
           </option>

@@ -59,7 +59,7 @@ export default async function TasksPage() {
           <TaskForm
             ownerId={user.id}
             accounts={accounts.data.map((account) => ({ id: account.id, name: account.name }))}
-            opportunities={opportunities.data.map((opp) => ({ id: opp.id, name: opp.name }))}
+            opportunities={opportunities.data.map((opp) => ({ id: opp.id, name: opp.name, accountId: opp.accountId }))}
           />
         </Card>
       </div>
