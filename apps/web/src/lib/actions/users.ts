@@ -67,10 +67,15 @@ export async function inviteUserAction(_state: InviteUserActionState | undefined
   }
 }
 
-export async function updateUserAction(userId: string, formData: FormData) {
+export type UserActionState = {
+  ok?: boolean;
+  error?: 'validation' | 'requestFailed';
+};
+
+export async function updateUserAction(userId: string, formData: FormData, pathToRevalidate?: string): Promise<UserActionState | void> {
   const parsed = updateSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) {
-    return;
+    return { error: 'validation' };
   }
   try {
     await apiFetch(`/users/${userId}`, {
@@ -78,21 +83,33 @@ export async function updateUserAction(userId: string, formData: FormData) {
       body: JSON.stringify(parsed.data),
     });
     revalidatePath('/admin/users');
+    if (pathToRevalidate) {
+      revalidatePath(pathToRevalidate);
+    }
+    revalidatePath(`/admin/users/${userId}`);
     revalidatePath('/admin/audit-logs');
+    return { ok: true };
   } catch (error) {
     console.error(error);
+    return { error: 'requestFailed' };
   }
 }
 
-export async function toggleUserStatusAction(userId: string, nextStatus: boolean, _formData: FormData) {
+export async function toggleUserStatusAction(userId: string, nextStatus: boolean, pathToRevalidate?: string): Promise<UserActionState | void> {
   try {
     await apiFetch(`/users/${userId}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ isActive: nextStatus }),
     });
     revalidatePath('/admin/users');
+    if (pathToRevalidate) {
+      revalidatePath(pathToRevalidate);
+    }
+    revalidatePath(`/admin/users/${userId}`);
     revalidatePath('/admin/audit-logs');
+    return { ok: true };
   } catch (error) {
     console.error(error);
+    return { error: 'requestFailed' };
   }
 }

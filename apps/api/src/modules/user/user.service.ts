@@ -58,6 +58,14 @@ export async function listUsers(query: UserFilterQuery) {
   return { data: users, meta: buildPaginationMeta(total, normalizedPage, normalizedPageSize) };
 }
 
+export async function getUserById(id: string) {
+  const user = await prisma.user.findUnique({ where: { id }, select: userSelect });
+  if (!user) {
+    throw createError(404, 'User not found');
+  }
+  return user;
+}
+
 export async function inviteUser(payload: InviteUserInput, actorId?: string) {
   const existing = await prisma.user.findUnique({ where: { email: payload.email } });
   if (existing) {

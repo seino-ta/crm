@@ -136,3 +136,8 @@ export async function listUsers(params?: {
   const { data, meta } = await apiFetch<User[]>(`/users${query}`);
   return { data, meta: meta as ApiMeta | undefined };
 }
+
+export async function getUser(id: string) {
+  const { data } = await apiFetch<User>(`/users/${id}`);
+  return data;
+}

@@ -244,8 +244,7 @@ export const en: JaMessages = {
     },
     list: {
       headers: {
-        name: 'Name',
-        email: 'Email',
+        profile: 'User Info',
         role: 'Role',
         status: 'Status',
         lastLogin: 'Last login',
@@ -258,8 +257,11 @@ export const en: JaMessages = {
       },
       actions: {
         saveRole: 'Save',
+        saveDetails: 'Save details',
         deactivate: 'Deactivate',
         activate: 'Activate',
+        confirmDeactivate: 'Deactivate this user?',
+        confirmActivate: 'Activate this user?',
       },
       pagination: 'Page {page} of {totalPages}',
       prev: 'Prev',
@@ -278,6 +280,12 @@ export const en: JaMessages = {
       toast: 'User invited.',
       passwordLabel: 'Temporary password',
     },
+    details: {
+      firstName: 'First name',
+      lastName: 'Last name',
+      title: 'Title',
+      phone: 'Phone',
+    },
     roles: {
       admin: 'Admin',
       manager: 'Manager',
@@ -286,6 +294,29 @@ export const en: JaMessages = {
     errors: {
       validation: 'Please check the form fields.',
       requestFailed: 'Request failed. Try again later.',
+    },
+    detail: {
+      title: 'User Detail',
+      back: 'Back to users',
+      profileSection: 'Overview',
+      profileEditSection: 'Profile Details',
+      accessSection: 'Role & Access',
+      fields: {
+        email: 'Email',
+        role: 'Role',
+      },
+      actions: {
+        saveDetails: 'Save details',
+        statusHint: 'Change account availability',
+        deactivate: 'Deactivate user',
+        activate: 'Activate user',
+      },
+      toasts: {
+        profileSaved: 'User details saved.',
+        roleSaved: 'Role updated.',
+        activated: 'User activated.',
+        deactivated: 'User deactivated.',
+      },
     },
   },
   opportunities: {

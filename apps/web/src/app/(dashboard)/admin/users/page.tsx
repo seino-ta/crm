@@ -11,7 +11,7 @@ import { getServerTranslations } from '@/lib/i18n/server';
 import type { UserRole } from '@/lib/types';
 import { formatDateTime } from '@/lib/formatters';
 import { InviteUserForm } from './invite-user-form';
-import { updateUserAction, toggleUserStatusAction } from '@/lib/actions/users';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 const PAGE_SIZE = 20;
 
@@ -95,12 +95,10 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
           <table className="min-w-full text-sm">
             <thead>
               <tr className="app-table-head">
-                <th className="px-3 py-2 text-left">{t('list.headers.name')}</th>
-                <th className="px-3 py-2 text-left">{t('list.headers.email')}</th>
-                <th className="px-3 py-2 text-left">{t('list.headers.role')}</th>
-                <th className="px-3 py-2 text-left">{t('list.headers.status')}</th>
+                <th className="px-3 py-2 text-left w-[420px]">{t('list.headers.profile')}</th>
+                <th className="px-3 py-2 text-left w-[200px]">{t('list.headers.role')}</th>
+                <th className="px-3 py-2 text-left w-[140px]">{t('list.headers.status')}</th>
                 <th className="px-3 py-2 text-left">{t('list.headers.lastLogin')}</th>
-                <th className="px-3 py-2 text-left">{t('list.headers.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -113,41 +111,28 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
               ) : (
                 users.map((item) => (
                   <tr key={item.id} className="border-t border-slate-100" data-testid="user-row">
-                    <td className="px-3 py-2">
-                      <div className="font-medium">{`${item.lastName ?? ''} ${item.firstName ?? ''}`.trim() || '—'}</div>
-                      <div className="text-xs text-slate-500">{item.title ?? '—'}</div>
+                    <td className="px-3 py-2 align-top max-w-[420px]">
+                      <div className="space-y-1">
+                        <div className="font-medium text-slate-900">
+                          <Link href={`/admin/users/${item.id}`} className="text-blue-600" data-testid="user-detail-link">
+                            {`${item.lastName ?? ''} ${item.firstName ?? ''}`.trim() || item.email}
+                          </Link>
+                        </div>
+                        {item.title && <p className="text-xs text-slate-500">{item.title}</p>}
+                        <p className="text-xs text-slate-500 break-all">{item.email}</p>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 align-top">
+                      {t(`roles.${item.role.toLowerCase()}`)}
                     </td>
                     <td className="px-3 py-2">
-                      <Link href={`mailto:${item.email}`} className="text-blue-600">
-                        {item.email}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-2">
-                      <form className="flex items-center gap-2" action={updateUserAction.bind(null, item.id)}>
-                        <Select name="role" defaultValue={item.role} aria-label={t('list.headers.role')}>
-                          {roleOptions.map((option) => (
-                            <option key={option} value={option}>
-                              {t(`roles.${option.toLowerCase()}`)}
-                            </option>
-                          ))}
-                        </Select>
-                        <Button type="submit" size="sm" variant="secondary">
-                          {t('list.actions.saveRole')}
-                        </Button>
-                      </form>
-                    </td>
-                    <td className="px-3 py-2">
-                      <span className={item.isActive ? 'text-emerald-600' : 'text-slate-500'}>{item.isActive ? t('list.status.active') : t('list.status.inactive')}</span>
+                      <StatusBadge
+                        label={item.isActive ? t('list.status.active') : t('list.status.inactive')}
+                        tone={item.isActive ? 'success' : 'neutral'}
+                      />
                     </td>
                     <td className="px-3 py-2">
                       {item.lastLoginAt ? formatDateTime(item.lastLoginAt) : t('list.noLogin')}
-                    </td>
-                    <td className="px-3 py-2">
-                      <form action={toggleUserStatusAction.bind(null, item.id, !item.isActive)}>
-                        <Button type="submit" size="sm" variant="ghost" className={item.isActive ? 'text-rose-600' : 'text-emerald-600'} data-testid="user-status-toggle">
-                          {item.isActive ? t('list.actions.deactivate') : t('list.actions.activate')}
-                        </Button>
-                      </form>
                     </td>
                   </tr>
                 ))

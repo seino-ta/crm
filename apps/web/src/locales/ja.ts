@@ -242,8 +242,7 @@ export const ja = {
     },
     list: {
       headers: {
-        name: '氏名',
-        email: 'メールアドレス',
+        profile: 'ユーザー情報',
         role: 'ロール',
         status: '状態',
         lastLogin: '最終ログイン',
@@ -256,8 +255,11 @@ export const ja = {
       },
       actions: {
         saveRole: '保存',
+        saveDetails: '詳細を保存',
         deactivate: '無効化',
         activate: '有効化',
+        confirmDeactivate: 'このユーザーを無効化しますか？',
+        confirmActivate: 'このユーザーを有効化しますか？',
       },
       pagination: '{page}/{totalPages} ページ',
       prev: '前へ',
@@ -276,6 +278,12 @@ export const ja = {
       toast: 'ユーザーを招待しました。',
       passwordLabel: '一時パスワード',
     },
+    details: {
+      firstName: '名',
+      lastName: '姓',
+      title: '役職',
+      phone: '電話番号',
+    },
     roles: {
       admin: '管理者',
       manager: 'マネージャー',
@@ -284,6 +292,29 @@ export const ja = {
     errors: {
       validation: '入力内容を確認してください。',
       requestFailed: 'リクエストに失敗しました。時間を置いて再試行してください。',
+    },
+    detail: {
+      title: 'ユーザー詳細',
+      back: '一覧に戻る',
+      profileSection: '概要',
+      profileEditSection: 'プロフィール情報',
+      accessSection: 'ロールとアクセス',
+      fields: {
+        email: 'メールアドレス',
+        role: 'ロール',
+      },
+      actions: {
+        saveDetails: '詳細を保存',
+        statusHint: 'アカウントの有効/無効を切り替えます',
+        deactivate: 'ユーザーを無効化',
+        activate: 'ユーザーを有効化',
+      },
+      toasts: {
+        profileSaved: 'ユーザー情報を保存しました。',
+        roleSaved: 'ロールを更新しました。',
+        activated: 'ユーザーを有効化しました。',
+        deactivated: 'ユーザーを無効化しました。',
+      },
     },
   },
   opportunities: {

@@ -6,7 +6,7 @@ import { authenticate } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 import { successResponse } from '../utils/response';
 import { inviteUserSchema, updateUserSchema, updateUserStatusSchema, userFilterSchema, type InviteUserInput, type UpdateUserInput, type UpdateUserStatusInput } from '../modules/user/user.schema';
-import { inviteUser, listUsers, updateUser, updateUserStatus } from '../modules/user/user.service';
+import { getUserById, inviteUser, listUsers, updateUser, updateUserStatus } from '../modules/user/user.service';
 
 const router = Router();
 
@@ -20,6 +20,16 @@ router.get('/', async (req, res, next) => {
     }
     const result = await listUsers(parsed.data);
     res.json(successResponse(result.data, result.meta));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params as { id: string };
+    const user = await getUserById(id);
+    res.json(successResponse(user));
   } catch (error) {
     next(error);
   }

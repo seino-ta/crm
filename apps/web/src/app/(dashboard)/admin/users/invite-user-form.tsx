@@ -19,6 +19,7 @@ export function InviteUserForm() {
   const [state, formAction] = useActionState<InviteUserActionState | undefined, FormData>(inviteUserAction, undefined);
   const { t } = useI18n('users.invite');
   const { t: tErrors } = useI18n('users.errors');
+  const { t: tUsers } = useI18n('users');
 
   return (
     <form action={formAction} className="space-y-3" data-testid="invite-user-form">
@@ -41,7 +42,7 @@ export function InviteUserForm() {
         <Select id="invite-role" name="role" defaultValue="REP" required>
           {roles.map((role) => (
             <option key={role.value} value={role.value}>
-              {t(`roles.${role.value.toLowerCase()}`)}
+              {tUsers(`roles.${role.value.toLowerCase()}`)}
             </option>
           ))}
         </Select>

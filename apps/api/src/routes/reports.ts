@@ -7,7 +7,7 @@ import { successResponse } from '../utils/response';
 
 const router = Router();
 
-router.use(authenticate([UserRole.ADMIN, UserRole.MANAGER]));
+router.use(authenticate());
 
 router.get('/pipeline-stage', async (_req, res, next) => {
   try {
