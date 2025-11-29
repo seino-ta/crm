@@ -52,9 +52,14 @@ export async function loginUser(payload: LoginInput) {
     throw createError(401, 'Invalid credentials');
   }
 
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: { lastLoginAt: new Date() },
+  });
+
   const token = signAccessToken({ id: user.id, email: user.email, role: user.role });
 
-  return { token, user: sanitizeUser(user) };
+  return { token, user: sanitizeUser(updated) };
 }
 
 export async function getCurrentUser(userId: string) {

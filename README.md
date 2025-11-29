@@ -119,6 +119,7 @@ This repository is prepared so that:
   - `activities.spec.ts` — 活動ログ追加
   - `tasks.spec.ts` — タスク作成
   - `reports.spec.ts` — レポート画面表示
+  - `admin-users.spec.ts` — ユーザー招待/ロール変更/無効化
   - `audit-logs.spec.ts` — 監査ログのフィルタリング
 - 例: `npx playwright test tests/e2e/contacts.spec.ts --headed` でコンタクト UI のみをヘッドレス/ヘッドフル任意で検証できる。
 - HTML レポート: `npx playwright show-report apps/web/tests/e2e/report`。テストが失敗した場合は `npx playwright show-trace test-results/<run>/trace.zip` で詳細を確認。

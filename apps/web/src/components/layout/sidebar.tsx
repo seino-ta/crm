@@ -17,7 +17,10 @@ const mainNavItems = [
   { href: '/reports', key: 'reports' },
 ];
 
-const adminNavItems = [{ href: '/admin/audit-logs', key: 'auditLogs' }];
+const adminNavItems = [
+  { href: '/admin/users', key: 'users' },
+  { href: '/admin/audit-logs', key: 'auditLogs' },
+];
 
 export function Sidebar({ role }: { role: UserRole }) {
   const pathname = usePathname();

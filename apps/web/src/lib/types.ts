@@ -18,7 +18,12 @@ export type User = {
   firstName: string | null;
   lastName: string | null;
   title?: string | null;
+  phone?: string | null;
   role: UserRole;
+  isActive?: boolean;
+  invitedAt?: string | null;
+  lastLoginAt?: string | null;
+  createdAt?: string;
 };
 
 export type AccountStatus = 'ACTIVE' | 'INACTIVE' | 'PROSPECT' | 'ARCHIVED';

@@ -13,6 +13,8 @@ import type {
   Task,
   TaskStatus,
   AuditLog,
+  User,
+  UserRole,
 } from './types';
 
 function toQuery(params: Record<string, string | number | boolean | undefined | null>) {
@@ -120,5 +122,17 @@ export async function listAuditLogs(params?: {
 }) {
   const query = toQuery(params ?? {});
   const { data, meta } = await apiFetch<AuditLog[]>(`/audit-logs${query}`);
+  return { data, meta: meta as ApiMeta | undefined };
+}
+
+export async function listUsers(params?: {
+  search?: string;
+  role?: UserRole;
+  status?: 'active' | 'inactive';
+  page?: number;
+  pageSize?: number;
+}) {
+  const query = toQuery(params ?? {});
+  const { data, meta } = await apiFetch<User[]>(`/users${query}`);
   return { data, meta: meta as ApiMeta | undefined };
 }

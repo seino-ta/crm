@@ -10,6 +10,7 @@ import opportunitiesRouter from './opportunities';
 import pipelineStagesRouter from './pipeline-stages';
 import reportsRouter from './reports';
 import tasksRouter from './tasks';
+import usersRouter from './users';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use('/opportunities', opportunitiesRouter);
 router.use('/reports', reportsRouter);
 router.use('/pipeline-stages', pipelineStagesRouter);
 router.use('/audit-logs', auditLogsRouter);
+router.use('/users', usersRouter);
 router.use('/auth', authRouter);
 
 export default router;
