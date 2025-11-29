@@ -242,8 +242,7 @@ export const ja = {
     },
     list: {
       headers: {
-        name: '氏名',
-        email: 'メールアドレス',
+        profile: 'ユーザー情報',
         role: 'ロール',
         status: '状態',
         lastLogin: '最終ログイン',
@@ -256,8 +255,11 @@ export const ja = {
       },
       actions: {
         saveRole: '保存',
+        saveDetails: '詳細を保存',
         deactivate: '無効化',
         activate: '有効化',
+        confirmDeactivate: 'このユーザーを無効化しますか？',
+        confirmActivate: 'このユーザーを有効化しますか？',
       },
       pagination: '{page}/{totalPages} ページ',
       prev: '前へ',
@@ -275,6 +277,12 @@ export const ja = {
       submit: '招待を送信',
       toast: 'ユーザーを招待しました。',
       passwordLabel: '一時パスワード',
+    },
+    details: {
+      firstName: '名',
+      lastName: '姓',
+      title: '役職',
+      phone: '電話番号',
     },
     roles: {
       admin: '管理者',
