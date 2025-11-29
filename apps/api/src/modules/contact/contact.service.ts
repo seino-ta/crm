@@ -1,8 +1,9 @@
-import type { Prisma } from '@prisma/client';
+import { AuditAction, type Prisma } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
 import { buildPaginationMeta, normalizePagination } from '../../utils/pagination';
+import { createAuditLogEntry } from '../audit-log/audit-log.helper';
 
 import type { ContactListQuery, CreateContactInput, UpdateContactInput } from './contact.schema';
 
@@ -31,6 +32,8 @@ export async function listContacts(query: ContactListQuery) {
     where.OR = [
       { firstName: { contains: search, mode: 'insensitive' } },
       { lastName: { contains: search, mode: 'insensitive' } },
+      { kanaFirstName: { contains: search, mode: 'insensitive' } },
+      { kanaLastName: { contains: search, mode: 'insensitive' } },
       { email: { contains: search, mode: 'insensitive' } },
     ];
   }
@@ -56,14 +59,16 @@ export async function getContactById(id: string) {
   return contact;
 }
 
-export async function createContact(payload: CreateContactInput) {
+export async function createContact(payload: CreateContactInput, actorId?: string) {
   await ensureAccountExists(payload.accountId);
 
-  return prisma.contact.create({
+  const contact = await prisma.contact.create({
     data: {
       accountId: payload.accountId,
       firstName: payload.firstName,
       lastName: payload.lastName,
+      kanaFirstName: payload.kanaFirstName ?? null,
+      kanaLastName: payload.kanaLastName ?? null,
       email: payload.email,
       phone: payload.phone ?? null,
       jobTitle: payload.jobTitle ?? null,
@@ -71,9 +76,17 @@ export async function createContact(payload: CreateContactInput) {
       notes: payload.notes ?? null,
     },
   });
+  await createAuditLogEntry({
+    entityType: 'Contact',
+    entityId: contact.id,
+    action: AuditAction.CREATE,
+    actorId,
+    changes: payload,
+  });
+  return contact;
 }
 
-export async function updateContact(id: string, payload: UpdateContactInput) {
+export async function updateContact(id: string, payload: UpdateContactInput, actorId?: string) {
   const existing = await getContactById(id);
 
   if (payload.accountId && payload.accountId !== existing.accountId) {
@@ -88,22 +101,38 @@ export async function updateContact(id: string, payload: UpdateContactInput) {
   if (payload.firstName !== undefined) data.firstName = payload.firstName;
   if (payload.lastName !== undefined) data.lastName = payload.lastName;
   if (payload.email !== undefined) data.email = payload.email;
+  if (payload.kanaFirstName !== undefined) data.kanaFirstName = payload.kanaFirstName ?? null;
+  if (payload.kanaLastName !== undefined) data.kanaLastName = payload.kanaLastName ?? null;
   if (payload.phone !== undefined) data.phone = payload.phone ?? null;
   if (payload.jobTitle !== undefined) data.jobTitle = payload.jobTitle ?? null;
   if (payload.linkedin !== undefined) data.linkedin = payload.linkedin ?? null;
   if (payload.notes !== undefined) data.notes = payload.notes ?? null;
 
-  return prisma.contact.update({
+  const contact = await prisma.contact.update({
     where: { id },
     data,
   });
+  await createAuditLogEntry({
+    entityType: 'Contact',
+    entityId: id,
+    action: AuditAction.UPDATE,
+    actorId,
+    changes: payload,
+  });
+  return contact;
 }
 
-export async function softDeleteContact(id: string) {
+export async function softDeleteContact(id: string, actorId?: string) {
   await getContactById(id);
 
   await prisma.contact.update({
     where: { id },
     data: { deletedAt: new Date() },
+  });
+  await createAuditLogEntry({
+    entityType: 'Contact',
+    entityId: id,
+    action: AuditAction.DELETE,
+    actorId,
   });
 }

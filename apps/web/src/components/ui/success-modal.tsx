@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
 import { useToastContext } from '@/components/providers/toast-provider';
 
@@ -11,55 +11,8 @@ type SuccessToastProps = {
   duration?: number;
 };
 
-type ToastContextValue = NonNullable<ReturnType<typeof useToastContext>>;
-
-type ResolvedToastProps = {
-  message: string;
-  open?: boolean;
-  trigger?: unknown;
-  duration: number;
-};
-
-const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
-
 export function SuccessToast({ open, trigger, message, duration = 2400 }: SuccessToastProps) {
   const toastCtx = useToastContext();
-  if (toastCtx) {
-    return <GlobalSuccessToast toastCtx={toastCtx} open={open} trigger={trigger} message={message} duration={duration} />;
-  }
-  return <InlineSuccessToast open={open} trigger={trigger} message={message} duration={duration} />;
-}
-
-type GlobalSuccessToastProps = ResolvedToastProps & {
-  toastCtx: ToastContextValue;
-};
-
-function GlobalSuccessToast({ toastCtx, open, trigger, message, duration }: GlobalSuccessToastProps) {
-  const lastTriggerRef = useRef<unknown>();
-  const lastOpenRef = useRef<boolean>(false);
-
-  useIsomorphicLayoutEffect(() => {
-    if (trigger === undefined || trigger === null) return;
-    if (lastTriggerRef.current === trigger) return;
-    lastTriggerRef.current = trigger;
-    toastCtx.showToast(message, { duration });
-  }, [trigger, toastCtx, message, duration]);
-
-  useIsomorphicLayoutEffect(() => {
-    const nextOpen = Boolean(open);
-    if (!nextOpen) {
-      lastOpenRef.current = nextOpen;
-      return;
-    }
-    if (lastOpenRef.current === nextOpen) return;
-    lastOpenRef.current = nextOpen;
-    toastCtx.showToast(message, { duration });
-  }, [open, toastCtx, message, duration]);
-
-  return null;
-}
-
-function InlineSuccessToast({ open, trigger, message, duration }: ResolvedToastProps) {
   const [visible, setVisible] = useState(false);
   const lastTriggerRef = useRef<unknown>();
   const lastOpenRef = useRef<boolean>(false);
@@ -76,6 +29,14 @@ function InlineSuccessToast({ open, trigger, message, duration }: ResolvedToastP
     }, duration);
   });
 
+  const showToast = useEffectEvent(() => {
+    if (toastCtx) {
+      toastCtx.showToast(message, { duration });
+      return;
+    }
+    showInlineToast();
+  });
+
   useEffect(() => {
     return () => {
       if (timerRef.current) {
@@ -90,8 +51,8 @@ function InlineSuccessToast({ open, trigger, message, duration }: ResolvedToastP
       return;
     }
     lastTriggerRef.current = trigger;
-    showInlineToast();
-  }, [trigger]);
+    showToast();
+  }, [trigger, showToast]);
 
   useEffect(() => {
     const nextOpen = Boolean(open);
@@ -100,10 +61,10 @@ function InlineSuccessToast({ open, trigger, message, duration }: ResolvedToastP
       return;
     }
     lastOpenRef.current = nextOpen;
-    showInlineToast();
-  }, [open]);
+    showToast();
+  }, [open, showToast]);
 
-  if (!visible) {
+  if (toastCtx || !visible) {
     return null;
   }
 

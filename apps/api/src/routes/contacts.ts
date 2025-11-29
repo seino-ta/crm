@@ -37,7 +37,7 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', validateBody(createContactSchema), async (req, res, next) => {
   try {
     const payload = req.body as CreateContactInput;
-    const contact = await createContact(payload);
+    const contact = await createContact(payload, req.user?.id);
     res.status(201).json(successResponse(contact));
   } catch (error) {
     next(error);
@@ -48,7 +48,7 @@ router.put('/:id', validateBody(updateContactSchema), async (req, res, next) => 
   try {
     const payload = req.body as UpdateContactInput;
     const { id } = req.params as { id: string };
-    const contact = await updateContact(id, payload);
+    const contact = await updateContact(id, payload, req.user?.id);
     res.json(successResponse(contact));
   } catch (error) {
     next(error);
@@ -58,7 +58,7 @@ router.put('/:id', validateBody(updateContactSchema), async (req, res, next) => 
 router.delete('/:id', async (req, res, next) => {
   try {
     const { id } = req.params as { id: string };
-    await softDeleteContact(id);
+    await softDeleteContact(id, req.user?.id);
     res.status(204).send();
   } catch (error) {
     next(error);

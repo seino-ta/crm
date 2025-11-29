@@ -10,6 +10,7 @@ import { useI18n } from '@/components/providers/i18n-provider';
 const mainNavItems = [
   { href: '/dashboard', key: 'dashboard' },
   { href: '/accounts', key: 'accounts' },
+  { href: '/contacts', key: 'contacts' },
   { href: '/opportunities', key: 'opportunities' },
   { href: '/activities', key: 'activities' },
   { href: '/tasks', key: 'tasks' },

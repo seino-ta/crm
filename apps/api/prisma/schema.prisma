@@ -123,6 +123,8 @@ model Contact {
   accountId String    @db.Uuid
   firstName String
   lastName  String
+  kanaFirstName String?
+  kanaLastName  String?
   email     String    @unique
   phone     String?
   jobTitle  String?

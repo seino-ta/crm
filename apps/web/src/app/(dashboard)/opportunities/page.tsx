@@ -18,7 +18,7 @@ export default async function OpportunitiesPage() {
     listContacts({ pageSize: 100 }),
   ]);
 
-  const contactOptions = contacts.map((contact) => ({ id: contact.id, name: `${contact.firstName} ${contact.lastName}` }));
+  const contactOptions = contacts.data.map((contact) => ({ id: contact.id, name: `${contact.firstName} ${contact.lastName}`.trim() }));
   const grouped = stages.map((stage) => ({
     stage,
     items: opportunities.data.filter((opp) => opp.stageId === stage.id),

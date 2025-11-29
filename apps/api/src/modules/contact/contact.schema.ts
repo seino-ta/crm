@@ -11,6 +11,8 @@ export const createContactSchema = z.object({
   accountId: z.string().uuid(),
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
+  kanaFirstName: z.string().max(100).optional(),
+  kanaLastName: z.string().max(100).optional(),
   email: z.string().email(),
   phone: z.string().max(50).optional(),
   jobTitle: z.string().max(150).optional(),
