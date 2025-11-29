@@ -233,6 +233,7 @@ export const en: JaMessages = {
     title: 'User Management',
     description: 'Invite teammates and manage roles and access.',
     filters: {
+      searchLabel: 'Search',
       searchPlaceholder: 'Search by name or email',
       role: 'Role',
       roleAll: 'All roles',
@@ -241,6 +242,7 @@ export const en: JaMessages = {
       statusActive: 'Active',
       statusInactive: 'Inactive',
       submit: 'Filter',
+      clear: 'Clear',
     },
     list: {
       headers: {
@@ -271,10 +273,10 @@ export const en: JaMessages = {
     invite: {
       title: 'Invite User',
       email: 'Email',
-      firstPlaceholder: 'First name',
-      lastPlaceholder: 'Last name',
-      titlePlaceholder: 'Title',
-      phonePlaceholder: 'Phone',
+      firstPlaceholder: 'Jane',
+      lastPlaceholder: 'Doe',
+      titlePlaceholder: 'VP of Sales',
+      phonePlaceholder: '090-1234-5678',
       role: 'Role',
       submit: 'Invite',
       toast: 'User invited.',

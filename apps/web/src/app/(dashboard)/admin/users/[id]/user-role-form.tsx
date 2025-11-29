@@ -2,8 +2,8 @@
 
 import { useActionState } from 'react';
 
-import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { FloatingSelect } from '@/components/ui/floating-field';
 import { SuccessToast } from '@/components/ui/success-modal';
 import { useI18n } from '@/components/providers/i18n-provider';
 import { updateUserAction, type UserActionState } from '@/lib/actions/users';
@@ -22,16 +22,13 @@ export function UserRoleForm({ userId, currentRole, revalidatePath }: { userId: 
 
   return (
     <form className="flex flex-col gap-2" action={formAction} data-testid="user-role-form">
-      <label className="app-form-label text-xs" htmlFor="detail-role">
-        {t('list.headers.role')}
-      </label>
-      <Select id="detail-role" name="role" defaultValue={currentRole}>
+      <FloatingSelect id="detail-role" name="role" label={t('list.headers.role')} defaultValue={currentRole}>
         {roleOptions.map((option) => (
           <option key={option} value={option}>
             {t(`roles.${option.toLowerCase()}`)}
           </option>
         ))}
-      </Select>
+      </FloatingSelect>
       {state?.error && <p className="text-xs text-rose-600">{tErrors(state.error)}</p>}
       <div className="flex justify-end">
         <Button type="submit" size="sm" variant="secondary">

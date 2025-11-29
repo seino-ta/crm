@@ -2,9 +2,8 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
 import { getCurrentUser } from '@/lib/auth';
 import { listUsers } from '@/lib/data';
 import { getServerTranslations } from '@/lib/i18n/server';
@@ -65,24 +64,42 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
       </div>
       <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
         <Card>
-          <form className="grid gap-4 md:grid-cols-4" action="/admin/users" method="get">
-            <Input name="search" placeholder={t('filters.searchPlaceholder')} defaultValue={search} aria-label={t('filters.searchPlaceholder')} />
-            <Select name="role" defaultValue={role} aria-label={t('filters.role')}>
+          <form
+            className="grid gap-4 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))_auto]"
+            action="/admin/users"
+            method="get"
+          >
+            <FloatingInput
+              name="search"
+              label={t('filters.searchLabel')}
+              example={t('filters.searchPlaceholder')}
+              defaultValue={search}
+              containerClassName="md:col-span-1"
+            />
+            <FloatingSelect name="role" label={t('filters.role')} defaultValue={role ?? ''} forceFloatLabel>
               <option value="">{t('filters.roleAll')}</option>
               {roleOptions.map((option) => (
                 <option key={option} value={option}>
                   {t(`roles.${option.toLowerCase()}`)}
                 </option>
               ))}
-            </Select>
-            <Select name="status" defaultValue={status} aria-label={t('filters.status')}>
+            </FloatingSelect>
+            <FloatingSelect name="status" label={t('filters.status')} defaultValue={status ?? ''} forceFloatLabel>
               <option value="">{t('filters.statusAll')}</option>
               <option value="active">{t('filters.statusActive')}</option>
               <option value="inactive">{t('filters.statusInactive')}</option>
-            </Select>
-            <Button type="submit" size="sm">
-              {t('filters.submit')}
-            </Button>
+            </FloatingSelect>
+            <div className="flex flex-wrap items-end gap-2">
+              <Button type="submit" size="sm">
+                {t('filters.submit')}
+              </Button>
+              <Link
+                href="/admin/users"
+                className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+              >
+                {t('filters.clear')}
+              </Link>
+            </div>
           </form>
         </Card>
         <Card>

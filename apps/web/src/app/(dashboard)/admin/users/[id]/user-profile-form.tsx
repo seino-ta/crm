@@ -2,8 +2,8 @@
 
 import { useActionState } from 'react';
 
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { FloatingInput } from '@/components/ui/floating-field';
 import { SuccessToast } from '@/components/ui/success-modal';
 import { useI18n } from '@/components/providers/i18n-provider';
 import { updateUserAction, type UserActionState } from '@/lib/actions/users';
@@ -32,32 +32,36 @@ export function UserProfileForm({ userId, firstName, lastName, title, phone, rev
   return (
     <form className="space-y-3" action={formAction} data-testid="user-detail-form">
       <div className="grid gap-3 md:grid-cols-2">
-        <div>
-          <label className="app-form-label text-xs" htmlFor="detail-first">
-            {t('details.firstName')}
-          </label>
-          <Input id="detail-first" name="firstName" defaultValue={firstName ?? ''} placeholder={t('invite.firstPlaceholder')} />
-        </div>
-        <div>
-          <label className="app-form-label text-xs" htmlFor="detail-last">
-            {t('details.lastName')}
-          </label>
-          <Input id="detail-last" name="lastName" defaultValue={lastName ?? ''} placeholder={t('invite.lastPlaceholder')} />
-        </div>
+        <FloatingInput
+          id="detail-first"
+          name="firstName"
+          label={t('details.firstName')}
+          defaultValue={firstName ?? ''}
+          example={t('invite.firstPlaceholder')}
+        />
+        <FloatingInput
+          id="detail-last"
+          name="lastName"
+          label={t('details.lastName')}
+          defaultValue={lastName ?? ''}
+          example={t('invite.lastPlaceholder')}
+        />
       </div>
       <div className="grid gap-3 md:grid-cols-2">
-        <div>
-          <label className="app-form-label text-xs" htmlFor="detail-title">
-            {t('details.title')}
-          </label>
-          <Input id="detail-title" name="title" defaultValue={title ?? ''} placeholder={t('invite.titlePlaceholder')} />
-        </div>
-        <div>
-          <label className="app-form-label text-xs" htmlFor="detail-phone">
-            {t('details.phone')}
-          </label>
-          <Input id="detail-phone" name="phone" defaultValue={phone ?? ''} placeholder={t('invite.phonePlaceholder')} />
-        </div>
+        <FloatingInput
+          id="detail-title"
+          name="title"
+          label={t('details.title')}
+          defaultValue={title ?? ''}
+          example={t('invite.titlePlaceholder')}
+        />
+        <FloatingInput
+          id="detail-phone"
+          name="phone"
+          label={t('details.phone')}
+          defaultValue={phone ?? ''}
+          example={t('invite.phonePlaceholder')}
+        />
       </div>
       {state?.error && <p className="text-xs text-rose-600">{tErrors(state.error)}</p>}
       <div className="flex justify-end">

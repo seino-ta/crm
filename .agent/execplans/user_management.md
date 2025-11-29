@@ -57,14 +57,17 @@
 - [x] WS1: API / Prisma 拡張 — `invitedAt/lastLoginAt` 追加、`/users` ルーター・サービス・監査ログ記録を実装し、`auth.login` で `lastLoginAt` 更新。
 - [x] WS2: Admin Web UI — `/admin/users` ページと招待フォーム/ロール編集/有効化切替 UI を追加し、サイドバーに Users を表示。
 - [x] WS3: 監査ログ & テスト — Playwright `admin-users.spec.ts` を作成して CRUD フローを検証し、README に spec 一覧を追記。
+- [x] UI Polish (2025-11-29): 招待フォームと詳細フォームでフローティングラベル Input/Select を共通化し、Bootstrap 風のラベル挙動に合わせた。
 
 ## Surprises & Discoveries
 - Playwright の高速ナビゲーションで `page.goto` が `NS_BINDING_ABORTED` を頻発したため、再利用可能な `safeGoto` ヘルパーを導入して安定化した。
 - Prisma クライアントを再生成し忘れると `lastLoginAt` が存在しない扱いになり 500 になるため、マイグレーション適用後に `db:generate` を必ず実行する手順を README へ周知予定。
+- 浮動ラベル UI では `:placeholder-shown` だけでは Select をカバーできなかったため、`data-filled` 属性で状態を同期し Tailwind の `peer-data` バリアントで制御した。
 
 ## Decision Log
 - 一時パスワードはメール送信ではなく UI 上に表示し、管理者がコピーして渡す運用とした（最小実装）。
 - ユーザー行の編集は簡易フォーム（ロール選択＋保存ボタン、アクティブ切替ボタン）で提供し、サーバーアクション + 再検証でページを更新する。
+- 入力 UI は Bootstrap の floating label パターンに揃えるため、`FloatingInput`/`FloatingSelect` コンポーネントを共通利用する方針に決定。
 
 ## Outcomes & Retrospective
 - 管理者が UI からユーザーを招待/管理できるようになり、監査ログと Playwright で行為を追跡できる状態になった。今後は初期パスワード再発行や一括インポートなど上位機能を追加する余地がある。

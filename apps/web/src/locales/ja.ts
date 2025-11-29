@@ -231,7 +231,8 @@ export const ja = {
     title: 'ユーザー管理',
     description: 'チームメンバーを招待し、ロールや有効状態を管理します。',
     filters: {
-      searchPlaceholder: '氏名・メールで検索',
+      searchLabel: '検索',
+      searchPlaceholder: '氏名やメールアドレスで検索',
       role: 'ロール',
       roleAll: 'すべてのロール',
       status: 'ステータス',
@@ -239,6 +240,7 @@ export const ja = {
       statusActive: '有効',
       statusInactive: '無効',
       submit: '絞り込み',
+      clear: 'クリア',
     },
     list: {
       headers: {
@@ -269,10 +271,10 @@ export const ja = {
     invite: {
       title: 'ユーザーを招待',
       email: 'メールアドレス',
-      firstPlaceholder: '名',
-      lastPlaceholder: '姓',
-      titlePlaceholder: '役職・肩書き',
-      phonePlaceholder: '電話番号',
+      firstPlaceholder: '太郎',
+      lastPlaceholder: '山田',
+      titlePlaceholder: '営業部長',
+      phonePlaceholder: '090-1234-5678',
       role: 'ロール',
       submit: '招待を送信',
       toast: 'ユーザーを招待しました。',
