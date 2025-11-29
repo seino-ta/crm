@@ -244,7 +244,8 @@ export const en: JaMessages = {
     },
     list: {
       headers: {
-        profile: 'User Info',
+        name: 'Name',
+        email: 'Email',
         role: 'Role',
         status: 'Status',
         lastLogin: 'Last login',
@@ -257,11 +258,8 @@ export const en: JaMessages = {
       },
       actions: {
         saveRole: 'Save',
-        saveDetails: 'Save details',
         deactivate: 'Deactivate',
         activate: 'Activate',
-        confirmDeactivate: 'Deactivate this user?',
-        confirmActivate: 'Activate this user?',
       },
       pagination: 'Page {page} of {totalPages}',
       prev: 'Prev',
@@ -279,12 +277,6 @@ export const en: JaMessages = {
       submit: 'Invite',
       toast: 'User invited.',
       passwordLabel: 'Temporary password',
-    },
-    details: {
-      firstName: 'First name',
-      lastName: 'Last name',
-      title: 'Title',
-      phone: 'Phone',
     },
     roles: {
       admin: 'Admin',

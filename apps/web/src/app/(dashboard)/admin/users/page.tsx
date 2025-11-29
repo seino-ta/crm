@@ -12,8 +12,6 @@ import type { UserRole } from '@/lib/types';
 import { formatDateTime } from '@/lib/formatters';
 import { InviteUserForm } from './invite-user-form';
 import { updateUserAction, toggleUserStatusAction } from '@/lib/actions/users';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { ConfirmForm } from '@/components/ui/confirm-form';
 
 const PAGE_SIZE = 20;
 
@@ -97,7 +95,8 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
           <table className="min-w-full text-sm">
             <thead>
               <tr className="app-table-head">
-                <th className="px-3 py-2 text-left">{t('list.headers.profile')}</th>
+                <th className="px-3 py-2 text-left">{t('list.headers.name')}</th>
+                <th className="px-3 py-2 text-left">{t('list.headers.email')}</th>
                 <th className="px-3 py-2 text-left">{t('list.headers.role')}</th>
                 <th className="px-3 py-2 text-left">{t('list.headers.status')}</th>
                 <th className="px-3 py-2 text-left">{t('list.headers.lastLogin')}</th>
@@ -114,52 +113,12 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
               ) : (
                 users.map((item) => (
                   <tr key={item.id} className="border-t border-slate-100" data-testid="user-row">
-                    <td className="px-3 py-2 align-top max-w-[280px]">
-                      <div>
-                        <p className="font-medium">{`${item.lastName ?? ''} ${item.firstName ?? ''}`.trim() || '—'}</p>
-                        <p className="text-xs text-slate-500">{item.title ?? '—'}</p>
-                        <Link href={`mailto:${item.email}`} className="text-xs text-blue-600" title={item.email} data-testid="user-email">
-                          {item.email}
-                        </Link>
-                      </div>
-                      <form className="mt-3 space-y-3" action={updateUserAction.bind(null, item.id)} data-testid="user-details-form">
-                        <div className="grid gap-2 md:grid-cols-2">
-                          <div>
-                            <label className="app-form-label text-xs" htmlFor={`first-${item.id}`}>
-                              {t('details.firstName')}
-                            </label>
-                            <Input id={`first-${item.id}`} name="firstName" placeholder={t('invite.firstPlaceholder')} defaultValue={item.firstName ?? ''} />
-                          </div>
-                          <div>
-                            <label className="app-form-label text-xs" htmlFor={`last-${item.id}`}>
-                              {t('details.lastName')}
-                            </label>
-                            <Input id={`last-${item.id}`} name="lastName" placeholder={t('invite.lastPlaceholder')} defaultValue={item.lastName ?? ''} />
-                          </div>
-                        </div>
-                        <div className="grid gap-2 md:grid-cols-2">
-                          <div>
-                            <label className="app-form-label text-xs" htmlFor={`title-${item.id}`}>
-                              {t('details.title')}
-                            </label>
-                            <Input id={`title-${item.id}`} name="title" placeholder={t('invite.titlePlaceholder')} defaultValue={item.title ?? ''} />
-                          </div>
-                          <div>
-                            <label className="app-form-label text-xs" htmlFor={`phone-${item.id}`}>
-                              {t('details.phone')}
-                            </label>
-                            <Input id={`phone-${item.id}`} name="phone" placeholder={t('invite.phonePlaceholder')} defaultValue={item.phone ?? ''} />
-                          </div>
-                        </div>
-                        <div className="flex justify-end">
-                          <Button type="submit" size="sm" variant="secondary">
-                            {t('list.actions.saveDetails')}
-                          </Button>
-                        </div>
-                      </form>
+                    <td className="px-3 py-2">
+                      <div className="font-medium">{`${item.lastName ?? ''} ${item.firstName ?? ''}`.trim() || '—'}</div>
+                      <div className="text-xs text-slate-500">{item.title ?? '—'}</div>
                     </td>
-                    <td className="px-3 py-2 max-w-[220px] truncate align-top">
-                      <Link href={`mailto:${item.email}`} className="text-blue-600" title={item.email}>
+                    <td className="px-3 py-2">
+                      <Link href={`mailto:${item.email}`} className="text-blue-600">
                         {item.email}
                       </Link>
                     </td>
@@ -178,28 +137,17 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
                       </form>
                     </td>
                     <td className="px-3 py-2">
-                      <StatusBadge
-                        label={item.isActive ? t('list.status.active') : t('list.status.inactive')}
-                        tone={item.isActive ? 'success' : 'neutral'}
-                      />
+                      <span className={item.isActive ? 'text-emerald-600' : 'text-slate-500'}>{item.isActive ? t('list.status.active') : t('list.status.inactive')}</span>
                     </td>
                     <td className="px-3 py-2">
                       {item.lastLoginAt ? formatDateTime(item.lastLoginAt) : t('list.noLogin')}
                     </td>
                     <td className="px-3 py-2">
-                      <ConfirmForm
-                        action={toggleUserStatusAction.bind(null, item.id, !item.isActive)}
-                        confirmMessage={item.isActive ? t('list.actions.confirmDeactivate') : t('list.actions.confirmActivate')}
-                      >
-                        <Button
-                          type="submit"
-                          size="sm"
-                          variant={item.isActive ? 'danger' : 'secondary'}
-                          data-testid="user-status-toggle"
-                        >
+                      <form action={toggleUserStatusAction.bind(null, item.id, !item.isActive)}>
+                        <Button type="submit" size="sm" variant="ghost" className={item.isActive ? 'text-rose-600' : 'text-emerald-600'} data-testid="user-status-toggle">
                           {item.isActive ? t('list.actions.deactivate') : t('list.actions.activate')}
                         </Button>
-                      </ConfirmForm>
+                      </form>
                     </td>
                   </tr>
                 ))
