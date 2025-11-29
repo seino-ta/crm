@@ -112,6 +112,15 @@ This repository is prepared so that:
 - `npm run test:e2e` — ログイン → 主要 CRM 画面を自動操作。スクリーンショットやビデオは `test-results/`、`apps/web/tests/e2e/screenshots/` に保存される。
 - `npm run ui:snapshots` — `@snapshot` タグ付きテストのみ実行し、UI の diff を確認。
 - `npm run playwright:codegen` — `PLAYWRIGHT_BASE_URL` (デフォルト `http://localhost:3000`) を基にブラウザ操作を記録。
+- Playwright の spec はメニュー/CRUD 単位で分割済み。必要な機能だけを検証したい場合は `npx playwright test tests/e2e/<spec>` を指定する。
+  - `accounts.spec.ts` — アカウント作成/更新
+  - `contacts.spec.ts` — コンタクト CRUD + アカウント詳細反映
+  - `opportunities.spec.ts` — 案件作成とステージ変更
+  - `activities.spec.ts` — 活動ログ追加
+  - `tasks.spec.ts` — タスク作成
+  - `reports.spec.ts` — レポート画面表示
+  - `audit-logs.spec.ts` — 監査ログのフィルタリング
+- 例: `npx playwright test tests/e2e/contacts.spec.ts --headed` でコンタクト UI のみをヘッドレス/ヘッドフル任意で検証できる。
 - HTML レポート: `npx playwright show-report apps/web/tests/e2e/report`。テストが失敗した場合は `npx playwright show-trace test-results/<run>/trace.zip` で詳細を確認。
 
 ### トラブルシュート

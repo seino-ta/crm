@@ -62,6 +62,7 @@
 - Web 側は Server Action ベースで CRUD を統一し、作成/更新/削除のたびに `/contacts` と関連ページを `revalidatePath` する。
 - 削除はソフトデリート（`deletedAt`）のみ行い、監査ログの `DELETE` と整合させる。
 - アカウント詳細ページでは既存 API (`listContacts` の accountId フィルタ) を利用して軽量に取得し、カード内に最大数件を表示する簡易サマリーとする。
+- Playwright テストはメニュー単位の spec（accounts/contacts/opportunities/...）に分割し、個別 CRUD ごとに選択実行できるよう整理した。
 
 ## Outcomes & Retrospective
 - Web UI での CRUD（作成/編集/論理削除）を統一し、Playwright で一連の CRM フロー + コンタクト編集/削除/アカウント詳細反映まで自動検証できる状態になった。必要に応じて将来のタブ分割やフィルタ拡張を検討する。
