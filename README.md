@@ -170,6 +170,8 @@ Docker Compose では `.env` の値が `api` サービスに渡され、`db` サ
 3. `npm --prefix apps/api run db:seed` でサンプルユーザー/アカウント/案件データを投入。
 4. Prisma Studio を確認したい場合は `npm --prefix apps/api run db:studio`。
 
+> 💡 **TIP:** `npm --prefix apps/api …` 系コマンドはリポジトリ直下で実行し、`apps/api` から参照できる `.env` (例: `DOTENV_CONFIG_PATH=../../.env npm --prefix apps/api run db:migrate` または `apps/api/.env` を用意) に `DATABASE_URL` が設定されていることを確認してください。`apps/api` ディレクトリ内で同コマンドを実行すると `apps/api/apps/api/package.json` を探しに行くため失敗します。
+
 ### マイグレーションの生成
 
 - 新しいスキーマを記述したら `npm --prefix apps/api run db:migrate -- --name <migration_name>` を実行し、PostgreSQL が起動していることを確認する。

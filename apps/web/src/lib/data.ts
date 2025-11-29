@@ -36,9 +36,14 @@ export async function getAccount(id: string) {
   return data;
 }
 
-export async function listContacts(params?: { accountId?: string; search?: string; pageSize?: number }) {
+export async function listContacts(params?: { accountId?: string; search?: string; page?: number; pageSize?: number }) {
   const query = toQuery(params ?? {});
-  const { data } = await apiFetch<Contact[]>(`/contacts${query}`);
+  const { data, meta } = await apiFetch<Contact[]>(`/contacts${query}`);
+  return { data, meta: meta as ApiMeta | undefined };
+}
+
+export async function getContact(id: string) {
+  const { data } = await apiFetch<Contact>(`/contacts/${id}`);
   return data;
 }
 

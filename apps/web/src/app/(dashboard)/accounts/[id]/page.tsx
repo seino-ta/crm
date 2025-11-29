@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 import { AccountForm } from '../account-form';
 import { updateAccountAction } from '@/lib/actions/accounts';
-import { getAccount, listActivities, listOpportunities, listTasks } from '@/lib/data';
+import { getAccount, listActivities, listContacts, listOpportunities, listTasks } from '@/lib/data';
 import { formatCurrency, formatDateTime, formatUserName } from '@/lib/formatters';
 import { Card } from '@/components/ui/card';
 import { DeleteAccountButton } from '@/components/accounts/delete-account-button';
@@ -28,10 +28,11 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
   const tDetail = createTranslator(messages, 'accounts.detail');
   const tTable = createTranslator(messages, 'accounts.table');
   const tForm = createTranslator(messages, 'accounts.form');
-  const [opportunities, tasks, activities] = await Promise.all([
+  const [opportunities, tasks, activities, contacts] = await Promise.all([
     listOpportunities({ accountId: id, pageSize: 20 }),
     listTasks({ accountId: id, pageSize: 10 }),
     listActivities({ accountId: id, pageSize: 10 }),
+    listContacts({ accountId: id, pageSize: 20 }),
   ]);
 
   return (
@@ -162,6 +163,43 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
           </div>
         </Card>
       </div>
+      <Card data-testid="account-contacts-section">
+        <h2 className="text-lg font-semibold">{tDetail('contactsTitle')}</h2>
+        {contacts.data.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500" data-testid="account-contacts-empty">
+            {tDetail('contactsEmpty')}
+          </p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {contacts.data.map((contact) => (
+              <div key={contact.id} className="rounded-xl border border-slate-100 bg-white p-3" data-testid="account-contact-row">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">{`${contact.lastName} ${contact.firstName}`}</p>
+                  <Link href={`/contacts/${contact.id}/edit`} className="text-xs text-blue-600 hover:underline">
+                    {tDetail('contactsEdit')}
+                  </Link>
+                </div>
+                <p className="text-xs text-slate-500">{contact.jobTitle ?? tDetail('contactsJobFallback')}</p>
+                <div className="mt-1 text-xs text-blue-600">
+                  <a href={`mailto:${contact.email}`} className="hover:underline">
+                    {contact.email}
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
+          <span>
+            {tDetail('contactsCount', {
+              values: { count: (contacts.meta?.total ?? contacts.data.length).toString() },
+            })}
+          </span>
+          <Link href="/contacts" className="text-blue-600 hover:underline">
+            {tDetail('contactsViewAll')}
+          </Link>
+        </div>
+      </Card>
     </div>
   );
 }

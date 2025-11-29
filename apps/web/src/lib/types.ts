@@ -44,11 +44,17 @@ export type Contact = {
   accountId: string;
   firstName: string;
   lastName: string;
+  kanaFirstName?: string | null;
+  kanaLastName?: string | null;
   email: string;
   phone: string | null;
   jobTitle: string | null;
+  linkedin?: string | null;
   notes: string | null;
-  account?: Account;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+  account?: Account | null;
 };
 
 export type PipelineStage = {

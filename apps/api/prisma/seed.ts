@@ -92,12 +92,17 @@ async function main() {
 
   const contact = await prisma.contact.upsert({
     where: { id: IDS.contact },
-    update: {},
+    update: {
+      kanaFirstName: 'カナ',
+      kanaLastName: 'クライアント',
+    },
     create: {
       id: IDS.contact,
       accountId: account.id,
       firstName: 'Kana',
       lastName: 'Client',
+      kanaFirstName: 'カナ',
+      kanaLastName: 'クライアント',
       email: 'kana.client@acme-industries.example',
       phone: '+1-415-555-0099',
       jobTitle: 'VP of Operations',
