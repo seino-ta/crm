@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 import { FloatingInput, FloatingSelect, FloatingTextarea } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
@@ -109,7 +109,9 @@ export function AccountForm({ action, submitLabel, initialValues, successRedirec
   const statusOptions = useMemo(() => getAccountStatusOptions(locale, { includeArchived: false }), [locale]);
   const statusContext = useAccountStatus();
   const [statusValue, setStatusValue] = useState<AccountStatus>((initialValues?.status as AccountStatus) ?? 'ACTIVE');
-  const pathname = usePathname();
+  useEffect(() => {
+    setStatusValue((initialValues?.status as AccountStatus) ?? 'ACTIVE');
+  }, [initialValues?.status]);
   const initialSnapshotSignature = useMemo(() => JSON.stringify(snapshotFromInitialValues(initialValues)), [initialValues]);
   const shouldMatchSnapshot = matchSnapshot ?? Boolean(initialValues);
   const { toastTrigger, handleSubmitSnapshot, handleSuccessPersist, handleErrorCleanup, triggerImmediateToast } = useFormSuccessToast({
@@ -130,16 +132,12 @@ export function AccountForm({ action, submitLabel, initialValues, successRedirec
       handleSuccessPersist();
       statusContext?.setStatus(statusValue);
       setTimeout(() => {
-        if (successRedirect && successRedirect !== pathname) {
-          router.replace(successRedirect);
-        } else {
-          router.refresh();
-        }
+        router.refresh();
       }, 0);
     } else if (state.error) {
       handleErrorCleanup();
     }
-  }, [state, router, successRedirect, statusContext, statusValue, pathname, handleSuccessPersist, handleErrorCleanup, triggerImmediateToast]);
+  }, [state, router, successRedirect, statusContext, statusValue, handleSuccessPersist, handleErrorCleanup, triggerImmediateToast]);
 
   return (
     <form

@@ -73,7 +73,6 @@ export default async function AccountDetailPage({ params }: { params: Promise<{ 
             {!isArchived && (
               <div className="mt-6">
                 <AccountForm
-                  key={account.status}
                   action={updateAccountAction.bind(null, account.id)}
                   submitLabel={tForm('submitUpdate')}
                   successRedirect={`/accounts/${account.id}`}
