@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import type { PipelineStage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Select } from '@/components/ui/select';
+import { FloatingSelect } from '@/components/ui/floating-field';
 import { SuccessToast } from '@/components/ui/success-modal';
 import { useI18n } from '@/components/providers/i18n-provider';
 import type { OpportunityStageActionState } from '@/lib/actions/opportunities';
@@ -61,13 +61,13 @@ export function StageUpdateForm({
         handleSubmitSnapshot(snapshot);
       }}
     >
-      <Select name="stageId" defaultValue={defaultStageId}>
+      <FloatingSelect name="stageId" label={t('stageLabel')} defaultValue={defaultStageId} forceFloatLabel>
         {stageOptions.map((stage) => (
           <option key={stage.id} value={stage.id}>
             {stage.name}
           </option>
         ))}
-      </Select>
+      </FloatingSelect>
       <Button type="submit" variant="primary" size="sm" className="w-full">
         {t('stageUpdateAction')}
       </Button>

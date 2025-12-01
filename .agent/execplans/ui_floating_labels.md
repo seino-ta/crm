@@ -54,6 +54,7 @@
 - [x] WS1: `FloatingTextarea` を追加し、`FloatingSelect` に `forceFloatLabel` を導入。Input/Select/Textarea すべてで必須バリデーション・フォーカス中プレースホルダー制御・例示テキスト差し込みを共通化。
 - [x] WS2: Accounts / Contacts / Opportunities / Activities / Tasks / Admin Audit Logs のフィルター・フォームをフローティングラベルに置き換え、必要なロケール（ラベル・例示テキスト）も整備。
 - [x] 2025-11-29: 既存フォーム全体を監査し、ラベルとプレースホルダーが同一だった箇所をすべて解消。新たに `domainLabel` や `kanaFirstLabel` などの翻訳キーを追加し、例示テキストは placeholder 側へ集約。
+- [x] 2025-11-29 pm: 案件詳細のステージ更新フォームも `FloatingSelect` 化し、すべての Select が共通コンポーネント経由になるよう揃えた。
 - [x] WS3: Playwright (`accounts.spec.ts`, `contacts.spec.ts`, `opportunities.spec.ts`, `activities.spec.ts`, `tasks.spec.ts`, `audit-logs.spec.ts` いずれも Chromium) を実行し、フォーム単位のリグレッションを確認。
 
 ## Surprises & Discoveries
