@@ -3,8 +3,7 @@ import { notFound } from 'next/navigation';
 import { AuditAction } from '@prisma/client';
 
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
+import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
 import { listAuditLogs } from '@/lib/data';
 import { getCurrentUser } from '@/lib/auth';
@@ -50,17 +49,17 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
       </div>
       <Card>
         <form className="grid gap-4 md:grid-cols-4" action="/admin/audit-logs" method="get">
-          <Input name="entityType" placeholder={t('filters.entityPlaceholder')} defaultValue={entityType} aria-label={t('filters.entityPlaceholder')} />
-          <Select name="action" defaultValue={action}>
+          <FloatingInput name="entityType" label={t('filters.entityLabel')} example={t('filters.entityPlaceholder')} defaultValue={entityType} />
+          <FloatingSelect name="action" label={t('filters.actionLabel')} defaultValue={action ?? ''} forceFloatLabel>
             <option value="">{t('filters.actionAll')}</option>
             {auditActionOptions.map((item) => (
               <option key={item} value={item}>
                 {item}
               </option>
             ))}
-          </Select>
-          <Input type="date" name="from" defaultValue={from} aria-label={t('filters.from')} />
-          <Input type="date" name="to" defaultValue={to} aria-label={t('filters.to')} />
+          </FloatingSelect>
+          <FloatingInput type="date" name="from" label={t('filters.from')} defaultValue={from} />
+          <FloatingInput type="date" name="to" label={t('filters.to')} defaultValue={to} />
           <div className="md:col-span-4 flex justify-end">
             <Button type="submit" size="sm">
               {t('filters.submit')}

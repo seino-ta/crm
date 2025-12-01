@@ -5,7 +5,7 @@ import { createAccountAction } from '@/lib/actions/accounts';
 import { listAccounts } from '@/lib/data';
 import { formatCurrency } from '@/lib/formatters';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { FloatingInput } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
 import { getAccountStatusMeta } from '@/lib/labels';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -63,12 +63,14 @@ export default async function AccountsPage({
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <Card>
           <div className="mb-4 flex items-center justify-between gap-4">
-            <form className="flex flex-1 items-center gap-2" action="/accounts" method="get">
+            <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/accounts" method="get">
               {view === 'archived' && <input type="hidden" name="view" value="archived" />}
-              <Input name="search" placeholder={tCommon('search')} defaultValue={search} aria-label={tCommon('search')} />
-              <Button type="submit" variant="primary" size="sm">
-                {tCommon('search')}
-              </Button>
+              <FloatingInput name="search" label={tCommon('search')} example={tForm('namePlaceholder')} defaultValue={search} />
+              <div className="flex items-end justify-end">
+                <Button type="submit" variant="primary" size="sm">
+                  {tCommon('search')}
+                </Button>
+              </div>
             </form>
           </div>
           <div className="overflow-x-auto">

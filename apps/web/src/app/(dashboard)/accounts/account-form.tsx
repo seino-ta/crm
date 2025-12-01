@@ -3,12 +3,9 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select } from '@/components/ui/select';
+import { FloatingInput, FloatingSelect, FloatingTextarea } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
 import { getAccountStatusOptions } from '@/lib/labels';
-import { RequiredMark } from '@/components/ui/required-mark';
 import { SuccessToast } from '@/components/ui/success-modal';
 import { useI18n } from '@/components/providers/i18n-provider';
 import type { AccountActionState } from '@/lib/actions/accounts';
@@ -154,37 +151,61 @@ export function AccountForm({ action, submitLabel, initialValues, successRedirec
         handleSubmitSnapshot(snapshot);
       }}
     >
-      <div className="space-y-1">
-        <label htmlFor="account-name" className="app-form-label">
-          {tForm('nameLabel')}<RequiredMark />
-        </label>
-        <Input id="account-name" name="name" required defaultValue={initialValues?.name ?? ''} placeholder={tForm('namePlaceholder')} aria-label={tForm('nameLabel')} />
+      <FloatingInput
+        id="account-name"
+        name="name"
+        label={tForm('nameLabel')}
+        example={tForm('namePlaceholder')}
+        required
+        defaultValue={initialValues?.name ?? ''}
+      />
+      <div className="grid gap-4 md:grid-cols-2">
+        <FloatingInput name="domain" label={tForm('domainPlaceholder')} example="https://acme.com" defaultValue={initialValues?.domain ?? ''} />
+        <FloatingInput name="website" label={tForm('websitePlaceholder')} example="https://acme.com" defaultValue={initialValues?.website ?? ''} />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Input name="domain" defaultValue={initialValues?.domain ?? ''} placeholder={tForm('domainPlaceholder')} aria-label={tForm('domainPlaceholder')} />
-        <Input name="website" defaultValue={initialValues?.website ?? ''} placeholder={tForm('websitePlaceholder')} aria-label={tForm('websitePlaceholder')} />
+        <FloatingInput name="industry" label={tAccounts('industryLabel')} example={tForm('industryPlaceholder')} defaultValue={initialValues?.industry ?? ''} />
+        <FloatingInput name="phone" label={tAccounts('phoneLabel')} example={tForm('phonePlaceholder')} defaultValue={initialValues?.phone ?? ''} />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Input name="industry" defaultValue={initialValues?.industry ?? ''} placeholder={tForm('industryPlaceholder')} aria-label={tAccounts('industryLabel')} />
-        <Input name="phone" defaultValue={initialValues?.phone ?? ''} placeholder={tForm('phonePlaceholder')} aria-label={tAccounts('phoneLabel')} />
+        <FloatingInput
+          name="size"
+          type="number"
+          min={1}
+          label={tForm('sizeLabel')}
+          example={tForm('sizePlaceholder')}
+          defaultValue={initialValues?.size ?? ''}
+        />
+        <FloatingInput
+          name="annualRevenue"
+          type="number"
+          min={0}
+          label={tAccounts('revenueLabel')}
+          example={tForm('revenuePlaceholder')}
+          defaultValue={initialValues?.annualRevenue ?? ''}
+        />
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <Input name="size" type="number" min={1} defaultValue={initialValues?.size ?? ''} placeholder={tForm('sizePlaceholder')} aria-label={tForm('sizeLabel')} />
-        <Input name="annualRevenue" type="number" min={0} defaultValue={initialValues?.annualRevenue ?? ''} placeholder={tForm('revenuePlaceholder')} aria-label={tAccounts('revenueLabel')} />
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="account-status" className="app-form-label">
-          {tAccounts('statusLabel')}<RequiredMark />
-        </label>
-        <Select id="account-status" name="status" value={statusValue} onChange={(event) => setStatusValue(event.target.value as AccountStatus)} aria-label={tAccounts('statusLabel')}>
-          {statusOptions.map((status) => (
-            <option key={status.value} value={status.value}>
-              {status.label}
-            </option>
-          ))}
-        </Select>
-      </div>
-      <Textarea name="description" rows={3} defaultValue={initialValues?.description ?? ''} placeholder={tForm('descriptionPlaceholder')} aria-label={tForm('descriptionPlaceholder')} />
+      <FloatingSelect
+        id="account-status"
+        name="status"
+        label={tAccounts('statusLabel')}
+        value={statusValue}
+        onChange={(event) => setStatusValue(event.target.value as AccountStatus)}
+        required
+      >
+        {statusOptions.map((status) => (
+          <option key={status.value} value={status.value}>
+            {status.label}
+          </option>
+        ))}
+      </FloatingSelect>
+      <FloatingTextarea
+        name="description"
+        rows={3}
+        label={tForm('descriptionPlaceholder')}
+        example={tForm('descriptionPlaceholder')}
+        defaultValue={initialValues?.description ?? ''}
+      />
       <SuccessToast trigger={successToastTrigger} message={tToasts('accountSaved')} />
       {state?.error && <p className="text-sm text-rose-600">{tErrors(state.error)}</p>}
       <Button type="submit" className="w-full" data-testid="account-submit">

@@ -4,13 +4,10 @@ import { useActionState, useEffect, useEffectEvent, useMemo, useState } from 're
 import { useRouter } from 'next/navigation';
 
 import { createTaskAction, type TaskActionState } from '@/lib/actions/tasks';
-import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { FloatingInput, FloatingSelect, FloatingTextarea } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
 import { SuccessToast } from '@/components/ui/success-modal';
 import { getTaskPriorityOptions } from '@/lib/labels';
-import { RequiredMark } from '@/components/ui/required-mark';
 import { useI18n } from '@/components/providers/i18n-provider';
 import { useFormSuccessToast } from '@/hooks/use-form-success-toast';
 
@@ -74,72 +71,53 @@ export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
         handleSubmitSnapshot(snapshot);
       }}
     >
-      <div className="space-y-1">
-        <label htmlFor="task-title" className="text-sm font-medium text-slate-600">
-          {tForm('nameLabel')}
-          <RequiredMark />
-        </label>
-        <Input id="task-title" name="title" placeholder={tForm('namePlaceholder')} required aria-label={tForm('nameLabel')} />
-      </div>
-      <Textarea name="description" rows={3} placeholder={tForm('descriptionPlaceholder')} aria-label={tForm('descriptionPlaceholder')} />
-      <div className="space-y-1">
-        <label htmlFor="task-priority" className="text-sm font-medium text-slate-600">
-          {tForm('priorityLabel')}
-          <RequiredMark />
-        </label>
-        <Select id="task-priority" name="priority" defaultValue="MEDIUM" aria-label={tForm('priorityLabel')}>
-          {priorityOptions.map((priority) => (
-            <option key={priority.value} value={priority.value}>
-              {priority.label}
-            </option>
-          ))}
-        </Select>
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="task-due" className="text-sm font-medium text-slate-600">
-          {tForm('dueLabel')}
-        </label>
-        <Input id="task-due" name="dueDate" type="date" aria-label={tForm('dueLabel')} />
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="task-account" className="text-sm font-medium text-slate-600">
-          {tForm('accountLabel')}
-        </label>
-        <Select
-          id="task-account"
-          name="accountId"
-          value={selectedAccountId}
-          onChange={(event) => setSelectedAccountId(event.target.value)}
-          aria-label={tForm('accountLabel')}
-        >
-          <option value="">{tForm('accountPlaceholder')}</option>
-          {accounts.map((account) => (
-            <option key={account.id} value={account.id}>
-              {account.name}
-            </option>
-          ))}
-        </Select>
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="task-opportunity" className="text-sm font-medium text-slate-600">
-          {tForm('opportunityLabel')}
-        </label>
-        <Select
-          id="task-opportunity"
-          name="opportunityId"
-          value={selectedOpportunityId}
-          onChange={(event) => setSelectedOpportunityId(event.target.value)}
-          aria-label={tForm('opportunityLabel')}
-          disabled={selectedAccountId !== '' && filteredOpportunities.length === 0}
-        >
-          <option value="">{tForm('opportunityPlaceholder')}</option>
-          {filteredOpportunities.map((opp) => (
-            <option key={opp.id} value={opp.id}>
-              {opp.name}
-            </option>
-          ))}
-        </Select>
-      </div>
+      <FloatingInput
+        id="task-title"
+        name="title"
+        label={tForm('nameLabel')}
+        example={tForm('namePlaceholder')}
+        required
+      />
+      <FloatingTextarea name="description" label={tForm('descriptionPlaceholder')} example={tForm('descriptionPlaceholder')} rows={3} />
+      <FloatingSelect id="task-priority" name="priority" label={tForm('priorityLabel')} defaultValue="MEDIUM" required>
+        {priorityOptions.map((priority) => (
+          <option key={priority.value} value={priority.value}>
+            {priority.label}
+          </option>
+        ))}
+      </FloatingSelect>
+      <FloatingInput id="task-due" name="dueDate" type="date" label={tForm('dueLabel')} />
+      <FloatingSelect
+        id="task-account"
+        name="accountId"
+        label={tForm('accountLabel')}
+        value={selectedAccountId}
+        onChange={(event) => setSelectedAccountId(event.target.value)}
+        forceFloatLabel
+      >
+        <option value="">{tForm('accountPlaceholder')}</option>
+        {accounts.map((account) => (
+          <option key={account.id} value={account.id}>
+            {account.name}
+          </option>
+        ))}
+      </FloatingSelect>
+      <FloatingSelect
+        id="task-opportunity"
+        name="opportunityId"
+        label={tForm('opportunityLabel')}
+        value={selectedOpportunityId}
+        onChange={(event) => setSelectedOpportunityId(event.target.value)}
+        disabled={selectedAccountId !== '' && filteredOpportunities.length === 0}
+        forceFloatLabel
+      >
+        <option value="">{tForm('opportunityPlaceholder')}</option>
+        {filteredOpportunities.map((opp) => (
+          <option key={opp.id} value={opp.id}>
+            {opp.name}
+          </option>
+        ))}
+      </FloatingSelect>
       <input type="hidden" name="ownerId" value={ownerId} />
       <SuccessToast trigger={successToastTrigger} message={tToast('taskCreated')} />
       {state?.error && <p className="text-sm text-rose-600">{tErrors(state.error)}</p>}

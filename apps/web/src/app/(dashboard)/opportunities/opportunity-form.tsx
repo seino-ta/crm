@@ -4,13 +4,10 @@ import { useActionState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { createOpportunityAction, type OpportunityActionState } from '@/lib/actions/opportunities';
-import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { FloatingInput, FloatingSelect, FloatingTextarea } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
 import { SuccessToast } from '@/components/ui/success-modal';
 import { getPipelineStageLabel } from '@/lib/labels';
-import { RequiredMark } from '@/components/ui/required-mark';
 import { useI18n } from '@/components/providers/i18n-provider';
 import { useFormSuccessToast } from '@/hooks/use-form-success-toast';
 
@@ -60,60 +57,45 @@ export function OpportunityForm({ accounts, stages, contacts, ownerId }: Opportu
         handleSubmitSnapshot(snapshot);
       }}
     >
-      <div className="space-y-1">
-        <label htmlFor="opportunity-name" className="app-form-label">
-          {t('nameLabel')}<RequiredMark />
-        </label>
-        <Input id="opportunity-name" name="name" placeholder={t('namePlaceholder')} required />
-      </div>
+      <FloatingInput name="name" label={t('nameLabel')} example={t('namePlaceholder')} required />
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-1">
-          <label htmlFor="opportunity-account" className="app-form-label">
-            {t('accountLabel')}<RequiredMark />
-          </label>
-          <Select id="opportunity-account" name="accountId" required defaultValue="">
-            <option value="" disabled>
-              {t('accountPlaceholder')}
+        <FloatingSelect name="accountId" label={t('accountLabel')} required defaultValue="">
+          <option value="" disabled>
+            {t('accountPlaceholder')}
+          </option>
+          {accounts.map((account) => (
+            <option key={account.id} value={account.id}>
+              {account.name}
             </option>
-            {accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="opportunity-stage" className="app-form-label">
-            {t('stageLabel')}<RequiredMark />
-          </label>
-          <Select id="opportunity-stage" name="stageId" required defaultValue="">
-            <option value="" disabled>
-              {t('stagePlaceholder')}
+          ))}
+        </FloatingSelect>
+        <FloatingSelect name="stageId" label={t('stageLabel')} required defaultValue="">
+          <option value="" disabled>
+            {t('stagePlaceholder')}
+          </option>
+          {stageOptions.map((stage) => (
+            <option key={stage.id} value={stage.id}>
+              {stage.name}
             </option>
-            {stageOptions.map((stage) => (
-              <option key={stage.id} value={stage.id}>
-                {stage.name}
-              </option>
-            ))}
-          </Select>
-        </div>
+          ))}
+        </FloatingSelect>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Input name="amount" type="number" min={0} placeholder={t('amountPlaceholder')} />
-        <Input name="probability" type="number" min={0} max={100} placeholder={t('probabilityPlaceholder')} />
+        <FloatingInput name="amount" type="number" min={0} label={t('amountPlaceholder')} example={t('amountPlaceholder')} />
+        <FloatingInput name="probability" type="number" min={0} max={100} label={t('probabilityPlaceholder')} example="50" />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Input name="expectedCloseDate" type="date" aria-label={t('dateLabel')} />
-        <Select name="contactId" defaultValue="">
+        <FloatingInput name="expectedCloseDate" type="date" label={t('dateLabel')} />
+        <FloatingSelect name="contactId" label={t('contactLabel')} defaultValue="">
           <option value="">{t('contactNone')}</option>
           {contacts.map((contact) => (
             <option key={contact.id} value={contact.id}>
               {contact.name}
             </option>
           ))}
-        </Select>
+        </FloatingSelect>
       </div>
-      <Textarea name="description" rows={3} placeholder={t('descriptionPlaceholder')} />
+      <FloatingTextarea name="description" rows={3} label={t('descriptionPlaceholder')} example={t('descriptionPlaceholder')} />
       <input type="hidden" name="ownerId" value={ownerId} />
       <SuccessToast trigger={successToastTrigger} message={tToast('opportunityCreated')} />
       {state?.error && <p className="text-sm text-rose-600">{tErrors(state.error)}</p>}

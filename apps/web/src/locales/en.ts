@@ -156,7 +156,9 @@ export const en: JaMessages = {
       subjectLabel: 'Subject',
       subjectPlaceholder: 'Subject',
       descriptionPlaceholder: 'Notes',
+      accountLabel: 'Account',
       accountPlaceholder: 'No account',
+      opportunityLabel: 'Opportunity',
       opportunityPlaceholder: 'No opportunity',
       submit: 'Save Activity',
     },
@@ -170,6 +172,7 @@ export const en: JaMessages = {
     title: 'Contacts',
     description: 'Manage client stakeholders and link them quickly to deals or activities.',
     filters: {
+      searchLabel: 'Search',
       searchPlaceholder: 'Search by name, kana, or email',
       account: 'Account',
       accountAll: 'All accounts',
@@ -434,7 +437,9 @@ export const en: JaMessages = {
     title: 'Audit Logs',
     description: 'Review create/update/delete history for key entities.',
     filters: {
+      entityLabel: 'Entity',
       entityPlaceholder: 'Entity',
+      actionLabel: 'Action',
       actionAll: 'All actions',
       from: 'From',
       to: 'To',

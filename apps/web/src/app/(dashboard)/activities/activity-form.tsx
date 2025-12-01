@@ -4,14 +4,11 @@ import { useActionState, useEffect, useEffectEvent, useMemo, useState } from 're
 import { useRouter } from 'next/navigation';
 
 import { createActivityAction, type ActivityActionState } from '@/lib/actions/activities';
-import { Select } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { FloatingInput, FloatingSelect, FloatingTextarea } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
 import { SuccessToast } from '@/components/ui/success-modal';
 
 import { getActivityTypeOptions } from '@/lib/labels';
-import { RequiredMark } from '@/components/ui/required-mark';
 import { useI18n } from '@/components/providers/i18n-provider';
 import { useFormSuccessToast } from '@/hooks/use-form-success-toast';
 
@@ -75,27 +72,18 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
         handleSubmitSnapshot(snapshot);
       }}
     >
-      <div className="space-y-1">
-        <label htmlFor="activity-type" className="text-sm font-medium text-slate-600">
-          {t('typeLabel')}<RequiredMark />
-        </label>
-        <Select id="activity-type" name="type" defaultValue="CALL">
-          {typeOptions.map((type) => (
-            <option key={type.value} value={type.value}>
-              {type.label}
-            </option>
-          ))}
-        </Select>
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="activity-subject" className="text-sm font-medium text-slate-600">
-          {t('subjectLabel')}<RequiredMark />
-        </label>
-        <Input id="activity-subject" name="subject" placeholder={t('subjectPlaceholder')} required />
-      </div>
-      <Textarea name="description" rows={3} placeholder={t('descriptionPlaceholder')} />
-      <Select
+      <FloatingSelect id="activity-type" name="type" label={t('typeLabel')} defaultValue="CALL" required>
+        {typeOptions.map((type) => (
+          <option key={type.value} value={type.value}>
+            {type.label}
+          </option>
+        ))}
+      </FloatingSelect>
+      <FloatingInput id="activity-subject" name="subject" label={t('subjectLabel')} example={t('subjectPlaceholder')} required />
+      <FloatingTextarea name="description" label={t('descriptionPlaceholder')} example={t('descriptionPlaceholder')} rows={3} />
+      <FloatingSelect
         name="accountId"
+        label={t('accountPlaceholder')}
         value={selectedAccountId}
         onChange={(event) => {
           setSelectedAccountId(event.target.value);
@@ -107,20 +95,21 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
             {account.name}
           </option>
         ))}
-      </Select>
-      <Select
+      </FloatingSelect>
+      <FloatingSelect
         name="opportunityId"
+        label={t('opportunityPlaceholder')}
         value={selectedOpportunityId}
         onChange={(event) => setSelectedOpportunityId(event.target.value)}
         disabled={selectedAccountId !== '' && filteredOpportunities.length === 0}
       >
-        <option value="">{selectedAccountId ? t('opportunityPlaceholder') : t('opportunityPlaceholder')}</option>
+        <option value="">{t('opportunityPlaceholder')}</option>
         {filteredOpportunities.map((opp) => (
           <option key={opp.id} value={opp.id}>
             {opp.name}
           </option>
         ))}
-      </Select>
+      </FloatingSelect>
       <input type="hidden" name="userId" value={userId} />
       <SuccessToast trigger={successToastTrigger} message={tToast('activityCreated')} />
       {state?.error && <p className="text-sm text-rose-600">{tErrors(state.error)}</p>}

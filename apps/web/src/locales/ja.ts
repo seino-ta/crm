@@ -154,7 +154,9 @@ export const ja = {
       subjectLabel: '件名',
       subjectPlaceholder: '件名',
       descriptionPlaceholder: '詳細',
+      accountLabel: 'アカウント',
       accountPlaceholder: 'アカウントなし',
+      opportunityLabel: '案件',
       opportunityPlaceholder: '案件なし',
       submit: '活動を追加',
     },
@@ -168,6 +170,7 @@ export const ja = {
     title: 'コンタクト',
     description: '取引先担当者を管理し、案件/活動に素早く紐づけます。',
     filters: {
+      searchLabel: '検索',
       searchPlaceholder: '氏名・カナ・メールで検索',
       account: 'アカウント',
       accountAll: 'すべてのアカウント',
@@ -432,7 +435,9 @@ export const ja = {
     title: '監査ログ',
     description: '主要エンティティの作成・更新・削除履歴を時系列で確認できます。',
     filters: {
+      entityLabel: 'エンティティ',
       entityPlaceholder: 'エンティティ',
+      actionLabel: 'アクション',
       actionAll: 'すべてのアクション',
       from: '開始日',
       to: '終了日',

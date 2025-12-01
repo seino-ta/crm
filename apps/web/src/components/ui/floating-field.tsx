@@ -6,6 +6,7 @@ import clsx from 'clsx';
 
 import { Input } from './input';
 import { Select } from './select';
+import { Textarea } from './textarea';
 
 type BaseProps = {
   label: string;
@@ -184,6 +185,88 @@ export function FloatingSelect({
         {children}
       </Select>
       <label htmlFor={id} className={clsx(labelBase, labelFocus, labelSelectFilled)}>
+        {label}
+        {required ? <RequiredMark /> : null}
+      </label>
+      {helperText ? <p className="mt-1 text-xs text-slate-500">{helperText}</p> : null}
+    </div>
+  );
+}
+
+export type FloatingTextareaProps = React.ComponentPropsWithoutRef<typeof Textarea> & BaseProps & {
+  example?: string;
+};
+
+export function FloatingTextarea({
+  label,
+  helperText,
+  containerClassName,
+  className,
+  id: idProp,
+  example,
+  placeholder,
+  required,
+  value,
+  defaultValue,
+  onChange,
+  onFocus,
+  onBlur,
+  ...rest
+}: FloatingTextareaProps) {
+  const autoId = useId();
+  const id = idProp ?? rest.name ?? `floating-textarea-${autoId}`;
+  const isControlled = value !== undefined;
+  const [uncontrolledValue, setUncontrolledValue] = useState<string>(String(defaultValue ?? ''));
+  const [touched, setTouched] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const exampleText = example ?? placeholder ?? '';
+  const currentValue = isControlled ? value : uncontrolledValue;
+  const filled = isFilled(currentValue);
+  const showError = required && touched && !filled;
+  const placeholderText = isFocused && exampleText ? exampleText : ' ';
+
+  useEffect(() => {
+    if (!isControlled) {
+      setUncontrolledValue(String(defaultValue ?? ''));
+      setTouched(false);
+    }
+  }, [defaultValue, isControlled]);
+
+  return (
+    <div className={clsx('relative', containerClassName)}>
+      <Textarea
+        {...rest}
+        id={id}
+        required={required}
+        value={isControlled ? value : undefined}
+        defaultValue={!isControlled ? defaultValue : undefined}
+        onChange={(event) => {
+          if (!isControlled) {
+            setUncontrolledValue(event.currentTarget.value);
+          }
+          if (!touched) {
+            setTouched(true);
+          }
+          onChange?.(event);
+        }}
+        placeholder={placeholderText}
+        className={clsx(
+          'peer placeholder-transparent focus:placeholder-slate-400 focus-visible:placeholder-slate-400',
+          showError ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-100' : '',
+          className
+        )}
+        aria-invalid={showError ? true : undefined}
+        onFocus={(event) => {
+          setIsFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setIsFocused(false);
+          setTouched(true);
+          onBlur?.(event);
+        }}
+      />
+      <label htmlFor={id} className={clsx(labelBase, labelFocus, labelInputFilled)}>
         {label}
         {required ? <RequiredMark /> : null}
       </label>

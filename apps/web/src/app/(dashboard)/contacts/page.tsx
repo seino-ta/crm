@@ -1,8 +1,7 @@
 import Link from 'next/link';
 
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
+import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
 import { listAccounts, listContacts } from '@/lib/data';
 import { getServerTranslations } from '@/lib/i18n/server';
@@ -52,19 +51,21 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
         <p>{t('description')}</p>
       </div>
       <Card>
-        <form className="grid gap-4 md:grid-cols-[2fr,1fr,auto]" action="/contacts" method="get">
-          <Input name="search" placeholder={t('filters.searchPlaceholder')} defaultValue={search} aria-label={t('filters.searchPlaceholder')} />
-          <Select name="accountId" defaultValue={accountId} aria-label={t('filters.account')}>
+        <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/contacts" method="get">
+          <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
+          <FloatingSelect name="accountId" label={t('filters.account')} defaultValue={accountId ?? ''} forceFloatLabel>
             <option value="">{t('filters.accountAll')}</option>
             {accounts.data.map((account) => (
               <option key={account.id} value={account.id}>
                 {account.name}
               </option>
             ))}
-          </Select>
-          <Button type="submit" size="sm">
-            {t('filters.submit')}
-          </Button>
+          </FloatingSelect>
+          <div className="flex items-end">
+            <Button type="submit" size="sm">
+              {t('filters.submit')}
+            </Button>
+          </div>
         </form>
       </Card>
       <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
