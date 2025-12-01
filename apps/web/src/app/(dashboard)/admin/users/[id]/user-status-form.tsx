@@ -7,13 +7,9 @@ import { SuccessToast } from '@/components/ui/success-modal';
 import { useI18n } from '@/components/providers/i18n-provider';
 import { toggleUserStatusAction, type UserActionState } from '@/lib/actions/users';
 
-async function handleStatus(userId: string, nextStatus: boolean, revalidatePath: string, _state: UserActionState | undefined, formData: FormData) {
-  return (await toggleUserStatusAction(userId, nextStatus, revalidatePath)) ?? undefined;
-}
-
 export function UserStatusForm({ userId, isActive, revalidatePath }: { userId: string; isActive: boolean; revalidatePath: string }) {
   const [state, formAction] = useActionState<UserActionState | undefined, FormData>(
-    handleStatus.bind(null, userId, !isActive, revalidatePath),
+    async () => (await toggleUserStatusAction(userId, !isActive, revalidatePath)) ?? undefined,
     undefined
   );
   const { t } = useI18n('users');

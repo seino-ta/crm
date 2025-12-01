@@ -110,7 +110,10 @@ export function AccountForm({ action, submitLabel, initialValues, successRedirec
   const statusContext = useAccountStatus();
   const [statusValue, setStatusValue] = useState<AccountStatus>((initialValues?.status as AccountStatus) ?? 'ACTIVE');
   useEffect(() => {
-    setStatusValue((initialValues?.status as AccountStatus) ?? 'ACTIVE');
+    const timeoutId = window.setTimeout(() => {
+      setStatusValue((initialValues?.status as AccountStatus) ?? 'ACTIVE');
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [initialValues?.status]);
   const initialSnapshotSignature = useMemo(() => JSON.stringify(snapshotFromInitialValues(initialValues)), [initialValues]);
   const shouldMatchSnapshot = matchSnapshot ?? Boolean(initialValues);

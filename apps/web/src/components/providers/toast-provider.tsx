@@ -65,13 +65,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const restored = readPersistedToast();
-    if (restored) {
-      setToast(restored);
-    }
+    if (!restored) return undefined;
+    const timeoutId = window.setTimeout(() => setToast(restored), 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
     if (!toast) {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
       return undefined;
     }
     if (timerRef.current) {
@@ -79,9 +83,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     }
     const remaining = Math.max(0, toast.expiresAt - Date.now());
     if (remaining === 0) {
-      setToast(null);
+      const timeoutId = window.setTimeout(() => setToast(null), 0);
       clearPersistedToast(toast.id);
-      return undefined;
+      return () => window.clearTimeout(timeoutId);
     }
     timerRef.current = setTimeout(() => {
       setToast(null);

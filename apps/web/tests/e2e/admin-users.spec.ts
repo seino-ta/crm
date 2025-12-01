@@ -2,8 +2,6 @@ import { test, expect } from '@playwright/test';
 
 import { createSlug, login, safeGoto } from './support/crm-helpers';
 
-const roles = ['ADMIN', 'MANAGER', 'REP'] as const;
-
 test.describe('Admin Users', () => {
   test('invite user, change role, toggle status', async ({ page }, testInfo) => {
     const slug = createSlug(testInfo);

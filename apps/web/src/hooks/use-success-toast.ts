@@ -11,13 +11,14 @@ export function useSuccessToast(duration = 2400) {
   useEffect(() => {
     if (!toastCtx || !message) return;
     toastCtx.showToast(message, { duration });
-    setMessage(null);
+    const timeoutId = window.setTimeout(() => setMessage(null), 0);
+    return () => window.clearTimeout(timeoutId);
   }, [message, toastCtx, duration]);
 
   useEffect(() => {
-    if (toastCtx) {
-      setMessage(null);
-    }
+    if (!toastCtx) return undefined;
+    const timeoutId = window.setTimeout(() => setMessage(null), 0);
+    return () => window.clearTimeout(timeoutId);
   }, [toastCtx]);
 
   const showToast = useCallback(

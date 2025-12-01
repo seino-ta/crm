@@ -52,6 +52,7 @@ export function SuccessToast({ open, trigger, message, duration = 2400 }: Succes
     }
     lastTriggerRef.current = trigger;
     showToast();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trigger, showToast]);
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export function SuccessToast({ open, trigger, message, duration = 2400 }: Succes
     }
     lastOpenRef.current = nextOpen;
     showToast();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, showToast]);
 
   if (toastCtx || !visible) {
