@@ -78,7 +78,7 @@ export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
         example={tForm('namePlaceholder')}
         required
       />
-      <FloatingTextarea name="description" label={tForm('descriptionPlaceholder')} example={tForm('descriptionPlaceholder')} rows={3} />
+      <FloatingTextarea name="description" label={tForm('descriptionLabel')} example={tForm('descriptionPlaceholder')} rows={3} />
       <FloatingSelect id="task-priority" name="priority" label={tForm('priorityLabel')} defaultValue="MEDIUM" required>
         {priorityOptions.map((priority) => (
           <option key={priority.value} value={priority.value}>

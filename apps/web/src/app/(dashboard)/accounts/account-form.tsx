@@ -160,8 +160,8 @@ export function AccountForm({ action, submitLabel, initialValues, successRedirec
         defaultValue={initialValues?.name ?? ''}
       />
       <div className="grid gap-4 md:grid-cols-2">
-        <FloatingInput name="domain" label={tForm('domainPlaceholder')} example="https://acme.com" defaultValue={initialValues?.domain ?? ''} />
-        <FloatingInput name="website" label={tForm('websitePlaceholder')} example="https://acme.com" defaultValue={initialValues?.website ?? ''} />
+        <FloatingInput name="domain" label={tForm('domainLabel')} example={tForm('domainPlaceholder')} defaultValue={initialValues?.domain ?? ''} />
+        <FloatingInput name="website" label={tForm('websiteLabel')} example={tForm('websitePlaceholder')} defaultValue={initialValues?.website ?? ''} />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <FloatingInput name="industry" label={tAccounts('industryLabel')} example={tForm('industryPlaceholder')} defaultValue={initialValues?.industry ?? ''} />
@@ -202,7 +202,7 @@ export function AccountForm({ action, submitLabel, initialValues, successRedirec
       <FloatingTextarea
         name="description"
         rows={3}
-        label={tForm('descriptionPlaceholder')}
+        label={tForm('descriptionLabel')}
         example={tForm('descriptionPlaceholder')}
         defaultValue={initialValues?.description ?? ''}
       />

@@ -60,8 +60,8 @@ function ContactFormBase({ accounts, action, initialValues, submitLabel, toastMe
         />
       </div>
       <div className="grid gap-3 md:grid-cols-2">
-        <FloatingInput name="kanaFirstName" label={t('kanaFirstPlaceholder')} example={t('kanaFirstPlaceholder')} defaultValue={initialValues?.kanaFirstName ?? ''} />
-        <FloatingInput name="kanaLastName" label={t('kanaLastPlaceholder')} example={t('kanaLastPlaceholder')} defaultValue={initialValues?.kanaLastName ?? ''} />
+        <FloatingInput name="kanaFirstName" label={t('kanaFirstLabel')} example={t('kanaFirstPlaceholder')} defaultValue={initialValues?.kanaFirstName ?? ''} />
+        <FloatingInput name="kanaLastName" label={t('kanaLastLabel')} example={t('kanaLastPlaceholder')} defaultValue={initialValues?.kanaLastName ?? ''} />
       </div>
       <FloatingInput
         id={`${testId}-email`}
@@ -73,7 +73,7 @@ function ContactFormBase({ accounts, action, initialValues, submitLabel, toastMe
         defaultValue={initialValues?.email ?? ''}
       />
       <FloatingInput name="phone" label={t('phone')} example="090-1234-5678" defaultValue={initialValues?.phone ?? ''} />
-      <FloatingInput name="jobTitle" label={t('jobTitle')} example={t('jobTitle')} defaultValue={initialValues?.jobTitle ?? ''} />
+      <FloatingInput name="jobTitle" label={t('jobTitle')} example={t('jobTitlePlaceholder')} defaultValue={initialValues?.jobTitle ?? ''} />
       <FloatingSelect
         id={`${testId}-account`}
         name="accountId"
@@ -93,7 +93,7 @@ function ContactFormBase({ accounts, action, initialValues, submitLabel, toastMe
       </FloatingSelect>
       <FloatingTextarea
         name="notes"
-        label={t('notesPlaceholder')}
+        label={t('notesLabel')}
         example={t('notesPlaceholder')}
         rows={3}
         defaultValue={initialValues?.notes ?? ''}

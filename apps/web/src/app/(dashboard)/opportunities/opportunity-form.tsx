@@ -59,7 +59,7 @@ export function OpportunityForm({ accounts, stages, contacts, ownerId }: Opportu
     >
       <FloatingInput name="name" label={t('nameLabel')} example={t('namePlaceholder')} required />
       <div className="grid gap-4 md:grid-cols-2">
-        <FloatingSelect name="accountId" label={t('accountLabel')} required defaultValue="">
+        <FloatingSelect name="accountId" label={t('accountLabel')} required defaultValue="" forceFloatLabel>
           <option value="" disabled>
             {t('accountPlaceholder')}
           </option>
@@ -69,7 +69,7 @@ export function OpportunityForm({ accounts, stages, contacts, ownerId }: Opportu
             </option>
           ))}
         </FloatingSelect>
-        <FloatingSelect name="stageId" label={t('stageLabel')} required defaultValue="">
+        <FloatingSelect name="stageId" label={t('stageLabel')} required defaultValue="" forceFloatLabel>
           <option value="" disabled>
             {t('stagePlaceholder')}
           </option>
@@ -81,12 +81,12 @@ export function OpportunityForm({ accounts, stages, contacts, ownerId }: Opportu
         </FloatingSelect>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <FloatingInput name="amount" type="number" min={0} label={t('amountPlaceholder')} example={t('amountPlaceholder')} />
-        <FloatingInput name="probability" type="number" min={0} max={100} label={t('probabilityPlaceholder')} example="50" />
+        <FloatingInput name="amount" type="number" min={0} label={t('amountLabel')} example={t('amountPlaceholder')} />
+        <FloatingInput name="probability" type="number" min={0} max={100} label={t('probabilityLabel')} example={t('probabilityPlaceholder')} />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <FloatingInput name="expectedCloseDate" type="date" label={t('dateLabel')} />
-        <FloatingSelect name="contactId" label={t('contactLabel')} defaultValue="">
+        <FloatingSelect name="contactId" label={t('contactLabel')} defaultValue="" forceFloatLabel>
           <option value="">{t('contactNone')}</option>
           {contacts.map((contact) => (
             <option key={contact.id} value={contact.id}>
@@ -95,7 +95,7 @@ export function OpportunityForm({ accounts, stages, contacts, ownerId }: Opportu
           ))}
         </FloatingSelect>
       </div>
-      <FloatingTextarea name="description" rows={3} label={t('descriptionPlaceholder')} example={t('descriptionPlaceholder')} />
+      <FloatingTextarea name="description" rows={3} label={t('descriptionLabel')} example={t('descriptionPlaceholder')} />
       <input type="hidden" name="ownerId" value={ownerId} />
       <SuccessToast trigger={successToastTrigger} message={tToast('opportunityCreated')} />
       {state?.error && <p className="text-sm text-rose-600">{tErrors(state.error)}</p>}

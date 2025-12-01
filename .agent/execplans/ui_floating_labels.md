@@ -53,6 +53,7 @@
 ## Progress
 - [x] WS1: `FloatingTextarea` を追加し、`FloatingSelect` に `forceFloatLabel` を導入。Input/Select/Textarea すべてで必須バリデーション・フォーカス中プレースホルダー制御・例示テキスト差し込みを共通化。
 - [x] WS2: Accounts / Contacts / Opportunities / Activities / Tasks / Admin Audit Logs のフィルター・フォームをフローティングラベルに置き換え、必要なロケール（ラベル・例示テキスト）も整備。
+- [x] 2025-11-29: 既存フォーム全体を監査し、ラベルとプレースホルダーが同一だった箇所をすべて解消。新たに `domainLabel` や `kanaFirstLabel` などの翻訳キーを追加し、例示テキストは placeholder 側へ集約。
 - [x] WS3: Playwright (`accounts.spec.ts`, `contacts.spec.ts`, `opportunities.spec.ts`, `activities.spec.ts`, `tasks.spec.ts`, `audit-logs.spec.ts` いずれも Chromium) を実行し、フォーム単位のリグレッションを確認。
 
 ## Surprises & Discoveries
@@ -64,6 +65,7 @@
 - すべてのフォームで placeholder ではなくラベルを主要情報にするため、各フィールドの例示文言をロケールファイルへ追加し、フォーム実装からベタ書きを排除する方針とした。
 - フィルター UI では `forceFloatLabel` を用いて初期状態からラベルを上に固定し、値が空でも検索条件の意味を明示するデザインに統一した。
 - Validation 表現は `Floating` コンポーネントに集約し、個別フォームで `RequiredMark` を配置しない（必須項目は `required` 属性で宣言する）方針に切り替えた。
+- Select コンポーネントのデファクトを `FloatingSelect` とし、新規/既存のセレクトを更新する際は本コンポーネント（必要に応じて `forceFloatLabel`）を必ず使用する。
 
 ## Outcomes & Retrospective
 - (未記入)

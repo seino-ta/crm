@@ -80,14 +80,15 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
         ))}
       </FloatingSelect>
       <FloatingInput id="activity-subject" name="subject" label={t('subjectLabel')} example={t('subjectPlaceholder')} required />
-      <FloatingTextarea name="description" label={t('descriptionPlaceholder')} example={t('descriptionPlaceholder')} rows={3} />
+      <FloatingTextarea name="description" label={t('descriptionLabel')} example={t('descriptionPlaceholder')} rows={3} />
       <FloatingSelect
         name="accountId"
-        label={t('accountPlaceholder')}
+        label={t('accountLabel')}
         value={selectedAccountId}
         onChange={(event) => {
           setSelectedAccountId(event.target.value);
         }}
+        forceFloatLabel
       >
         <option value="">{t('accountPlaceholder')}</option>
         {accounts.map((account) => (
@@ -98,10 +99,11 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
       </FloatingSelect>
       <FloatingSelect
         name="opportunityId"
-        label={t('opportunityPlaceholder')}
+        label={t('opportunityLabel')}
         value={selectedOpportunityId}
         onChange={(event) => setSelectedOpportunityId(event.target.value)}
         disabled={selectedAccountId !== '' && filteredOpportunities.length === 0}
+        forceFloatLabel
       >
         <option value="">{t('opportunityPlaceholder')}</option>
         {filteredOpportunities.map((opp) => (
