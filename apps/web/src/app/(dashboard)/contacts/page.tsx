@@ -81,7 +81,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
                   <th className="px-3 py-2 text-left">{t('list.headers.phone')}</th>
                   <th className="px-3 py-2 text-left">{t('list.headers.account')}</th>
                   <th className="px-3 py-2 text-left">{t('list.headers.created')}</th>
-                  <th className="px-3 py-2 text-left">{t('list.headers.actions')}</th>
+                  <th className="px-3 py-2 text-left w-[140px]">{t('list.headers.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -95,7 +95,13 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
                   contacts.map((contact) => (
                     <tr key={contact.id} className="border-t border-slate-100" data-testid="contact-row">
                       <td className="px-3 py-2 font-medium">
-                        {contact.lastName} {contact.firstName}
+                        <Link
+                          href={`/contacts/${contact.id}/edit`}
+                          className="text-blue-600 hover:underline"
+                          data-testid="contact-edit-link"
+                        >
+                          {contact.lastName} {contact.firstName}
+                        </Link>
                       </td>
                       <td className="px-3 py-2 text-slate-500">
                         {contact.kanaLastName || contact.kanaFirstName
@@ -118,11 +124,8 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
                         )}
                       </td>
                       <td className="px-3 py-2">{formatDate(contact.createdAt)}</td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2 w-[140px]">
                         <div className="flex flex-wrap gap-2 text-sm">
-                          <Link href={`/contacts/${contact.id}/edit`} className="text-blue-600 hover:underline" data-testid="contact-edit-link">
-                            {t('list.actions.edit')}
-                          </Link>
                           <DeleteContactButton
                             contactId={contact.id}
                             accountId={contact.account?.id}

@@ -8,6 +8,7 @@ const webUrl = new URL(webBaseUrl);
 let sessionToken: string | null = null;
 let sessionUserId: string | null = null;
 let defaultStageId: string | null = null;
+let defaultOwnerName: string | null = null;
 
 export async function safeGoto(page: Page, path: string) {
   try {
@@ -174,6 +175,27 @@ export async function apiCreateOpportunity(page: Page, params: { name: string; a
   const payload = (await response.json()) as { data?: { id: string; name: string } };
   if (!payload.data) {
     throw new Error('Opportunity API response missing data');
+  }
+  return payload.data;
+}
+
+export async function apiCreateLead(page: Page, params: { name: string; ownerId?: string; status?: string; accountId?: string }) {
+  const ownerId = params.ownerId ?? (await ensureUserId(page));
+  const response = await page.request.post(`${apiBaseUrl}/leads`, {
+    headers: { ...authHeaders(), 'content-type': 'application/json' },
+    data: {
+      name: params.name,
+      ownerId,
+      status: params.status,
+      accountId: params.accountId,
+    },
+  });
+  if (!response.ok()) {
+    throw new Error(`Failed to create lead via API: ${response.status()} ${response.statusText()}`);
+  }
+  const payload = (await response.json()) as { data?: { id: string; name: string } };
+  if (!payload.data) {
+    throw new Error('Lead API response missing data');
   }
   return payload.data;
 }

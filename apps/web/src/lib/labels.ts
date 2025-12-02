@@ -1,4 +1,4 @@
-import type { AccountStatus, ActivityType, OpportunityStatus, TaskPriority, TaskStatus } from './types';
+import type { AccountStatus, ActivityType, LeadStatus, OpportunityStatus, TaskPriority, TaskStatus } from './types';
 import type { Locale } from '@/lib/i18n/config';
 import { defaultLocale } from '@/lib/i18n/config';
 
@@ -11,6 +11,14 @@ const ACCOUNT_STATUS_OPTIONS_INTERNAL: Option<AccountStatus>[] = [
   { value: 'PROSPECT', label: { ja: '見込み', en: 'Prospect' } },
   { value: 'INACTIVE', label: { ja: '非アクティブ', en: 'Inactive' } },
   { value: 'ARCHIVED', label: { ja: 'アーカイブ', en: 'Archived' } },
+];
+
+const LEAD_STATUS_OPTIONS_INTERNAL: Option<LeadStatus>[] = [
+  { value: 'NEW', label: { ja: '新規', en: 'New' } },
+  { value: 'CONTACTED', label: { ja: 'フォロー中', en: 'Contacted' } },
+  { value: 'QUALIFIED', label: { ja: '有望', en: 'Qualified' } },
+  { value: 'LOST', label: { ja: '失注', en: 'Lost' } },
+  { value: 'CONVERTED', label: { ja: '顧客化', en: 'Converted' } },
 ];
 
 const ACTIVITY_TYPE_OPTIONS_INTERNAL: Option<ActivityType>[] = [
@@ -75,6 +83,14 @@ const TASK_STATUS_TONES: Record<TaskStatus, StatusTone> = {
   CANCELLED: 'danger',
 };
 
+const LEAD_STATUS_TONES: Record<LeadStatus, StatusTone> = {
+  NEW: 'info',
+  CONTACTED: 'info',
+  QUALIFIED: 'success',
+  LOST: 'danger',
+  CONVERTED: 'success',
+};
+
 const OPPORTUNITY_STATUS_TONES: Record<OpportunityStatus, StatusTone> = {
   OPEN: 'info',
   WON: 'success',
@@ -116,6 +132,7 @@ function buildMap<T extends string>(options: Option<T>[]) {
 const ACCOUNT_STATUS_LABELS = buildMap(ACCOUNT_STATUS_OPTIONS_INTERNAL);
 const ACTIVITY_TYPE_LABELS = buildMap(ACTIVITY_TYPE_OPTIONS_INTERNAL);
 const TASK_PRIORITY_LABELS = buildMap(TASK_PRIORITY_OPTIONS_INTERNAL);
+const LEAD_STATUS_LABELS = buildMap(LEAD_STATUS_OPTIONS_INTERNAL);
 
 function getLabel<T extends string>(map: Record<Locale, Record<T, string>>, value?: T | null, locale: Locale = defaultLocale) {
   if (!value) {
@@ -138,6 +155,10 @@ export function getActivityTypeOptions(locale: Locale = defaultLocale) {
 
 export function getTaskPriorityOptions(locale: Locale = defaultLocale) {
   return TASK_PRIORITY_OPTIONS_INTERNAL.map((option) => ({ value: option.value, label: option.label[locale] ?? option.label[defaultLocale] }));
+}
+
+export function getLeadStatusOptions(locale: Locale = defaultLocale) {
+  return LEAD_STATUS_OPTIONS_INTERNAL.map((option) => ({ value: option.value, label: option.label[locale] ?? option.label[defaultLocale] }));
 }
 
 export function getAccountStatusLabel(status?: AccountStatus | null, locale: Locale = defaultLocale) {
@@ -165,6 +186,16 @@ export function getTaskStatusLabel(status?: TaskStatus | null, locale: Locale = 
 export function getTaskStatusMeta(status?: TaskStatus | null, locale: Locale = defaultLocale) {
   const label = getTaskStatusLabel(status, locale);
   const tone = status ? TASK_STATUS_TONES[status] ?? 'neutral' : 'neutral';
+  return { label, tone };
+}
+
+export function getLeadStatusLabel(status?: LeadStatus | null, locale: Locale = defaultLocale) {
+  return getLabel(LEAD_STATUS_LABELS, status, locale);
+}
+
+export function getLeadStatusMeta(status?: LeadStatus | null, locale: Locale = defaultLocale) {
+  const label = getLeadStatusLabel(status, locale);
+  const tone = status ? LEAD_STATUS_TONES[status] ?? 'neutral' : 'neutral';
   return { label, tone };
 }
 

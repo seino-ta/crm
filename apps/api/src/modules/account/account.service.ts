@@ -1,4 +1,4 @@
-import { AuditAction, Prisma } from '@prisma/client';
+import { AccountAssignmentRole, AuditAction, Prisma, UserRole } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
@@ -12,6 +12,21 @@ const DEFAULT_ORDER = { createdAt: 'desc' } as const;
 type AccountFetchOptions = {
   includeDeleted?: boolean;
 };
+
+type Actor = Express.AuthenticatedUser | undefined;
+
+function assertActor(actor: Actor) {
+  if (!actor) {
+    throw createError(401, 'Authentication required');
+  }
+}
+
+async function assertAccountManagePermission(_accountId: string, actor: Actor) {
+  assertActor(actor);
+  if (actor.role !== UserRole.ADMIN) {
+    throw createError(403, 'Insufficient permissions');
+  }
+}
 
 async function findAccountOrThrow(id: string, { includeDeleted }: AccountFetchOptions = {}) {
   const where: Prisma.AccountWhereInput = { id };
@@ -61,7 +76,7 @@ export async function getAccountById(id: string, options?: AccountFetchOptions) 
   return findAccountOrThrow(id, options);
 }
 
-export async function createAccount(payload: CreateAccountInput, actorId?: string) {
+export async function createAccount(payload: CreateAccountInput, actor?: Actor) {
   const data: Prisma.AccountCreateInput = {
     name: payload.name,
     domain: payload.domain ?? null,
@@ -80,12 +95,21 @@ export async function createAccount(payload: CreateAccountInput, actorId?: strin
     data.annualRevenue = new Prisma.Decimal(payload.annualRevenue);
   }
 
+  if (actor) {
+    data.assignments = {
+      create: {
+        user: { connect: { id: actor.id } },
+        role: AccountAssignmentRole.OWNER,
+      },
+    };
+  }
+
   const account = await prisma.account.create({ data });
   await createAuditLogEntry({
     entityType: 'Account',
     entityId: account.id,
     action: AuditAction.CREATE,
-    actorId,
+    actorId: actor?.id,
     changes: payload,
   });
   return account;
@@ -119,8 +143,9 @@ export async function updateAccount(id: string, payload: UpdateAccountInput, act
   return account;
 }
 
-export async function softDeleteAccount(id: string, actorId?: string) {
+export async function softDeleteAccount(id: string, actor?: Actor) {
   await findAccountOrThrow(id);
+  await assertAccountManagePermission(id, actor);
 
   await prisma.account.update({
     where: { id },
@@ -130,15 +155,17 @@ export async function softDeleteAccount(id: string, actorId?: string) {
     entityType: 'Account',
     entityId: id,
     action: AuditAction.DELETE,
-    actorId,
+    actorId: actor?.id,
   });
 }
 
-export async function restoreAccount(id: string, actorId?: string) {
+export async function restoreAccount(id: string, actor?: Actor) {
   const account = await findAccountOrThrow(id, { includeDeleted: true });
   if (!account.deletedAt) {
     throw createError(400, 'Account is not archived');
   }
+
+  await assertAccountManagePermission(id, actor);
 
   const restored = await prisma.account.update({
     where: { id },
@@ -149,7 +176,7 @@ export async function restoreAccount(id: string, actorId?: string) {
     entityType: 'Account',
     entityId: id,
     action: AuditAction.UPDATE,
-    actorId,
+    actorId: actor?.id,
     changes: { restored: true },
   });
 

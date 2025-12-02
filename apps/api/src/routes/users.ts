@@ -10,9 +10,7 @@ import { getUserById, inviteUser, listUsers, updateUser, updateUserStatus } from
 
 const router = Router();
 
-router.use(authenticate([UserRole.ADMIN]));
-
-router.get('/', async (req, res, next) => {
+router.get('/', authenticate([UserRole.ADMIN, UserRole.MANAGER]), async (req, res, next) => {
   try {
     const parsed = userFilterSchema.safeParse(req.query);
     if (!parsed.success) {
@@ -25,7 +23,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', authenticate([UserRole.ADMIN, UserRole.MANAGER]), async (req, res, next) => {
   try {
     const { id } = req.params as { id: string };
     const user = await getUserById(id);
@@ -35,7 +33,7 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-router.post('/', validateBody(inviteUserSchema), async (req, res, next) => {
+router.post('/', authenticate([UserRole.ADMIN]), validateBody(inviteUserSchema), async (req, res, next) => {
   try {
     const payload = req.body as InviteUserInput;
     const result = await inviteUser(payload, req.user?.id);
@@ -45,7 +43,7 @@ router.post('/', validateBody(inviteUserSchema), async (req, res, next) => {
   }
 });
 
-router.put('/:id', validateBody(updateUserSchema), async (req, res, next) => {
+router.put('/:id', authenticate([UserRole.ADMIN]), validateBody(updateUserSchema), async (req, res, next) => {
   try {
     const payload = req.body as UpdateUserInput;
     const { id } = req.params as { id: string };
@@ -56,7 +54,7 @@ router.put('/:id', validateBody(updateUserSchema), async (req, res, next) => {
   }
 });
 
-router.patch('/:id/status', validateBody(updateUserStatusSchema), async (req, res, next) => {
+router.patch('/:id/status', authenticate([UserRole.ADMIN]), validateBody(updateUserStatusSchema), async (req, res, next) => {
   try {
     const payload = req.body as UpdateUserStatusInput;
     const { id } = req.params as { id: string };

@@ -1,0 +1,156 @@
+import Link from 'next/link';
+
+import { Card } from '@/components/ui/card';
+import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
+import { Button } from '@/components/ui/button';
+import { DeleteLeadButton } from './delete-lead-button';
+import { LeadStatusSelect } from './lead-status-select';
+import { LeadForm } from './lead-form';
+import { getCurrentUser } from '@/lib/auth';
+import { listAccounts, listLeads, listUsers } from '@/lib/data';
+import { formatDate, formatUserName } from '@/lib/formatters';
+import { getLeadStatusMeta } from '@/lib/labels';
+import { getServerTranslations } from '@/lib/i18n/server';
+import type { LeadStatus } from '@/lib/types';
+
+function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
+  const value = params[key];
+  if (Array.isArray(value)) return value[0] ?? '';
+  return value ?? '';
+}
+
+const PAGE_SIZE = 20;
+
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default async function LeadsPage({ searchParams }: { searchParams: SearchParams }) {
+  const { locale, t } = await getServerTranslations('leads');
+  const user = await getCurrentUser();
+  const filters = await searchParams;
+  const search = extractParam(filters, 'search');
+  const status = extractParam(filters, 'status') as LeadStatus | '';
+  const requestedPage = Number(extractParam(filters, 'page') || '1');
+  const page = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
+
+  const ownersPromise =
+    user.role === 'ADMIN' || user.role === 'MANAGER'
+      ? listUsers({ pageSize: 100 })
+      : Promise.resolve({ data: [user] });
+
+  const [{ data: leads, meta }, owners, accounts] = await Promise.all([
+    listLeads({ search: search || undefined, status: status || undefined, page, pageSize: PAGE_SIZE }),
+    ownersPromise,
+    listAccounts({ pageSize: 100 }),
+  ]);
+
+  const hasPrev = (meta?.page ?? 1) > 1;
+  const hasNext = meta ? meta.page < meta.totalPages : false;
+
+  const buildPageHref = (targetPage: number) => {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (status) params.set('status', status);
+    params.set('page', targetPage.toString());
+    const qs = params.toString();
+    return qs ? `/leads?${qs}` : '/leads';
+  };
+
+  return (
+    <div className="space-y-8" data-testid="leads-page">
+      <div className="page-header">
+        <h1>{t('title')}</h1>
+        <p>{t('description')}</p>
+      </div>
+      <Card>
+        <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/leads" method="get">
+          <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
+          <FloatingSelect name="status" label={t('filters.status')} defaultValue={status} forceFloatLabel>
+            <option value="">{t('filters.statusAll')}</option>
+            {['NEW', 'CONTACTED', 'QUALIFIED', 'LOST', 'CONVERTED'].map((value) => {
+              const { label } = getLeadStatusMeta(value as LeadStatus, locale);
+              return (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              );
+            })}
+          </FloatingSelect>
+          <div className="flex items-end">
+            <Button type="submit" size="sm">
+              {t('filters.submit')}
+            </Button>
+          </div>
+        </form>
+      </Card>
+      <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
+        <Card>
+          <h2 className="text-lg font-semibold">{t('list.title')}</h2>
+          <div className="mt-4 space-y-4">
+            {leads.length === 0 && <p className="text-sm text-slate-500">{t('list.empty')}</p>}
+            {leads.map((lead) => {
+              const { label, tone } = getLeadStatusMeta(lead.status, locale);
+              return (
+                <div key={lead.id} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm " data-testid="lead-row">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold">{lead.name}</p>
+                      <p className="text-xs text-slate-500">{lead.company || t('list.companyFallback')}</p>
+                      <p className="text-xs text-slate-400">{formatUserName(lead.owner?.firstName, lead.owner?.lastName, lead.owner?.email)}</p>
+                      <div className="mt-2 space-y-1 text-xs text-slate-600">
+                        {lead.email && (
+                          <a href={`mailto:${lead.email}`} className="text-blue-600 underline">
+                            {lead.email}
+                          </a>
+                        )}
+                        {lead.phone && <p>{lead.phone}</p>}
+                        {lead.account && (
+                          <Link href={`/accounts/${lead.account.id}`} className="text-blue-600">
+                            {lead.account.name}
+                          </Link>
+                        )}
+                      </div>
+                      <p className="mt-2 text-[11px] text-slate-400">{lead.createdAt ? formatDate(lead.createdAt) : '—'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 text-right">
+                      <LeadStatusSelect leadId={lead.id} status={lead.status} />
+                      <DeleteLeadButton leadId={lead.id} />
+                    </div>
+                  </div>
+                  {lead.notes && <p className="mt-2 text-sm text-slate-700">{lead.notes}</p>}
+                </div>
+              );
+            })}
+          </div>
+          {meta && meta.totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+              <span>
+                {t('list.pagination', {
+                  values: {
+                    page: meta.page.toString(),
+                    totalPages: meta.totalPages.toString(),
+                  },
+                })}
+              </span>
+              <div className="space-x-2">
+                <Button type="button" size="sm" variant="outline" disabled={!hasPrev} asChild>
+                  <Link href={hasPrev ? buildPageHref(meta.page - 1) : buildPageHref(meta.page)}>{t('list.prev')}</Link>
+                </Button>
+                <Button type="button" size="sm" variant="outline" disabled={!hasNext} asChild>
+                  <Link href={hasNext ? buildPageHref(meta.page + 1) : buildPageHref(meta.page)}>{t('list.next')}</Link>
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+        <Card>
+          <h2 className="text-lg font-semibold">{t('form.title')}</h2>
+          <LeadForm
+            owners={owners.data.map((owner) => ({ id: owner.id, name: formatUserName(owner.firstName, owner.lastName, owner.email) }))}
+            accounts={accounts.data.map((account) => ({ id: account.id, name: account.name }))}
+            defaultOwnerId={user.id}
+          />
+        </Card>
+      </div>
+    </div>
+  );
+}

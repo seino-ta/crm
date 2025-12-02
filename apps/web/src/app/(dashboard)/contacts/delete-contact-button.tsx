@@ -37,12 +37,13 @@ export function DeleteContactButton({ contactId, accountId, contactName, testId 
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant="danger"
       size="sm"
-      className="text-rose-600 hover:text-rose-700"
+      className="shadow-sm"
       onClick={handleDelete}
       disabled={pending}
       data-testid={testId}
+      aria-label={t('delete')}
     >
       {t('delete')}
     </Button>

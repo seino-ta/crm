@@ -62,6 +62,25 @@ export type Contact = {
   account?: Account | null;
 };
 
+export type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'LOST' | 'CONVERTED';
+
+export type Lead = {
+  id: string;
+  name: string;
+  company: string | null;
+  email: string | null;
+  phone: string | null;
+  status: LeadStatus;
+  ownerId: string;
+  source?: string | null;
+  notes?: string | null;
+  accountId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  owner?: User;
+  account?: Account | null;
+};
+
 export type PipelineStage = {
   id: string;
   name: string;

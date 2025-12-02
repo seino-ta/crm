@@ -1,4 +1,4 @@
-import { ActivityType, AuditAction, OpportunityStatus, Prisma, TaskPriority, TaskStatus } from '@prisma/client';
+import { ActivityType, AuditAction, OpportunityStatus, Prisma, TaskPriority, TaskStatus, UserRole } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
@@ -12,6 +12,17 @@ import type {
 } from './opportunity.schema';
 
 const DEFAULT_ORDER = { createdAt: 'desc' } as const;
+type Actor = Express.AuthenticatedUser | undefined;
+
+function assertActor(actor: Actor) {
+  if (!actor) throw createError(401, 'Authentication required');
+}
+
+function assertOwnerOrManager(actor: Actor, ownerId: string) {
+  assertActor(actor);
+  if (actor.role === UserRole.ADMIN || actor.role === UserRole.MANAGER) return;
+  if (actor.id !== ownerId) throw createError(403, 'Insufficient permissions');
+}
 
 async function ensureAccount(accountId: string) {
   const account = await prisma.account.findFirst({ where: { id: accountId, deletedAt: null } });
@@ -98,7 +109,8 @@ export async function getOpportunityById(id: string) {
   return opportunity;
 }
 
-export async function createOpportunity(payload: CreateOpportunityInput, actorId?: string) {
+export async function createOpportunity(payload: CreateOpportunityInput, actor?: Actor) {
+  assertOwnerOrManager(actor, payload.ownerId);
   await ensureAccount(payload.accountId);
   await ensureOwner(payload.ownerId);
   const stage = await ensureStage(payload.stageId);
@@ -130,7 +142,7 @@ export async function createOpportunity(payload: CreateOpportunityInput, actorId
     entityType: 'Opportunity',
     entityId: opportunity.id,
     action: AuditAction.CREATE,
-    actorId,
+    actorId: actor?.id,
     opportunityId: opportunity.id,
     changes: payload,
   });
@@ -175,12 +187,17 @@ async function handleStageChangeAutomation(opportunity: Prisma.OpportunityGetPay
   });
 }
 
-export async function updateOpportunity(id: string, payload: UpdateOpportunityInput, actorId?: string) {
+export async function updateOpportunity(id: string, payload: UpdateOpportunityInput, actor?: Actor) {
   const existing = await prisma.opportunity.findFirst({ where: { id, deletedAt: null } });
   if (!existing) throw createError(404, 'Opportunity not found');
 
+  assertOwnerOrManager(actor, existing.ownerId);
+
   if (payload.accountId && payload.accountId !== existing.accountId) await ensureAccount(payload.accountId);
-  if (payload.ownerId && payload.ownerId !== existing.ownerId) await ensureOwner(payload.ownerId);
+  if (payload.ownerId && payload.ownerId !== existing.ownerId) {
+    assertOwnerOrManager(actor, payload.ownerId);
+    await ensureOwner(payload.ownerId);
+  }
   let stage;
   if (payload.stageId && payload.stageId !== existing.stageId) {
     stage = await ensureStage(payload.stageId);
@@ -224,7 +241,7 @@ export async function updateOpportunity(id: string, payload: UpdateOpportunityIn
       entityType: 'Opportunity',
       entityId: id,
       action: AuditAction.STAGE_CHANGE,
-      actorId,
+      actorId: actor?.id,
       opportunityId: id,
       changes: { from: existing.stageId, to: payload.stageId },
     });
@@ -234,7 +251,7 @@ export async function updateOpportunity(id: string, payload: UpdateOpportunityIn
       entityType: 'Opportunity',
       entityId: id,
       action: AuditAction.UPDATE,
-      actorId,
+      actorId: actor?.id,
       opportunityId: id,
       changes: payload,
     });
@@ -243,16 +260,18 @@ export async function updateOpportunity(id: string, payload: UpdateOpportunityIn
   return updated;
 }
 
-export async function softDeleteOpportunity(id: string, actorId?: string) {
+export async function softDeleteOpportunity(id: string, actor?: Actor) {
   const existing = await prisma.opportunity.findFirst({ where: { id, deletedAt: null } });
   if (!existing) throw createError(404, 'Opportunity not found');
+
+  assertOwnerOrManager(actor, existing.ownerId);
 
   await prisma.opportunity.update({ where: { id }, data: { deletedAt: new Date() } });
   await createAuditLogEntry({
     entityType: 'Opportunity',
     entityId: id,
     action: AuditAction.DELETE,
-    actorId,
+    actorId: actor?.id,
     opportunityId: id,
   });
 }

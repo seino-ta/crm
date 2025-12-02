@@ -104,6 +104,7 @@ This repository is prepared so that:
 - `npm run lint` / `npm run lint:web` / `npm run lint:api` — ESLint (Flat config)。
 - `npm run test` — API (Jest) + Web (lint) をまとめて実行。
 - `npm run test:api` / `npm --prefix apps/api run test` — API ユニットテスト。
+- `npm --prefix apps/api run test:unit` — APIユニット（Leadサービスなど）。
 - `npm run test:e2e` — Playwright で Web フローを検証。
 - `npm --prefix apps/api run db:migrate` / `npm --prefix apps/api run db:seed` — Prisma でマイグレーション & シードを実行 (必要に応じて `DATABASE_URL=...` を前置)。
 
@@ -118,6 +119,7 @@ This repository is prepared so that:
   - `opportunities.spec.ts` — 案件作成とステージ変更
   - `activities.spec.ts` — 活動ログ追加
   - `tasks.spec.ts` — タスク作成
+  - `leads.spec.ts` — リード作成・ステータス変更・削除
   - `reports.spec.ts` — レポート画面表示
   - `admin-users.spec.ts` — ユーザー招待/ロール変更/無効化
   - `audit-logs.spec.ts` — 監査ログのフィルタリング
@@ -129,6 +131,25 @@ This repository is prepared so that:
 - プレースホルダーはロケール (`apps/web/src/locales/*`) で管理し、コンポーネントにベタ書きしない。例示テキストの追加は `...Placeholder` キーを作る。
 - 保存/更新成功時の通知は `useFormSuccessToast` を利用し、`triggerImmediateToast()` → `router.refresh()` の順で描画を保証する。即時に `router.replace()` するとトーストが消えるため、遷移が必要な場合はトースト表示後に遅延させる。
 - Select は `FloatingSelect` がデファクト。既存の `<select>` を更新する場合も本コンポーネントへ置き換える。
+
+### 機能カバレッジ（`config/feature.json` 準拠）
+| feature.id | status | 備考 |
+| --- | --- | --- |
+| auth_and_users | implemented | サインアップ/ログイン/`/auth/me` 実装済み |
+| role_based_access_control | partially_implemented | ロール (ADMIN/MANAGER/REP) による削除/更新権限制御を導入、データスコープは今後拡張予定 |
+| accounts_basic | implemented | CRUD + ソフトデリート/復元、作成者を自動で Account OWNER に割当 |
+| contacts_basic | implemented | CRUD + アーカイブ、アカウント権限に連動した削除制御 |
+| leads_management | implemented | 新規リード管理（DB/API/UI `/leads`、ステータス更新、削除） |
+| deals_pipeline | implemented | 案件 + ステージ管理、簡易レポート反映 |
+| activities_and_tasks | implemented | 活動/タスク CRUD、オーナー or 管理ロールのみが更新/削除可 |
+| notifications_basic | not_implemented | 今後の拡張枠 |
+| files_attachment | not_implemented | ストレージ設計未着手 |
+| dashboard_my | implemented | `/dashboard` に主要 KPI/最新ログ/タスクを表示 |
+| reports_simple | implemented | ステージ別・担当者別レポート |
+| import_export_basic | not_implemented | CSV I/O 未実装 |
+| audit_log | implemented | Admin 専用 API/UI で閲覧可 |
+
+RBACメモ: 破壊的操作（Account/Contact/Opportunity/Activity/Task/Lead の削除等）は ADMIN もしくはオーナー/マネージャーのみ許可。Account 作成時に作成者を OWNER として自動関連付けするが、アーカイブ/復元はカタログ準拠で ADMIN 限定。
 
 ### トラブルシュート
 

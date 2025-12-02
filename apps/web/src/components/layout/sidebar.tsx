@@ -11,6 +11,7 @@ const mainNavItems = [
   { href: '/dashboard', key: 'dashboard' },
   { href: '/accounts', key: 'accounts' },
   { href: '/contacts', key: 'contacts' },
+  { href: '/leads', key: 'leads' },
   { href: '/opportunities', key: 'opportunities' },
   { href: '/activities', key: 'activities' },
   { href: '/tasks', key: 'tasks' },

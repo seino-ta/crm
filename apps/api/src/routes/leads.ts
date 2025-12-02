@@ -4,19 +4,13 @@ import createError from 'http-errors';
 import { authenticate } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 import {
-  activityFilterSchema,
-  createActivitySchema,
-  updateActivitySchema,
-  type CreateActivityInput,
-  type UpdateActivityInput,
-} from '../modules/activity/activity.schema';
-import {
-  createActivity,
-  deleteActivity,
-  getActivityById,
-  listActivities,
-  updateActivity,
-} from '../modules/activity/activity.service';
+  createLeadSchema,
+  leadFilterSchema,
+  updateLeadSchema,
+  type CreateLeadInput,
+  type UpdateLeadInput,
+} from '../modules/lead/lead.schema';
+import { createLead, getLeadById, listLeads, softDeleteLead, updateLead } from '../modules/lead/lead.service';
 import { successResponse } from '../utils/response';
 
 const router = Router();
@@ -25,12 +19,12 @@ router.use(authenticate());
 
 router.get('/', async (req, res, next) => {
   try {
-    const parsed = activityFilterSchema.safeParse(req.query);
+    const parsed = leadFilterSchema.safeParse(req.query);
     if (!parsed.success) {
       return next(createError(422, 'Validation error', { details: parsed.error.flatten() }));
     }
 
-    const result = await listActivities(parsed.data);
+    const result = await listLeads(parsed.data);
     res.json(successResponse(result.data, result.meta));
   } catch (error) {
     next(error);
@@ -40,29 +34,29 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params as { id: string };
-    const activity = await getActivityById(id);
-    res.json(successResponse(activity));
+    const lead = await getLeadById(id);
+    res.json(successResponse(lead));
   } catch (error) {
     next(error);
   }
 });
 
-router.post('/', validateBody(createActivitySchema), async (req, res, next) => {
+router.post('/', validateBody(createLeadSchema), async (req, res, next) => {
   try {
-    const payload = req.body as CreateActivityInput;
-    const activity = await createActivity(payload, req.user);
-    res.status(201).json(successResponse(activity));
+    const payload = req.body as CreateLeadInput;
+    const lead = await createLead(payload, req.user);
+    res.status(201).json(successResponse(lead));
   } catch (error) {
     next(error);
   }
 });
 
-router.put('/:id', validateBody(updateActivitySchema), async (req, res, next) => {
+router.put('/:id', validateBody(updateLeadSchema), async (req, res, next) => {
   try {
     const { id } = req.params as { id: string };
-    const payload = req.body as UpdateActivityInput;
-    const activity = await updateActivity(id, payload, req.user);
-    res.json(successResponse(activity));
+    const payload = req.body as UpdateLeadInput;
+    const lead = await updateLead(id, payload, req.user);
+    res.json(successResponse(lead));
   } catch (error) {
     next(error);
   }
@@ -71,7 +65,7 @@ router.put('/:id', validateBody(updateActivitySchema), async (req, res, next) =>
 router.delete('/:id', async (req, res, next) => {
   try {
     const { id } = req.params as { id: string };
-    await deleteActivity(id, req.user);
+    await softDeleteLead(id, req.user);
     res.status(204).send();
   } catch (error) {
     next(error);

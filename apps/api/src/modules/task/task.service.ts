@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { AuditAction, TaskStatus } from '@prisma/client';
+import { AuditAction, TaskStatus, UserRole } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
@@ -7,6 +7,28 @@ import { buildPaginationMeta, normalizePagination } from '../../utils/pagination
 import { createAuditLogEntry } from '../audit-log/audit-log.helper';
 
 import type { CreateTaskInput, TaskFilterInput, UpdateTaskInput } from './task.schema';
+
+type Actor = Express.AuthenticatedUser | undefined;
+
+function assertActor(actor: Actor) {
+  if (!actor) {
+    throw createError(401, 'Authentication required');
+  }
+}
+
+function assertOwnerOrManager(actor: Actor, ownerId: string) {
+  assertActor(actor);
+  if (actor.role === UserRole.ADMIN || actor.role === UserRole.MANAGER) return;
+  if (actor.id !== ownerId) {
+    throw createError(403, 'Insufficient permissions');
+  }
+}
+
+function assertCreateScope(actor: Actor, ownerId: string) {
+  assertActor(actor);
+  if (actor.role === UserRole.ADMIN || actor.role === UserRole.MANAGER) return;
+  if (actor.id !== ownerId) throw createError(403, 'Insufficient permissions');
+}
 
 async function ensureUser(userId: string) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -98,7 +120,8 @@ export async function getTaskById(id: string) {
   return task;
 }
 
-export async function createTask(payload: CreateTaskInput, actorId?: string) {
+export async function createTask(payload: CreateTaskInput, actor?: Actor) {
+  assertCreateScope(actor, payload.ownerId);
   await Promise.all([
     ensureUser(payload.ownerId),
     ensureAccount(payload.accountId),
@@ -136,15 +159,20 @@ export async function createTask(payload: CreateTaskInput, actorId?: string) {
     entityType: 'Task',
     entityId: task.id,
     action: AuditAction.CREATE,
-    actorId,
+    actorId: actor?.id,
     opportunityId: task.opportunityId ?? undefined,
     changes: payload,
   });
   return task;
 }
 
-export async function updateTask(id: string, payload: UpdateTaskInput, actorId?: string) {
+export async function updateTask(id: string, payload: UpdateTaskInput, actor?: Actor) {
   const existing = await getTaskById(id);
+  assertOwnerOrManager(actor, existing.ownerId);
+
+  if (payload.ownerId && actor?.role === UserRole.REP && payload.ownerId !== existing.ownerId) {
+    throw createError(403, 'Insufficient permissions');
+  }
 
   await Promise.all([
     payload.ownerId && payload.ownerId !== existing.ownerId ? ensureUser(payload.ownerId) : Promise.resolve(),
@@ -200,21 +228,22 @@ export async function updateTask(id: string, payload: UpdateTaskInput, actorId?:
     entityType: 'Task',
     entityId: id,
     action: AuditAction.UPDATE,
-    actorId,
+    actorId: actor?.id,
     opportunityId: task.opportunityId ?? undefined,
     changes: payload,
   });
   return task;
 }
 
-export async function deleteTask(id: string, actorId?: string) {
+export async function deleteTask(id: string, actor?: Actor) {
   const existing = await getTaskById(id);
+  assertOwnerOrManager(actor, existing.ownerId);
   await prisma.task.delete({ where: { id } });
   await createAuditLogEntry({
     entityType: 'Task',
     entityId: id,
     action: AuditAction.DELETE,
-    actorId,
+    actorId: actor?.id,
     opportunityId: existing.opportunityId ?? undefined,
   });
 }

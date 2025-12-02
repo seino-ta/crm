@@ -58,7 +58,7 @@ router.put('/:id', validateBody(updateContactSchema), async (req, res, next) => 
 router.delete('/:id', async (req, res, next) => {
   try {
     const { id } = req.params as { id: string };
-    await softDeleteContact(id, req.user?.id);
+    await softDeleteContact(id, req.user);
     res.status(204).send();
   } catch (error) {
     next(error);

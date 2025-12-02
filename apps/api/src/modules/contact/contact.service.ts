@@ -1,4 +1,4 @@
-import { AuditAction, type Prisma } from '@prisma/client';
+import { AuditAction, Prisma, UserRole } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
@@ -8,6 +8,24 @@ import { createAuditLogEntry } from '../audit-log/audit-log.helper';
 import type { ContactListQuery, CreateContactInput, UpdateContactInput } from './contact.schema';
 
 const DEFAULT_ORDER = { createdAt: 'desc' } as const;
+
+type Actor = Express.AuthenticatedUser | undefined;
+
+function assertActor(actor: Actor) {
+  if (!actor) {
+    throw createError(401, 'Authentication required');
+  }
+}
+
+async function assertAccountScope(accountId: string, actor: Actor) {
+  assertActor(actor);
+  if (actor.role === UserRole.ADMIN || actor.role === UserRole.MANAGER) return;
+
+  const assignment = await prisma.accountAssignment.findFirst({ where: { accountId, userId: actor.id } });
+  if (!assignment) {
+    throw createError(403, 'Insufficient permissions');
+  }
+}
 
 async function ensureAccountExists(accountId: string) {
   const account = await prisma.account.findFirst({ where: { id: accountId, deletedAt: null } });
@@ -122,8 +140,9 @@ export async function updateContact(id: string, payload: UpdateContactInput, act
   return contact;
 }
 
-export async function softDeleteContact(id: string, actorId?: string) {
-  await getContactById(id);
+export async function softDeleteContact(id: string, actor?: Actor) {
+  const contact = await getContactById(id);
+  await assertAccountScope(contact.accountId, actor);
 
   await prisma.contact.update({
     where: { id },
@@ -133,6 +152,6 @@ export async function softDeleteContact(id: string, actorId?: string) {
     entityType: 'Contact',
     entityId: id,
     action: AuditAction.DELETE,
-    actorId,
+    actorId: actor?.id,
   });
 }

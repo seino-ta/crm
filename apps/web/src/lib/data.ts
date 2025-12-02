@@ -5,6 +5,8 @@ import type {
   ActivityType,
   ApiMeta,
   Contact,
+  Lead,
+  LeadStatus,
   Opportunity,
   OpportunityStatus,
   PipelineStage,
@@ -46,6 +48,17 @@ export async function listContacts(params?: { accountId?: string; search?: strin
 
 export async function getContact(id: string) {
   const { data } = await apiFetch<Contact>(`/contacts/${id}`);
+  return data;
+}
+
+export async function listLeads(params?: { search?: string; status?: LeadStatus; ownerId?: string; page?: number; pageSize?: number }) {
+  const query = toQuery(params ?? {});
+  const { data, meta } = await apiFetch<Lead[]>(`/leads${query}`);
+  return { data, meta: meta as ApiMeta | undefined };
+}
+
+export async function getLead(id: string) {
+  const { data } = await apiFetch<Lead>(`/leads/${id}`);
   return data;
 }
 

@@ -41,6 +41,14 @@ enum ActivityType {
   OTHER
 }
 
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  LOST
+  CONVERTED
+}
+
 enum TaskStatus {
   OPEN
   IN_PROGRESS
@@ -78,6 +86,7 @@ model User {
   lastLoginAt  DateTime?
   accounts     AccountAssignment[]
   ownedDeals   Opportunity[]       @relation("OpportunityOwner")
+  leads        Lead[]
   activities   Activity[]
   tasks        Task[]
   auditLogs    AuditLog[]
@@ -100,6 +109,7 @@ model Account {
   opportunities Opportunity[]
   activities    Activity[]
   tasks         Task[]
+  leads         Lead[]
   assignments   AccountAssignment[]
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
@@ -140,6 +150,29 @@ model Contact {
   deals      Opportunity[]
   activities Activity[]
   tasks      Task[]
+}
+
+model Lead {
+  id        String      @id @default(uuid()) @db.Uuid
+  name      String
+  company   String?
+  email     String?
+  phone     String?
+  status    LeadStatus  @default(NEW)
+  ownerId   String      @db.Uuid
+  source    String?
+  notes     String?
+  accountId String?     @db.Uuid
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  deletedAt DateTime?
+
+  owner   User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  account Account? @relation(fields: [accountId], references: [id])
+
+  @@index([status])
+  @@index([ownerId])
+  @@index([accountId])
 }
 
 model PipelineStage {
