@@ -124,6 +124,12 @@ This repository is prepared so that:
 - 例: `npx playwright test tests/e2e/contacts.spec.ts --headed` でコンタクト UI のみをヘッドレス/ヘッドフル任意で検証できる。
 - HTML レポート: `npx playwright show-report apps/web/tests/e2e/report`。テストが失敗した場合は `npx playwright show-trace test-results/<run>/trace.zip` で詳細を確認。
 
+### UI フォーム / トースト運用ガイド
+- すべてのフォーム/フィルターで `FloatingInput` / `FloatingSelect` / `FloatingTextarea` を使用する。検索系など初期値が空のセレクトは `forceFloatLabel` を付与してラベル位置を揃える。
+- プレースホルダーはロケール (`apps/web/src/locales/*`) で管理し、コンポーネントにベタ書きしない。例示テキストの追加は `...Placeholder` キーを作る。
+- 保存/更新成功時の通知は `useFormSuccessToast` を利用し、`triggerImmediateToast()` → `router.refresh()` の順で描画を保証する。即時に `router.replace()` するとトーストが消えるため、遷移が必要な場合はトースト表示後に遅延させる。
+- Select は `FloatingSelect` がデファクト。既存の `<select>` を更新する場合も本コンポーネントへ置き換える。
+
 ### トラブルシュート
 
 - `cookies()` の使用制限: Server Action / Route Handler / Middleware 以外 (例: `'use client'` コンポーネント) では `cookies()` を呼び出せない。クライアントからクッキーを操作したい場合は Server Action を経由して処理する。

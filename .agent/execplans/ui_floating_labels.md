@@ -67,6 +67,13 @@
 - フィルター UI では `forceFloatLabel` を用いて初期状態からラベルを上に固定し、値が空でも検索条件の意味を明示するデザインに統一した。
 - Validation 表現は `Floating` コンポーネントに集約し、個別フォームで `RequiredMark` を配置しない（必須項目は `required` 属性で宣言する）方針に切り替えた。
 - Select コンポーネントのデファクトを `FloatingSelect` とし、新規/既存のセレクトを更新する際は本コンポーネント（必要に応じて `forceFloatLabel`）を必ず使用する。
+- トースト表示を保証するため、保存成功時は `router.refresh()` を優先し、即座に `router.replace()` などでレイアウト全体を再マウントしない。どうしても遷移が必要なケースは `useFormSuccessToast` のセッション復元を併用する。
+
+## Guidelines（実装ルール）
+1. **Floating 系コンポーネント**: 新規フォーム/フィルターは `FloatingInput`/`FloatingSelect`/`FloatingTextarea` を必ず使用する。`forceFloatLabel` はデフォルト値が空（検索やフィルターなど）の場合に付与する。
+2. **Placeholder 管理**: 例示テキストはロケールファイル（`en.ts`/`ja.ts` など）にキーを追加して管理し、コンポーネントでベタ書きしない。
+3. **Toast 運用**: サーバーアクションの成功時は `useFormSuccessToast` を利用し、`triggerImmediateToast` → `router.refresh()` の順に実行してトーストを確実に描画する。遷移が必要な場合はトースト表示後に遅延させて行う。
+4. **テスト要件**: フォームを変更した場合は対応する Playwright spec（Accounts/Contacts/Opportunities/Activities/Tasks/Admin Users/Audit Logs など）を少なくとも Chromium で走らせる。
 
 ## Outcomes & Retrospective
 - (未記入)
