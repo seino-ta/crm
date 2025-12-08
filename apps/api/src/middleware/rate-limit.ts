@@ -19,7 +19,14 @@ function getBucket(key: string): Counter {
   return bucket;
 }
 
+const skipPaths = ['/api/health', '/api/auth/me'];
+
 export function rateLimit(req: Request, res: Response, next: NextFunction) {
+  if (skipPaths.includes(req.path)) {
+    next();
+    return;
+  }
+
   const key = req.ip || 'unknown';
   const bucket = getBucket(key);
   bucket.count += 1;
