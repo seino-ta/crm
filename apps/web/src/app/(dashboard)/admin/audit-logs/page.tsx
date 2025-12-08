@@ -147,12 +147,16 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
               Page {meta.page} / {meta.totalPages}
             </span>
             <div className="space-x-2">
-              <Button type="button" size="sm" variant="outline" disabled={!hasPrev} asChild>
-                <Link href={hasPrev ? buildPageHref(meta.page - 1) : buildPageHref(meta.page)}>Prev</Link>
-              </Button>
-              <Button type="button" size="sm" variant="outline" disabled={!hasNext} asChild>
-                <Link href={hasNext ? buildPageHref(meta.page + 1) : buildPageHref(meta.page)}>Next</Link>
-              </Button>
+              <Link href={hasPrev ? buildPageHref(meta.page - 1) : buildPageHref(meta.page)} passHref legacyBehavior>
+                <Button type="button" size="sm" variant="outline" disabled={!hasPrev} as="a">
+                  Prev
+                </Button>
+              </Link>
+              <Link href={hasNext ? buildPageHref(meta.page + 1) : buildPageHref(meta.page)} passHref legacyBehavior>
+                <Button type="button" size="sm" variant="outline" disabled={!hasNext} as="a">
+                  Next
+                </Button>
+              </Link>
             </div>
           </div>
         )}
