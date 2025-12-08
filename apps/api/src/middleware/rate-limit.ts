@@ -1,9 +1,11 @@
 import type { NextFunction, Request, Response } from 'express';
 
+import config from '../config/env';
+
 type Counter = { count: number; resetAt: number };
 
-const windowMs = 60 * 1000; // 1 minute
-const limit = 100; // recommended starter limit per IP per minute
+const windowMs = config.security.rateLimit.windowMs;
+const limit = config.security.rateLimit.max;
 const buckets = new Map<string, Counter>();
 
 function getBucket(key: string): Counter {

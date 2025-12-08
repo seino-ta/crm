@@ -196,6 +196,8 @@ docker compose up --build
 | `JWT_SECRET` | 認証トークン用シークレット (後続 WS で使用) | `please-change-me` |
 | `JWT_EXPIRES_IN` | JWT の有効期限 | `1d` |
 | `BCRYPT_SALT_ROUNDS` | パスワードハッシュの cost | `12` |
+| `RATE_LIMIT_WINDOW_MS` | レートリミットの時間窓 (ミリ秒) | `60000` |
+| `RATE_LIMIT_MAX` | 窓あたりの最大リクエスト数 (IP単位) | `100` |
 | `SEED_USER_PASSWORD` | シードユーザーの平文パスワード | `ChangeMe123!` |
 
 Docker Compose では `.env` の値が `api` サービスに渡され、`db` サービスは定義済みの資格情報 (ユーザー/パスワード) を利用する。
