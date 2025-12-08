@@ -71,6 +71,7 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
       </div>
       <Card>
         <form className="grid gap-4 md:grid-cols-5" action="/admin/audit-logs" method="get">
+          <input type="hidden" name="page" value="1" />
           <FloatingInput name="entityType" label={t('filters.entityLabel')} example={t('filters.entityPlaceholder')} defaultValue={entityType} />
           <FloatingSelect name="action" label={t('filters.actionLabel')} defaultValue={action ?? ''} forceFloatLabel>
             <option value="">{t('filters.actionAll')}</option>
