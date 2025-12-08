@@ -147,16 +147,30 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
               Page {meta.page} / {meta.totalPages}
             </span>
             <div className="space-x-2">
-              <Link href={hasPrev ? buildPageHref(meta.page - 1) : buildPageHref(meta.page)} passHref legacyBehavior>
-                <Button type="button" size="sm" variant="outline" disabled={!hasPrev} as="a">
+              {hasPrev ? (
+                <Link
+                  href={buildPageHref(meta.page - 1)}
+                  className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+                >
                   Prev
-                </Button>
-              </Link>
-              <Link href={hasNext ? buildPageHref(meta.page + 1) : buildPageHref(meta.page)} passHref legacyBehavior>
-                <Button type="button" size="sm" variant="outline" disabled={!hasNext} as="a">
+                </Link>
+              ) : (
+                <span className="inline-flex items-center justify-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400">
+                  Prev
+                </span>
+              )}
+              {hasNext ? (
+                <Link
+                  href={buildPageHref(meta.page + 1)}
+                  className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+                >
                   Next
-                </Button>
-              </Link>
+                </Link>
+              ) : (
+                <span className="inline-flex items-center justify-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400">
+                  Next
+                </span>
+              )}
             </div>
           </div>
         )}
