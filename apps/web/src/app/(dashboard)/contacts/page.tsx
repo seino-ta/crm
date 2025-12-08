@@ -54,20 +54,13 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
         <p>{t('description')}</p>
       </div>
       <Card>
-        <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,0.7fr)_auto]" action="/contacts" method="get">
+        <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/contacts" method="get">
           <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
           <FloatingSelect name="accountId" label={t('filters.account')} defaultValue={accountId ?? ''} forceFloatLabel>
             <option value="">{t('filters.accountAll')}</option>
             {accounts.data.map((account) => (
               <option key={account.id} value={account.id}>
                 {account.name}
-              </option>
-            ))}
-          </FloatingSelect>
-          <FloatingSelect name="pageSize" label="Page size" defaultValue={String(pageSize)} forceFloatLabel>
-            {[10, 20, 50, 100].map((size) => (
-              <option key={size} value={size}>
-                {size} / page
               </option>
             ))}
           </FloatingSelect>
@@ -151,7 +144,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
             </table>
           </div>
           {meta && meta.totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
               <span>
                 {t('list.pagination', {
                   values: {
@@ -160,13 +153,38 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
                   },
                 })}
               </span>
-              <div className="space-x-2">
-                <Button type="button" size="sm" variant="outline" disabled={!hasPrev} asChild>
-                  <Link href={hasPrev ? buildPageHref(meta.page - 1) : buildPageHref(meta.page)}>{t('list.prev')}</Link>
-                </Button>
-                <Button type="button" size="sm" variant="outline" disabled={!hasNext} asChild>
-                  <Link href={hasNext ? buildPageHref(meta.page + 1) : buildPageHref(meta.page)}>{t('list.next')}</Link>
-                </Button>
+              <div className="flex flex-wrap items-center gap-3">
+                <form action="/contacts" method="get" className="flex items-center gap-2">
+                  <input type="hidden" name="page" value="1" />
+                  {search && <input type="hidden" name="search" value={search} />}
+                  {accountId && <input type="hidden" name="accountId" value={accountId} />}
+                  <label className="text-xs text-slate-500" htmlFor="contact-page-size">
+                    Page size
+                  </label>
+                  <select
+                    id="contact-page-size"
+                    name="pageSize"
+                    defaultValue={String(pageSize)}
+                    className="rounded-md border border-slate-200 px-2 py-1 text-xs"
+                  >
+                    {[10, 20, 50, 100].map((size) => (
+                      <option key={size} value={size}>
+                        {size} / page
+                      </option>
+                    ))}
+                  </select>
+                  <Button type="submit" size="sm" variant="outline">
+                    Apply
+                  </Button>
+                </form>
+                <div className="space-x-2">
+                  <Button type="button" size="sm" variant="outline" disabled={!hasPrev} asChild>
+                    <Link href={hasPrev ? buildPageHref(meta.page - 1) : buildPageHref(meta.page)}>{t('list.prev')}</Link>
+                  </Button>
+                  <Button type="button" size="sm" variant="outline" disabled={!hasNext} asChild>
+                    <Link href={hasNext ? buildPageHref(meta.page + 1) : buildPageHref(meta.page)}>{t('list.next')}</Link>
+                  </Button>
+                </div>
               </div>
             </div>
           )}
