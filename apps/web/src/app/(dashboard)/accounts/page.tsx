@@ -5,7 +5,7 @@ import { createAccountAction } from '@/lib/actions/accounts';
 import { listAccounts } from '@/lib/data';
 import { formatCurrency } from '@/lib/formatters';
 import { Card } from '@/components/ui/card';
-import { FloatingInput } from '@/components/ui/floating-field';
+import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
 import { getAccountStatusMeta } from '@/lib/labels';
 import { StatusBadge } from '@/components/ui/status-badge';
