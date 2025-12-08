@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 
 import { AuditAction } from '@prisma/client';
 
+import Link from 'next/link';
+
 import { Card } from '@/components/ui/card';
 import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
@@ -32,14 +34,34 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
   const action = extractParam(filters, 'action');
   const from = extractParam(filters, 'from');
   const to = extractParam(filters, 'to');
+  const requestedPageSize = Number(extractParam(filters, 'pageSize') || '20');
+  const pageSize = [10, 20, 50, 100].includes(requestedPageSize) ? requestedPageSize : 20;
+  const requestedPage = Number(extractParam(filters, 'page') || '1');
+  const page = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
 
-  const { data } = await listAuditLogs({
-    pageSize: 50,
+  const { data, meta } = await listAuditLogs({
+    pageSize,
+    page,
     entityType: entityType || undefined,
     action: action || undefined,
     from: from || undefined,
     to: to || undefined,
   });
+
+  const hasPrev = (meta?.page ?? 1) > 1;
+  const hasNext = meta ? meta.page < meta.totalPages : false;
+
+  const buildPageHref = (targetPage: number) => {
+    const params = new URLSearchParams();
+    if (entityType) params.set('entityType', entityType);
+    if (action) params.set('action', action);
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    params.set('page', targetPage.toString());
+    params.set('pageSize', String(pageSize));
+    const qs = params.toString();
+    return qs ? `/admin/audit-logs?${qs}` : '/admin/audit-logs';
+  };
 
   return (
     <div className="space-y-8" data-testid="audit-logs-page">
@@ -48,7 +70,7 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
         <p>{t('description')}</p>
       </div>
       <Card>
-        <form className="grid gap-4 md:grid-cols-4" action="/admin/audit-logs" method="get">
+        <form className="grid gap-4 md:grid-cols-5" action="/admin/audit-logs" method="get">
           <FloatingInput name="entityType" label={t('filters.entityLabel')} example={t('filters.entityPlaceholder')} defaultValue={entityType} />
           <FloatingSelect name="action" label={t('filters.actionLabel')} defaultValue={action ?? ''} forceFloatLabel>
             <option value="">{t('filters.actionAll')}</option>
@@ -60,7 +82,14 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
           </FloatingSelect>
           <FloatingInput type="date" name="from" label={t('filters.from')} defaultValue={from} />
           <FloatingInput type="date" name="to" label={t('filters.to')} defaultValue={to} />
-          <div className="md:col-span-4 flex justify-end">
+          <FloatingSelect name="pageSize" label="Page size" defaultValue={String(pageSize)} forceFloatLabel>
+            {[10, 20, 50, 100].map((size) => (
+              <option key={size} value={size}>
+                {size} / page
+              </option>
+            ))}
+          </FloatingSelect>
+          <div className="md:col-span-5 flex justify-end">
             <Button type="submit" size="sm">
               {t('filters.submit')}
             </Button>
@@ -111,6 +140,21 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
             </tbody>
           </table>
         </div>
+        {meta && meta.totalPages > 1 && (
+          <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+            <span>
+              Page {meta.page} / {meta.totalPages}
+            </span>
+            <div className="space-x-2">
+              <Button type="button" size="sm" variant="outline" disabled={!hasPrev} asChild>
+                <Link href={hasPrev ? buildPageHref(meta.page - 1) : buildPageHref(meta.page)}>Prev</Link>
+              </Button>
+              <Button type="button" size="sm" variant="outline" disabled={!hasNext} asChild>
+                <Link href={hasNext ? buildPageHref(meta.page + 1) : buildPageHref(meta.page)}>Next</Link>
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );

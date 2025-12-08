@@ -24,11 +24,13 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
   const filters = await searchParams;
   const search = extractParam(filters, 'search');
   const accountId = extractParam(filters, 'accountId');
+  const requestedPageSize = Number(extractParam(filters, 'pageSize') || PAGE_SIZE);
+  const pageSize = [10, 20, 50, 100].includes(requestedPageSize) ? requestedPageSize : PAGE_SIZE;
   const requestedPage = Number(extractParam(filters, 'page') || '1');
   const page = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
 
   const [{ data: contacts, meta }, accounts] = await Promise.all([
-    listContacts({ search: search || undefined, accountId: accountId || undefined, page, pageSize: PAGE_SIZE }),
+    listContacts({ search: search || undefined, accountId: accountId || undefined, page, pageSize }),
     listAccounts({ pageSize: 200 }),
   ]);
 
@@ -40,6 +42,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
     if (search) params.set('search', search);
     if (accountId) params.set('accountId', accountId);
     params.set('page', targetPage.toString());
+    params.set('pageSize', String(pageSize));
     const qs = params.toString();
     return qs ? `/contacts?${qs}` : '/contacts';
   };
@@ -51,13 +54,20 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
         <p>{t('description')}</p>
       </div>
       <Card>
-        <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/contacts" method="get">
+        <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,0.7fr)_auto]" action="/contacts" method="get">
           <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
           <FloatingSelect name="accountId" label={t('filters.account')} defaultValue={accountId ?? ''} forceFloatLabel>
             <option value="">{t('filters.accountAll')}</option>
             {accounts.data.map((account) => (
               <option key={account.id} value={account.id}>
                 {account.name}
+              </option>
+            ))}
+          </FloatingSelect>
+          <FloatingSelect name="pageSize" label="Page size" defaultValue={String(pageSize)} forceFloatLabel>
+            {[10, 20, 50, 100].map((size) => (
+              <option key={size} value={size}>
+                {size} / page
               </option>
             ))}
           </FloatingSelect>

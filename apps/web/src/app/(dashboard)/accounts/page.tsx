@@ -21,9 +21,17 @@ export default async function AccountsPage({
   const params = await searchParams;
   const search = typeof params?.search === 'string' ? params.search : '';
   const view = typeof params?.view === 'string' && params.view === 'archived' ? 'archived' : 'active';
+  const requestedPageSize = Number(params?.pageSize ?? '20');
+  const pageSize = [10, 20, 50, 100].includes(requestedPageSize) ? requestedPageSize : 20;
+  const requestedPage = Number(params?.page ?? '1');
+  const page = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
   const { locale, messages, t } = await getServerTranslations('accounts');
-  const { data } = await listAccounts({ search, pageSize: 50, archived: view === 'archived' });
-  const filteredAccounts = data.filter((account) => (view === 'archived' ? account.deletedAt : !account.deletedAt));
+  const { data: accounts, meta } = await listAccounts({
+    search,
+    page,
+    pageSize,
+    archived: view === 'archived',
+  });
   const tCommon = createTranslator(messages, 'common');
   const tTable = createTranslator(messages, 'accounts.table');
   const tForm = createTranslator(messages, 'accounts.form');
@@ -31,12 +39,26 @@ export default async function AccountsPage({
   const buildViewHref = (nextView: 'active' | 'archived') => {
     const query = new URLSearchParams();
     if (search) query.set('search', search);
+    query.set('pageSize', String(pageSize));
     if (nextView === 'archived') {
       query.set('view', 'archived');
     }
     const qs = query.toString();
     return qs ? `/accounts?${qs}` : '/accounts';
   };
+
+  const buildPageHref = (targetPage: number) => {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    params.set('page', targetPage.toString());
+    params.set('pageSize', String(pageSize));
+    if (view === 'archived') params.set('view', 'archived');
+    const qs = params.toString();
+    return qs ? `/accounts?${qs}` : '/accounts';
+  };
+
+  const hasPrev = (meta?.page ?? 1) > 1;
+  const hasNext = meta ? meta.page < meta.totalPages : false;
 
   return (
     <div className="space-y-10" data-testid="accounts-page">
@@ -63,9 +85,16 @@ export default async function AccountsPage({
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <Card>
           <div className="mb-4 flex items-center justify-between gap-4">
-            <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/accounts" method="get">
+            <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto]" action="/accounts" method="get">
               {view === 'archived' && <input type="hidden" name="view" value="archived" />}
               <FloatingInput name="search" label={tCommon('search')} example={tForm('namePlaceholder')} defaultValue={search} />
+              <FloatingSelect name="pageSize" label="Page size" defaultValue={String(pageSize)} forceFloatLabel>
+                {[10, 20, 50, 100].map((size) => (
+                  <option key={size} value={size}>
+                    {size} / page
+                  </option>
+                ))}
+              </FloatingSelect>
               <div className="flex items-end justify-end">
                 <Button type="submit" variant="primary" size="sm">
                   {tCommon('search')}
@@ -86,7 +115,7 @@ export default async function AccountsPage({
                 </tr>
               </thead>
               <tbody>
-                {filteredAccounts.map((account) => (
+                {accounts.map((account) => (
                   <tr key={account.id} className="border-t border-slate-100 text-slate-700 ">
                     <td className="px-4 py-3">
                       <Link href={`/accounts/${account.id}`} className="font-semibold app-link-accent" data-testid="account-link">
@@ -112,7 +141,7 @@ export default async function AccountsPage({
                     )}
                   </tr>
                 ))}
-                {filteredAccounts.length === 0 && (
+                {accounts.length === 0 && (
                   <tr>
                     <td colSpan={view === 'archived' ? 6 : 4} className="px-4 py-6 text-center text-sm text-slate-500">
                       {view === 'archived' ? t('emptyArchived') : t('emptyActive')}
@@ -122,6 +151,21 @@ export default async function AccountsPage({
               </tbody>
             </table>
           </div>
+          {meta && meta.totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+              <span>
+                Page {meta.page} / {meta.totalPages}
+              </span>
+              <div className="space-x-2">
+                <Button type="button" size="sm" variant="outline" disabled={!hasPrev} asChild>
+                  <Link href={hasPrev ? buildPageHref(meta.page - 1) : buildPageHref(meta.page)}>Prev</Link>
+                </Button>
+                <Button type="button" size="sm" variant="outline" disabled={!hasNext} asChild>
+                  <Link href={hasNext ? buildPageHref(meta.page + 1) : buildPageHref(meta.page)}>Next</Link>
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
         {view === 'active' ? (
           <Card>

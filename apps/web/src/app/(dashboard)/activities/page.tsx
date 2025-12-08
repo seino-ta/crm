@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { ActivityForm } from './activity-form';
 import { getCurrentUser } from '@/lib/auth';
 import { listAccounts, listActivities, listOpportunities } from '@/lib/data';
@@ -5,16 +7,40 @@ import { formatDateTime, formatUserName } from '@/lib/formatters';
 import { getActivityTypeLabel } from '@/lib/labels';
 import { DeleteActivityButton } from '@/components/activities/delete-activity-button';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { getServerTranslations } from '@/lib/i18n/server';
 
-export default async function ActivitiesPage() {
+function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
+  const value = params[key];
+  if (Array.isArray(value)) return value[0] ?? '';
+  return value ?? '';
+}
+
+export default async function ActivitiesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { locale, t } = await getServerTranslations('activities');
   const user = await getCurrentUser();
+  const filters = await searchParams;
+  const requestedPageSize = Number(extractParam(filters, 'pageSize') || '20');
+  const pageSize = [10, 20, 50, 100].includes(requestedPageSize) ? requestedPageSize : 20;
+  const requestedPage = Number(extractParam(filters, 'page') || '1');
+  const page = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
+
   const [activities, accounts, opportunities] = await Promise.all([
-    listActivities({ pageSize: 20 }),
+    listActivities({ page, pageSize }),
     listAccounts({ pageSize: 100 }),
     listOpportunities({ pageSize: 100 }),
   ]);
+
+  const hasPrev = (activities.meta?.page ?? 1) > 1;
+  const hasNext = activities.meta ? activities.meta.page < activities.meta.totalPages : false;
+
+  const buildPageHref = (targetPage: number) => {
+    const params = new URLSearchParams();
+    params.set('page', targetPage.toString());
+    params.set('pageSize', String(pageSize));
+    const qs = params.toString();
+    return qs ? `/activities?${qs}` : '/activities';
+  };
 
   return (
     <div className="space-y-8" data-testid="activities-page">
@@ -25,6 +51,23 @@ export default async function ActivitiesPage() {
       <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
         <Card>
           <h2 className="text-lg font-semibold">{t('tableTitle')}</h2>
+          <div className="mb-4 max-w-xs">
+            <form action="/activities" method="get">
+              <input type="hidden" name="page" value="1" />
+              <label className="text-sm text-slate-600">{'Page size'}</label>
+              <select
+                name="pageSize"
+                defaultValue={String(pageSize)}
+                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+              >
+                {[10, 20, 50, 100].map((size) => (
+                  <option key={size} value={size}>
+                    {size} / page
+                  </option>
+                ))}
+              </select>
+            </form>
+          </div>
           <div className="mt-4 space-y-4">
             {activities.data.length === 0 && <p className="text-sm text-slate-500">{t('emptyMessage')}</p>}
             {activities.data.map((activity) => (
@@ -53,6 +96,23 @@ export default async function ActivitiesPage() {
           />
         </Card>
       </div>
+      {activities.meta && activities.meta.totalPages > 1 && (
+        <Card>
+          <div className="flex items-center justify-between text-sm text-slate-600">
+            <span>
+              Page {activities.meta.page} / {activities.meta.totalPages}
+            </span>
+            <div className="space-x-2">
+              <Button type="button" size="sm" variant="outline" disabled={!hasPrev} asChild>
+                <Link href={hasPrev ? buildPageHref(activities.meta.page - 1) : buildPageHref(activities.meta.page)}>Prev</Link>
+              </Button>
+              <Button type="button" size="sm" variant="outline" disabled={!hasNext} asChild>
+                <Link href={hasNext ? buildPageHref(activities.meta.page + 1) : buildPageHref(activities.meta.page)}>Next</Link>
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

@@ -29,6 +29,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
   const filters = await searchParams;
   const search = extractParam(filters, 'search');
   const status = extractParam(filters, 'status') as LeadStatus | '';
+  const requestedPageSize = Number(extractParam(filters, 'pageSize') || PAGE_SIZE);
+  const pageSize = [10, 20, 50, 100].includes(requestedPageSize) ? requestedPageSize : PAGE_SIZE;
   const requestedPage = Number(extractParam(filters, 'page') || '1');
   const page = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
 
@@ -38,7 +40,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
       : Promise.resolve({ data: [user] });
 
   const [{ data: leads, meta }, owners, accounts] = await Promise.all([
-    listLeads({ search: search || undefined, status: status || undefined, page, pageSize: PAGE_SIZE }),
+    listLeads({ search: search || undefined, status: status || undefined, page, pageSize }),
     ownersPromise,
     listAccounts({ pageSize: 100 }),
   ]);
@@ -51,6 +53,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
     if (search) params.set('search', search);
     if (status) params.set('status', status);
     params.set('page', targetPage.toString());
+    params.set('pageSize', String(pageSize));
     const qs = params.toString();
     return qs ? `/leads?${qs}` : '/leads';
   };
@@ -62,7 +65,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
         <p>{t('description')}</p>
       </div>
       <Card>
-        <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/leads" method="get">
+        <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,0.7fr)_auto]" action="/leads" method="get">
           <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
           <FloatingSelect name="status" label={t('filters.status')} defaultValue={status} forceFloatLabel>
             <option value="">{t('filters.statusAll')}</option>
@@ -74,6 +77,13 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
                 </option>
               );
             })}
+          </FloatingSelect>
+          <FloatingSelect name="pageSize" label="Page size" defaultValue={String(pageSize)} forceFloatLabel>
+            {[10, 20, 50, 100].map((size) => (
+              <option key={size} value={size}>
+                {size} / page
+              </option>
+            ))}
           </FloatingSelect>
           <div className="flex items-end">
             <Button type="submit" size="sm">

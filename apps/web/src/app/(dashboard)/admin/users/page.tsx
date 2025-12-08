@@ -12,8 +12,6 @@ import { formatDateTime } from '@/lib/formatters';
 import { InviteUserForm } from './invite-user-form';
 import { StatusBadge } from '@/components/ui/status-badge';
 
-const PAGE_SIZE = 20;
-
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
   if (Array.isArray(value)) return value[0] ?? '';
@@ -32,6 +30,8 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
   const search = extractParam(filters, 'search');
   const role = extractParam(filters, 'role');
   const status = extractParam(filters, 'status');
+  const requestedPageSize = Number(extractParam(filters, 'pageSize') || '20');
+  const pageSize = [10, 20, 50, 100].includes(requestedPageSize) ? requestedPageSize : 20;
   const requestedPage = Number(extractParam(filters, 'page') || '1');
   const page = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
 
@@ -40,7 +40,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
     role: (role as UserRole) || undefined,
     status: status || undefined,
     page,
-    pageSize: PAGE_SIZE,
+    pageSize,
   });
 
   const hasPrev = (meta?.page ?? 1) > 1;
@@ -52,6 +52,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
     if (role) params.set('role', role);
     if (status) params.set('status', status);
     params.set('page', targetPage.toString());
+    params.set('pageSize', String(pageSize));
     const qs = params.toString();
     return qs ? `/admin/users?${qs}` : '/admin/users';
   };
@@ -65,7 +66,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
       <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
         <Card>
           <form
-            className="grid gap-4 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))_auto]"
+            className="grid gap-4 md:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))_auto]"
             action="/admin/users"
             method="get"
           >
@@ -88,6 +89,13 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
               <option value="">{t('filters.statusAll')}</option>
               <option value="active">{t('filters.statusActive')}</option>
               <option value="inactive">{t('filters.statusInactive')}</option>
+            </FloatingSelect>
+            <FloatingSelect name="pageSize" label="Page size" defaultValue={String(pageSize)} forceFloatLabel>
+              {[10, 20, 50, 100].map((size) => (
+                <option key={size} value={size}>
+                  {size} / page
+                </option>
+              ))}
             </FloatingSelect>
             <div className="flex flex-wrap items-end gap-2">
               <Button type="submit" size="sm">
