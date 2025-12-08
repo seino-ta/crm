@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
+import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { listAuditLogs } from '@/lib/data';
 import { getCurrentUser } from '@/lib/auth';
 import { formatDateTime } from '@/lib/formatters';
@@ -50,6 +51,7 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
 
   const hasPrev = (meta?.page ?? 1) > 1;
   const hasNext = meta ? meta.page < meta.totalPages : false;
+  const isLongList = (meta?.totalPages ?? 1) > 2;
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
@@ -70,25 +72,39 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
         <p>{t('description')}</p>
       </div>
       <Card>
-        <form className="grid gap-4 md:grid-cols-4" action="/admin/audit-logs" method="get">
-          <input type="hidden" name="page" value="1" />
-          <FloatingInput name="entityType" label={t('filters.entityLabel')} example={t('filters.entityPlaceholder')} defaultValue={entityType} />
-          <FloatingSelect name="action" label={t('filters.actionLabel')} defaultValue={action ?? ''} forceFloatLabel>
-            <option value="">{t('filters.actionAll')}</option>
-            {auditActionOptions.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </FloatingSelect>
-          <FloatingInput type="date" name="from" label={t('filters.from')} defaultValue={from} />
-          <FloatingInput type="date" name="to" label={t('filters.to')} defaultValue={to} />
-          <div className="md:col-span-4 flex justify-end">
-            <Button type="submit" size="sm">
-              {t('filters.submit')}
-            </Button>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <form className="grid gap-4 md:grid-cols-4 flex-1 min-w-[280px]" action="/admin/audit-logs" method="get">
+            <input type="hidden" name="page" value="1" />
+            <FloatingInput name="entityType" label={t('filters.entityLabel')} example={t('filters.entityPlaceholder')} defaultValue={entityType} />
+            <FloatingSelect name="action" label={t('filters.actionLabel')} defaultValue={action ?? ''} forceFloatLabel>
+              <option value="">{t('filters.actionAll')}</option>
+              {auditActionOptions.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </FloatingSelect>
+            <FloatingInput type="date" name="from" label={t('filters.from')} defaultValue={from} />
+            <FloatingInput type="date" name="to" label={t('filters.to')} defaultValue={to} />
+            <div className="md:col-span-4 flex justify-end">
+              <Button type="submit" size="sm">
+                {t('filters.submit')}
+              </Button>
+            </div>
+          </form>
+          <PageSizeSelector
+            action="/admin/audit-logs"
+            pageSize={pageSize}
+            hiddenFields={{ entityType, action, from, to }}
+            id="audit-toolbar-page-size"
+            label="Max rows"
+          />
+        </div>
+        {isLongList && (
+          <div className="mt-4">
+            <PaginationBarLite page={meta?.page ?? 1} totalPages={meta?.totalPages ?? 1} buildHref={buildPageHref} />
           </div>
-        </form>
+        )}
       </Card>
       <Card>
         <div className="overflow-x-auto">
@@ -134,66 +150,7 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
             </tbody>
           </table>
         </div>
-        {meta && meta.totalPages > 1 && (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
-            <span>
-              Page {meta.page} / {meta.totalPages}
-            </span>
-            <div className="flex flex-wrap items-center gap-3">
-              <form action="/admin/audit-logs" method="get" className="flex items-center gap-2">
-                <input type="hidden" name="page" value="1" />
-                {entityType && <input type="hidden" name="entityType" value={entityType} />}
-                {action && <input type="hidden" name="action" value={action} />}
-                {from && <input type="hidden" name="from" value={from} />}
-                {to && <input type="hidden" name="to" value={to} />}
-                <label className="text-xs text-slate-500" htmlFor="audit-page-size">
-                  Page size
-                </label>
-                <select
-                  id="audit-page-size"
-                  name="pageSize"
-                  defaultValue={String(pageSize)}
-                  className="rounded-md border border-slate-200 px-2 py-1 text-xs"
-                >
-                  {[10, 20, 50, 100].map((size) => (
-                    <option key={size} value={size}>
-                      {size} / page
-                    </option>
-                  ))}
-                </select>
-                <Button type="submit" size="sm" variant="outline">
-                  Apply
-                </Button>
-              </form>
-              <div className="space-x-2">
-                {hasPrev ? (
-                  <Link
-                    href={buildPageHref(meta.page - 1)}
-                    className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
-                  >
-                  Prev
-                </Link>
-              ) : (
-                <span className="inline-flex items-center justify-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400">
-                  Prev
-                </span>
-              )}
-                {hasNext ? (
-                  <Link
-                    href={buildPageHref(meta.page + 1)}
-                    className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
-                  >
-                    Next
-                  </Link>
-                ) : (
-                  <span className="inline-flex items-center justify-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400">
-                    Next
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        <PaginationBar page={meta?.page ?? 1} totalPages={meta?.totalPages ?? 1} buildHref={buildPageHref} />
       </Card>
     </div>
   );
