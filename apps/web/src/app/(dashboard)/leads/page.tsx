@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
+import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { DeleteLeadButton } from './delete-lead-button';
 import { LeadStatusSelect } from './lead-status-select';
 import { LeadForm } from './lead-form';
@@ -47,6 +48,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
 
   const hasPrev = (meta?.page ?? 1) > 1;
   const hasNext = meta ? meta.page < meta.totalPages : false;
+  const isLongList = (meta?.totalPages ?? 1) > 2;
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
@@ -65,32 +67,48 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
         <p>{t('description')}</p>
       </div>
       <Card>
-        <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,0.7fr)_auto]" action="/leads" method="get">
-          <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
-          <FloatingSelect name="status" label={t('filters.status')} defaultValue={status} forceFloatLabel>
-            <option value="">{t('filters.statusAll')}</option>
-            {['NEW', 'CONTACTED', 'QUALIFIED', 'LOST', 'CONVERTED'].map((value) => {
-              const { label } = getLeadStatusMeta(value as LeadStatus, locale);
-              return (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              );
-            })}
-          </FloatingSelect>
-          <FloatingSelect name="pageSize" label="Page size" defaultValue={String(pageSize)} forceFloatLabel>
-            {[10, 20, 50, 100].map((size) => (
-              <option key={size} value={size}>
-                {size} / page
-              </option>
-            ))}
-          </FloatingSelect>
-          <div className="flex items-end">
-            <Button type="submit" size="sm">
-              {t('filters.submit')}
-            </Button>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/leads" method="get">
+            <input type="hidden" name="page" value="1" />
+            <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
+            <FloatingSelect name="status" label={t('filters.status')} defaultValue={status} forceFloatLabel>
+              <option value="">{t('filters.statusAll')}</option>
+              {['NEW', 'CONTACTED', 'QUALIFIED', 'LOST', 'CONVERTED'].map((value) => {
+                const { label } = getLeadStatusMeta(value as LeadStatus, locale);
+                return (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                );
+              })}
+            </FloatingSelect>
+            <div className="flex items-end">
+              <Button type="submit" size="sm">
+                {t('filters.submit')}
+              </Button>
+            </div>
+          </form>
+          <div className="flex items-center">
+            <PageSizeSelector
+              action="/leads"
+              pageSize={pageSize}
+              hiddenFields={{ search, status }}
+              label={locale === 'ja' ? '最大表示数' : 'Max rows'}
+            />
           </div>
-        </form>
+        </div>
+        {isLongList && (
+          <div className="mt-4">
+            <PaginationBarLite
+              page={meta?.page ?? 1}
+              totalPages={meta?.totalPages ?? 1}
+              prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
+              nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
+              prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+              nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+            />
+          </div>
+        )}
       </Card>
       <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
         <Card>
@@ -131,26 +149,15 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
               );
             })}
           </div>
-          {meta && meta.totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-              <span>
-                {t('list.pagination', {
-                  values: {
-                    page: meta.page.toString(),
-                    totalPages: meta.totalPages.toString(),
-                  },
-                })}
-              </span>
-              <div className="space-x-2">
-                <Button type="button" size="sm" variant="outline" disabled={!hasPrev} asChild>
-                  <Link href={hasPrev ? buildPageHref(meta.page - 1) : buildPageHref(meta.page)}>{t('list.prev')}</Link>
-                </Button>
-                <Button type="button" size="sm" variant="outline" disabled={!hasNext} asChild>
-                  <Link href={hasNext ? buildPageHref(meta.page + 1) : buildPageHref(meta.page)}>{t('list.next')}</Link>
-                </Button>
-              </div>
-            </div>
-          )}
+          <PaginationBar
+            page={meta?.page ?? 1}
+            totalPages={meta?.totalPages ?? 1}
+            prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
+            nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
+            pageLabel={locale === 'ja' ? 'ページ' : 'Page'}
+            prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+            nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+          />
         </Card>
         <Card>
           <h2 className="text-lg font-semibold">{t('form.title')}</h2>

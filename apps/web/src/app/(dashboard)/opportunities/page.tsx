@@ -5,7 +5,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { listAccounts, listContacts, listOpportunities, listPipelineStages } from '@/lib/data';
 import { formatCurrency, formatDate, formatUserName } from '@/lib/formatters';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { getPipelineStageLabel } from '@/lib/labels';
 import { getServerTranslations } from '@/lib/i18n/server';
 
@@ -44,6 +44,7 @@ export default async function OpportunitiesPage({
 
   const hasPrev = (tableOpportunities.meta?.page ?? 1) > 1;
   const hasNext = tableOpportunities.meta ? tableOpportunities.meta.page < tableOpportunities.meta.totalPages : false;
+  const isLongList = (tableOpportunities.meta?.totalPages ?? 1) > 2;
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
@@ -96,26 +97,32 @@ export default async function OpportunitiesPage({
           />
         </Card>
       </div>
-      <Card>
-        <h2 className="text-lg font-semibold">{t('tableTitle')}</h2>
-        <div className="mb-4 max-w-xs">
-          <form action="/opportunities" method="get">
-            <input type="hidden" name="page" value="1" />
-            <label className="text-sm text-slate-600">{'Page size'}</label>
-            <select
-              name="pageSize"
-              defaultValue={String(pageSize)}
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-            >
-              {[10, 20, 50, 100].map((size) => (
-                <option key={size} value={size}>
-                  {size} / page
-                </option>
-              ))}
-            </select>
-          </form>
-        </div>
-        <div className="mt-4 overflow-x-auto">
+        <Card>
+          <h2 className="text-lg font-semibold">{t('tableTitle')}</h2>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="flex-1" />
+            <div className="flex items-center justify-end">
+              <PageSizeSelector
+                action="/opportunities"
+                pageSize={pageSize}
+                hiddenFields={{}}
+                label={locale === 'ja' ? '最大表示数' : 'Max rows'}
+              />
+            </div>
+          </div>
+          {isLongList && (
+            <div className="mt-4">
+              <PaginationBarLite
+                page={tableOpportunities.meta?.page ?? 1}
+                totalPages={tableOpportunities.meta?.totalPages ?? 1}
+                prevHref={hasPrev ? buildPageHref((tableOpportunities.meta?.page ?? 1) - 1) : null}
+                nextHref={hasNext ? buildPageHref((tableOpportunities.meta?.page ?? 1) + 1) : null}
+                prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+                nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+              />
+            </div>
+          )}
+          <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="text-xs uppercase text-slate-500">
@@ -145,21 +152,15 @@ export default async function OpportunitiesPage({
             </tbody>
           </table>
         </div>
-        {tableOpportunities.meta && tableOpportunities.meta.totalPages > 1 && (
-          <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-            <span>
-              Page {tableOpportunities.meta.page} / {tableOpportunities.meta.totalPages}
-            </span>
-            <div className="space-x-2">
-              <Button type="button" size="sm" variant="outline" disabled={!hasPrev} asChild>
-                <Link href={hasPrev ? buildPageHref(tableOpportunities.meta.page - 1) : buildPageHref(tableOpportunities.meta.page)}>Prev</Link>
-              </Button>
-              <Button type="button" size="sm" variant="outline" disabled={!hasNext} asChild>
-                <Link href={hasNext ? buildPageHref(tableOpportunities.meta.page + 1) : buildPageHref(tableOpportunities.meta.page)}>Next</Link>
-              </Button>
-            </div>
-          </div>
-        )}
+        <PaginationBar
+          page={tableOpportunities.meta?.page ?? 1}
+          totalPages={tableOpportunities.meta?.totalPages ?? 1}
+          prevHref={hasPrev ? buildPageHref((tableOpportunities.meta?.page ?? 1) - 1) : null}
+          nextHref={hasNext ? buildPageHref((tableOpportunities.meta?.page ?? 1) + 1) : null}
+          pageLabel={locale === 'ja' ? 'ページ' : 'Page'}
+          prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+          nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+        />
       </Card>
     </div>
   );

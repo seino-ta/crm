@@ -8,7 +8,6 @@ const webUrl = new URL(webBaseUrl);
 let sessionToken: string | null = null;
 let sessionUserId: string | null = null;
 let defaultStageId: string | null = null;
-let defaultOwnerName: string | null = null;
 
 export async function safeGoto(page: Page, path: string) {
   try {

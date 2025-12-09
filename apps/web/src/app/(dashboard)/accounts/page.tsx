@@ -5,8 +5,9 @@ import { createAccountAction } from '@/lib/actions/accounts';
 import { listAccounts } from '@/lib/data';
 import { formatCurrency } from '@/lib/formatters';
 import { Card } from '@/components/ui/card';
-import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
+import { FloatingInput } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
+import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { getAccountStatusMeta } from '@/lib/labels';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { RestoreAccountButton } from '@/components/accounts/restore-account-button';
@@ -59,6 +60,7 @@ export default async function AccountsPage({
 
   const hasPrev = (meta?.page ?? 1) > 1;
   const hasNext = meta ? meta.page < meta.totalPages : false;
+  const isLongList = (meta?.totalPages ?? 1) > 2;
 
   return (
     <div className="space-y-10" data-testid="accounts-page">
@@ -84,25 +86,39 @@ export default async function AccountsPage({
       </div>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <Card>
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto]" action="/accounts" method="get">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/accounts" method="get">
               {view === 'archived' && <input type="hidden" name="view" value="archived" />}
+              <input type="hidden" name="page" value="1" />
               <FloatingInput name="search" label={tCommon('search')} example={tForm('namePlaceholder')} defaultValue={search} />
-              <FloatingSelect name="pageSize" label="Page size" defaultValue={String(pageSize)} forceFloatLabel>
-                {[10, 20, 50, 100].map((size) => (
-                  <option key={size} value={size}>
-                    {size} / page
-                  </option>
-                ))}
-              </FloatingSelect>
               <div className="flex items-end justify-end">
                 <Button type="submit" variant="primary" size="sm">
                   {tCommon('search')}
                 </Button>
               </div>
             </form>
+            <div className="flex items-center">
+              <PageSizeSelector
+                action="/accounts"
+                pageSize={pageSize}
+                hiddenFields={{ search, view }}
+                label={locale === 'ja' ? '最大表示数' : 'Max rows'}
+              />
+            </div>
           </div>
-          <div className="overflow-x-auto">
+          {isLongList && (
+            <div className="mt-4">
+              <PaginationBarLite
+                page={meta?.page ?? 1}
+                totalPages={meta?.totalPages ?? 1}
+                prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
+                nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
+                prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+                nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+              />
+            </div>
+          )}
+          <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
               <tr className="app-table-head">
@@ -151,21 +167,15 @@ export default async function AccountsPage({
               </tbody>
             </table>
           </div>
-          {meta && meta.totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-              <span>
-                Page {meta.page} / {meta.totalPages}
-              </span>
-              <div className="space-x-2">
-                <Button type="button" size="sm" variant="outline" disabled={!hasPrev} asChild>
-                  <Link href={hasPrev ? buildPageHref(meta.page - 1) : buildPageHref(meta.page)}>Prev</Link>
-                </Button>
-                <Button type="button" size="sm" variant="outline" disabled={!hasNext} asChild>
-                  <Link href={hasNext ? buildPageHref(meta.page + 1) : buildPageHref(meta.page)}>Next</Link>
-                </Button>
-              </div>
-            </div>
-          )}
+          <PaginationBar
+            page={meta?.page ?? 1}
+            totalPages={meta?.totalPages ?? 1}
+            prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
+            nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
+            pageLabel={locale === 'ja' ? 'ページ' : 'Page'}
+            prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+            nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+          />
         </Card>
         {view === 'active' ? (
           <Card>
@@ -183,3 +193,6 @@ export default async function AccountsPage({
     </div>
   );
 }
+// Turbopack dev で _jsxDEV 未定義になるケースへの安全策
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { jsxDEV as _jsxDEV } from 'react/jsx-dev-runtime';

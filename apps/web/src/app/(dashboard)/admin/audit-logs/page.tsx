@@ -24,7 +24,7 @@ function extractParam(params: Record<string, string | string[] | undefined>, key
 }
 
 export default async function AuditLogsPage({ searchParams }: { searchParams: SearchParams }) {
-  const { t } = await getServerTranslations('auditLogs');
+  const { t, locale } = await getServerTranslations('auditLogs');
   const user = await getCurrentUser();
   if (user.role !== 'ADMIN') {
     notFound();
@@ -92,17 +92,26 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
               </Button>
             </div>
           </form>
-          <PageSizeSelector
-            action="/admin/audit-logs"
-            pageSize={pageSize}
-            hiddenFields={{ entityType, action, from, to }}
-            id="audit-toolbar-page-size"
-            label="Max rows"
-          />
+          <div className="flex items-center">
+            <PageSizeSelector
+              action="/admin/audit-logs"
+              pageSize={pageSize}
+              hiddenFields={{ entityType, action, from, to }}
+              id="audit-toolbar-page-size"
+              label={locale === 'ja' ? '最大表示数' : 'Max rows'}
+            />
+          </div>
         </div>
         {isLongList && (
           <div className="mt-4">
-            <PaginationBarLite page={meta?.page ?? 1} totalPages={meta?.totalPages ?? 1} buildHref={buildPageHref} />
+            <PaginationBarLite
+              page={meta?.page ?? 1}
+              totalPages={meta?.totalPages ?? 1}
+              prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
+              nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
+              prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+              nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+            />
           </div>
         )}
       </Card>
@@ -150,7 +159,15 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
             </tbody>
           </table>
         </div>
-        <PaginationBar page={meta?.page ?? 1} totalPages={meta?.totalPages ?? 1} buildHref={buildPageHref} />
+        <PaginationBar
+          page={meta?.page ?? 1}
+          totalPages={meta?.totalPages ?? 1}
+          prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
+          nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
+          pageLabel={locale === 'ja' ? 'ページ' : 'Page'}
+          prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+          nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+        />
       </Card>
     </div>
   );

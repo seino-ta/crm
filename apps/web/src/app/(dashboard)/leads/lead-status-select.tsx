@@ -6,17 +6,18 @@ import { updateLeadStatusAction } from '@/lib/actions/leads';
 import { getLeadStatusOptions, getLeadStatusMeta } from '@/lib/labels';
 import { useI18n } from '@/components/providers/i18n-provider';
 import { StatusBadge } from '@/components/ui/status-badge';
+import type { LeadStatus } from '@/lib/types';
 
 type LeadStatusSelectProps = {
   leadId: string;
-  status: string;
+  status: LeadStatus;
 };
 
 export function LeadStatusSelect({ leadId, status }: LeadStatusSelectProps) {
   const { locale } = useI18n('leads');
   const [isPending, startTransition] = useTransition();
   const options = getLeadStatusOptions(locale);
-  const { label, tone } = getLeadStatusMeta(status as any, locale);
+  const { label, tone } = getLeadStatusMeta(status, locale);
 
   return (
     <div className="flex items-center gap-2" data-testid="lead-status">

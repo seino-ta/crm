@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
+import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { getCurrentUser } from '@/lib/auth';
 import { listUsers } from '@/lib/data';
 import { getServerTranslations } from '@/lib/i18n/server';
@@ -25,7 +26,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
   if (user.role !== 'ADMIN') {
     notFound();
   }
-  const { t } = await getServerTranslations('users');
+  const { t, locale } = await getServerTranslations('users');
   const filters = await searchParams;
   const search = extractParam(filters, 'search');
   const role = extractParam(filters, 'role');
@@ -45,6 +46,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
 
   const hasPrev = (meta?.page ?? 1) > 1;
   const hasNext = meta ? meta.page < meta.totalPages : false;
+  const isLongList = (meta?.totalPages ?? 1) > 2;
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
@@ -65,50 +67,66 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
       </div>
       <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
         <Card>
-          <form
-            className="grid gap-4 md:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))_auto]"
-            action="/admin/users"
-            method="get"
-          >
-            <FloatingInput
-              name="search"
-              label={t('filters.searchLabel')}
-              example={t('filters.searchPlaceholder')}
-              defaultValue={search}
-              containerClassName="md:col-span-1"
-            />
-            <FloatingSelect name="role" label={t('filters.role')} defaultValue={role ?? ''} forceFloatLabel>
-              <option value="">{t('filters.roleAll')}</option>
-              {roleOptions.map((option) => (
-                <option key={option} value={option}>
-                  {t(`roles.${option.toLowerCase()}`)}
-                </option>
-              ))}
-            </FloatingSelect>
-            <FloatingSelect name="status" label={t('filters.status')} defaultValue={status ?? ''} forceFloatLabel>
-              <option value="">{t('filters.statusAll')}</option>
-              <option value="active">{t('filters.statusActive')}</option>
-              <option value="inactive">{t('filters.statusInactive')}</option>
-            </FloatingSelect>
-            <FloatingSelect name="pageSize" label="Page size" defaultValue={String(pageSize)} forceFloatLabel>
-              {[10, 20, 50, 100].map((size) => (
-                <option key={size} value={size}>
-                  {size} / page
-                </option>
-              ))}
-            </FloatingSelect>
-            <div className="flex flex-wrap items-end gap-2">
-              <Button type="submit" size="sm">
-                {t('filters.submit')}
-              </Button>
-              <Link
-                href="/admin/users"
-                className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
-              >
-                {t('filters.clear')}
-              </Link>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <form
+              className="grid gap-4 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))_auto]"
+              action="/admin/users"
+              method="get"
+            >
+              <input type="hidden" name="page" value="1" />
+              <FloatingInput
+                name="search"
+                label={t('filters.searchLabel')}
+                example={t('filters.searchPlaceholder')}
+                defaultValue={search}
+                containerClassName="md:col-span-1"
+              />
+              <FloatingSelect name="role" label={t('filters.role')} defaultValue={role ?? ''} forceFloatLabel>
+                <option value="">{t('filters.roleAll')}</option>
+                {roleOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {t(`roles.${option.toLowerCase()}`)}
+                  </option>
+                ))}
+              </FloatingSelect>
+              <FloatingSelect name="status" label={t('filters.status')} defaultValue={status ?? ''} forceFloatLabel>
+                <option value="">{t('filters.statusAll')}</option>
+                <option value="active">{t('filters.statusActive')}</option>
+                <option value="inactive">{t('filters.statusInactive')}</option>
+              </FloatingSelect>
+              <div className="flex flex-wrap items-end gap-2">
+                <Button type="submit" size="sm">
+                  {t('filters.submit')}
+                </Button>
+                <Link
+                  href="/admin/users"
+                  className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+                >
+                  {t('filters.clear')}
+                </Link>
+              </div>
+            </form>
+            <div className="flex items-center">
+              <PageSizeSelector
+                action="/admin/users"
+                pageSize={pageSize}
+                hiddenFields={{ search, role, status }}
+                label={locale === 'ja' ? '最大表示数' : 'Max rows'}
+              />
             </div>
-          </form>
+          </div>
+          {isLongList && (
+            <div className="mt-4">
+              <PaginationBarLite
+                page={meta?.page ?? 1}
+                totalPages={meta?.totalPages ?? 1}
+                prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
+                nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
+                prevLabel={t('list.prev')}
+                nextLabel={t('list.next')}
+              />
+            </div>
+          )}
         </Card>
         <Card>
           <h2 className="text-lg font-semibold">{t('invite.title')}</h2>
@@ -165,26 +183,15 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
             </tbody>
           </table>
         </div>
-        {meta && meta.totalPages > 1 && (
-          <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-            <span>
-              {t('list.pagination', {
-                values: {
-                  page: meta.page.toString(),
-                  totalPages: meta.totalPages.toString(),
-                },
-              })}
-            </span>
-            <div className="space-x-2">
-              <Button type="button" size="sm" variant="outline" disabled={!hasPrev} asChild>
-                <Link href={hasPrev ? buildPageHref(meta.page - 1) : buildPageHref(meta.page)}>{t('list.prev')}</Link>
-              </Button>
-              <Button type="button" size="sm" variant="outline" disabled={!hasNext} asChild>
-                <Link href={hasNext ? buildPageHref(meta.page + 1) : buildPageHref(meta.page)}>{t('list.next')}</Link>
-              </Button>
-            </div>
-          </div>
-        )}
+        <PaginationBar
+          page={meta?.page ?? 1}
+          totalPages={meta?.totalPages ?? 1}
+          prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
+          nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
+          pageLabel={locale === 'ja' ? 'ページ' : 'Page'}
+          prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+          nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+        />
       </Card>
     </div>
   );

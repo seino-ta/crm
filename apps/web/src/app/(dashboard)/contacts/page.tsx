@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
+import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { listAccounts, listContacts } from '@/lib/data';
 import { getServerTranslations } from '@/lib/i18n/server';
 import { ContactForm } from './contact-form';
@@ -20,7 +21,7 @@ const PAGE_SIZE = 20;
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function ContactsPage({ searchParams }: { searchParams: SearchParams }) {
-  const { t } = await getServerTranslations('contacts');
+  const { t, locale } = await getServerTranslations('contacts');
   const filters = await searchParams;
   const search = extractParam(filters, 'search');
   const accountId = extractParam(filters, 'accountId');
@@ -36,6 +37,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
 
   const hasPrev = (meta?.page ?? 1) > 1;
   const hasNext = meta ? meta.page < meta.totalPages : false;
+  const isLongList = (meta?.totalPages ?? 1) > 2;
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
@@ -54,22 +56,45 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
         <p>{t('description')}</p>
       </div>
       <Card>
-        <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/contacts" method="get">
-          <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
-          <FloatingSelect name="accountId" label={t('filters.account')} defaultValue={accountId ?? ''} forceFloatLabel>
-            <option value="">{t('filters.accountAll')}</option>
-            {accounts.data.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
-            ))}
-          </FloatingSelect>
-          <div className="flex items-end">
-            <Button type="submit" size="sm">
-              {t('filters.submit')}
-            </Button>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <form className="grid flex-1 min-w-[280px] gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/contacts" method="get">
+            <input type="hidden" name="page" value="1" />
+            <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
+            <FloatingSelect name="accountId" label={t('filters.account')} defaultValue={accountId ?? ''} forceFloatLabel>
+              <option value="">{t('filters.accountAll')}</option>
+              {accounts.data.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))}
+            </FloatingSelect>
+            <div className="flex items-end">
+              <Button type="submit" size="sm">
+                {t('filters.submit')}
+              </Button>
+            </div>
+          </form>
+          <div className="flex items-center">
+            <PageSizeSelector
+              action="/contacts"
+              pageSize={pageSize}
+              hiddenFields={{ search, accountId }}
+              label={locale === 'ja' ? '最大表示数' : 'Max rows'}
+            />
           </div>
-        </form>
+        </div>
+        {isLongList && (
+          <div className="mt-4">
+            <PaginationBarLite
+              page={meta?.page ?? 1}
+              totalPages={meta?.totalPages ?? 1}
+              prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
+              nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
+              prevLabel={t('list.prev')}
+              nextLabel={t('list.next')}
+            />
+          </div>
+        )}
       </Card>
       <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
         <Card>
@@ -143,51 +168,15 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
               </tbody>
             </table>
           </div>
-          {meta && meta.totalPages > 1 && (
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
-              <span>
-                {t('list.pagination', {
-                  values: {
-                    page: meta.page.toString(),
-                    totalPages: meta.totalPages.toString(),
-                  },
-                })}
-              </span>
-              <div className="flex flex-wrap items-center gap-3">
-                <form action="/contacts" method="get" className="flex items-center gap-2">
-                  <input type="hidden" name="page" value="1" />
-                  {search && <input type="hidden" name="search" value={search} />}
-                  {accountId && <input type="hidden" name="accountId" value={accountId} />}
-                  <label className="text-xs text-slate-500" htmlFor="contact-page-size">
-                    Page size
-                  </label>
-                  <select
-                    id="contact-page-size"
-                    name="pageSize"
-                    defaultValue={String(pageSize)}
-                    className="rounded-md border border-slate-200 px-2 py-1 text-xs"
-                  >
-                    {[10, 20, 50, 100].map((size) => (
-                      <option key={size} value={size}>
-                        {size} / page
-                      </option>
-                    ))}
-                  </select>
-                  <Button type="submit" size="sm" variant="outline">
-                    Apply
-                  </Button>
-                </form>
-                <div className="space-x-2">
-                  <Button type="button" size="sm" variant="outline" disabled={!hasPrev} asChild>
-                    <Link href={hasPrev ? buildPageHref(meta.page - 1) : buildPageHref(meta.page)}>{t('list.prev')}</Link>
-                  </Button>
-                  <Button type="button" size="sm" variant="outline" disabled={!hasNext} asChild>
-                    <Link href={hasNext ? buildPageHref(meta.page + 1) : buildPageHref(meta.page)}>{t('list.next')}</Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+          <PaginationBar
+            page={meta?.page ?? 1}
+            totalPages={meta?.totalPages ?? 1}
+            prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
+            nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
+            pageLabel={locale === 'ja' ? 'ページ' : 'Page'}
+            prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+            nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+          />
         </Card>
         <Card>
           <h2 className="text-lg font-semibold">{t('form.title')}</h2>
