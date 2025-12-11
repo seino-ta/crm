@@ -69,8 +69,8 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
               userId={user.id}
               firstName={user.firstName}
               lastName={user.lastName}
-              title={user.title}
-              phone={user.phone}
+              title={user.title ?? null}
+              phone={user.phone ?? null}
               revalidatePath={`/admin/users/${user.id}`}
             />
           </div>
@@ -79,10 +79,14 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
 
       <Card>
         <h2 className="text-lg font-semibold">{t('detail.accessSection')}</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-[1fr,auto]">
-          <UserRoleForm userId={user.id} currentRole={user.role} revalidatePath={`/admin/users/${user.id}`} />
-          <UserStatusForm userId={user.id} isActive={user.isActive} revalidatePath={`/admin/users/${user.id}`} />
-        </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-[1fr,auto]">
+            <UserRoleForm userId={user.id} currentRole={user.role} revalidatePath={`/admin/users/${user.id}`} />
+            <UserStatusForm
+              userId={user.id}
+              isActive={user.isActive ?? false}
+              revalidatePath={`/admin/users/${user.id}`}
+            />
+          </div>
       </Card>
     </div>
   );

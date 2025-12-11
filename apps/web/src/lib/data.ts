@@ -88,6 +88,7 @@ export async function getOpportunity(id: string) {
 }
 
 export async function listActivities(params?: {
+  search?: string;
   type?: ActivityType;
   userId?: string;
   accountId?: string;
@@ -103,6 +104,7 @@ export async function listActivities(params?: {
 }
 
 export async function listTasks(params?: {
+  search?: string;
   status?: TaskStatus;
   ownerId?: string;
   accountId?: string;

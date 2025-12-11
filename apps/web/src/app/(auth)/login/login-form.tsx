@@ -10,7 +10,11 @@ import { RequiredMark } from '@/components/ui/required-mark';
 import { useI18n } from '@/components/providers/i18n-provider';
 
 export function LoginForm() {
-  const [state, action] = useActionState<AuthFormState | undefined, FormData>(loginAction, undefined);
+  // loginAction は AuthFormState | void を返すため、useActionState の戻り値型を合わせる
+  const [state, action] = useActionState<AuthFormState | undefined, FormData>(async (prev, form) => {
+    const result = await loginAction(prev, form);
+    return result ?? undefined;
+  }, undefined);
   const [showPassword, setShowPassword] = useState(false);
   const { t } = useI18n('auth');
   const { t: tErrors } = useI18n('auth.errors');

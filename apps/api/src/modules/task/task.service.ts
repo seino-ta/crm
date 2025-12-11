@@ -60,11 +60,12 @@ async function ensureContact(contactId?: string) {
 }
 
 export async function listTasks(filters: TaskFilterInput) {
-  const { status, ownerId, accountId, opportunityId, activityId, dueBefore, dueAfter, page, pageSize } = filters;
+  const { search, status, ownerId, accountId, opportunityId, activityId, dueBefore, dueAfter, page, pageSize } = filters;
   const { page: normalizedPage, pageSize: normalizedPageSize, skip, take } = normalizePagination({ page, pageSize });
 
   const where: Prisma.TaskWhereInput = {};
 
+  if (search) where.title = { contains: search, mode: 'insensitive' };
   if (status) where.status = status;
   if (ownerId) where.ownerId = ownerId;
   if (accountId) where.accountId = accountId;

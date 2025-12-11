@@ -4,6 +4,7 @@ import { z } from 'zod';
 const id = () => z.string().regex(/^[0-9a-fA-F-]{36}$/, 'Invalid ID format');
 
 export const activityFilterSchema = z.object({
+  search: z.string().trim().min(1).max(255).optional(),
   type: z.nativeEnum(ActivityType).optional(),
   userId: id().optional(),
   accountId: id().optional(),

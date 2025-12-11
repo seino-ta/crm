@@ -14,7 +14,7 @@ export const getCurrentUser = cache(async () => {
   return data.user;
 });
 
-export function clearSession() {
-  const cookieStore = cookies();
-  cookieStore.delete(TOKEN_COOKIE);
+export async function clearSession() {
+  const cookieStore = await cookies();
+  cookieStore?.delete?.(TOKEN_COOKIE);
 }

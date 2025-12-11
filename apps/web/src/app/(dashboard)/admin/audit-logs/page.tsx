@@ -43,10 +43,10 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
   const { data, meta } = await listAuditLogs({
     pageSize,
     page,
-    entityType: entityType || undefined,
-    action: action || undefined,
-    from: from || undefined,
-    to: to || undefined,
+    ...(entityType ? { entityType } : {}),
+    ...(action ? { action } : {}),
+    ...(from ? { from } : {}),
+    ...(to ? { to } : {}),
   });
 
   const hasPrev = (meta?.page ?? 1) > 1;

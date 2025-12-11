@@ -7,6 +7,9 @@ import { DeleteActivityButton } from '@/components/activities/delete-activity-bu
 import { Card } from '@/components/ui/card';
 import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { getServerTranslations } from '@/lib/i18n/server';
+import { FloatingInput } from '@/components/ui/floating-field';
+import { Button } from '@/components/ui/button';
+import { createTranslator } from '@/lib/i18n/translator';
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
@@ -15,16 +18,18 @@ function extractParam(params: Record<string, string | string[] | undefined>, key
 }
 
 export default async function ActivitiesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const { locale, t } = await getServerTranslations('activities');
+  const { locale, t, messages } = await getServerTranslations('activities');
   const user = await getCurrentUser();
   const filters = await searchParams;
+  const search = extractParam(filters, 'search');
   const requestedPageSize = Number(extractParam(filters, 'pageSize') || '20');
   const pageSize = [10, 20, 50, 100].includes(requestedPageSize) ? requestedPageSize : 20;
   const requestedPage = Number(extractParam(filters, 'page') || '1');
   const page = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
+  const tCommon = createTranslator(messages, 'common');
 
   const [activities, accounts, opportunities] = await Promise.all([
-    listActivities({ page, pageSize }),
+    listActivities({ ...(search ? { search } : {}), page, pageSize }),
     listAccounts({ pageSize: 100 }),
     listOpportunities({ pageSize: 100 }),
   ]);
@@ -35,6 +40,7 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
+    if (search) params.set('search', search);
     params.set('page', targetPage.toString());
     params.set('pageSize', String(pageSize));
     const qs = params.toString();
@@ -51,12 +57,20 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
         <Card>
           <h2 className="text-lg font-semibold">{t('tableTitle')}</h2>
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <div className="flex-1" />
+            <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/activities" method="get">
+              <input type="hidden" name="page" value="1" />
+              <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
+              <div className="flex items-end justify-end">
+                <Button type="submit" variant="primary" size="sm">
+                  {tCommon('search')}
+                </Button>
+              </div>
+            </form>
             <div className="flex items-center justify-end">
               <PageSizeSelector
                 action="/activities"
                 pageSize={pageSize}
-                hiddenFields={{}}
+                hiddenFields={{ search }}
                 label={locale === 'ja' ? '最大表示数' : 'Max rows'}
               />
             </div>

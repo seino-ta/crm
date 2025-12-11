@@ -14,7 +14,7 @@ type SuccessToastProps = {
 export function SuccessToast({ open, trigger, message, duration = 2400 }: SuccessToastProps) {
   const toastCtx = useToastContext();
   const [visible, setVisible] = useState(false);
-  const lastTriggerRef = useRef<unknown>();
+  const lastTriggerRef = useRef<unknown>(undefined);
   const lastOpenRef = useRef<boolean>(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

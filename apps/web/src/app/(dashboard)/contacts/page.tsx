@@ -31,7 +31,12 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
   const page = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
 
   const [{ data: contacts, meta }, accounts] = await Promise.all([
-    listContacts({ search: search || undefined, accountId: accountId || undefined, page, pageSize }),
+    listContacts({
+      ...(search ? { search } : {}),
+      ...(accountId ? { accountId } : {}),
+      page,
+      pageSize,
+    }),
     listAccounts({ pageSize: 200 }),
   ]);
 
@@ -156,7 +161,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
                         <div className="flex flex-wrap gap-2 text-sm">
                           <DeleteContactButton
                             contactId={contact.id}
-                            accountId={contact.account?.id}
+                            accountId={contact.account?.id ?? null}
                             contactName={`${contact.lastName} ${contact.firstName}`}
                             testId="contact-delete-button"
                           />

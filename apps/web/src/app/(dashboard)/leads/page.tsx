@@ -41,7 +41,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
       : Promise.resolve({ data: [user] });
 
   const [{ data: leads, meta }, owners, accounts] = await Promise.all([
-    listLeads({ search: search || undefined, status: status || undefined, page, pageSize }),
+    listLeads({
+      ...(search ? { search } : {}),
+      ...(status ? { status } : {}),
+      page,
+      pageSize,
+    }),
     ownersPromise,
     listAccounts({ pageSize: 100 }),
   ]);

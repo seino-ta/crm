@@ -82,7 +82,7 @@ export async function openAccountDetail(page: Page, accountName: string) {
 export async function getAccountByName(page: Page, accountName: string) {
   const response = await page.request.get(`${apiBaseUrl}/accounts`, {
     params: { search: accountName, pageSize: '50' },
-    headers: sessionToken ? { authorization: `Bearer ${sessionToken}` } : undefined,
+    ...(sessionToken ? { headers: { authorization: `Bearer ${sessionToken}` } } : {}),
   });
   if (!response.ok()) {
     throw new Error(`Failed to fetch accounts: ${response.status()} ${response.statusText()}`);
@@ -233,7 +233,7 @@ export async function createOpportunity(page: Page, params: {
   const stageSelect = page.locator('form[data-testid="opportunity-form"] select[name="stageId"]');
   const options = await stageSelect.locator('option:not([value=""])').all();
   if (options.length > 0) {
-    const first = await options[0].getAttribute('value');
+    const first = await options[0]?.getAttribute('value');
     if (first) {
       await stageSelect.selectOption(first);
     }

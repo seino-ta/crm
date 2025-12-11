@@ -37,9 +37,9 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
   const page = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
 
   const { data: users, meta } = await listUsers({
-    search: search || undefined,
-    role: (role as UserRole) || undefined,
-    status: status || undefined,
+    ...(search ? { search } : {}),
+    ...(role ? { role: role as UserRole } : {}),
+    ...(status ? { status: status as 'active' | 'inactive' } : {}),
     page,
     pageSize,
   });

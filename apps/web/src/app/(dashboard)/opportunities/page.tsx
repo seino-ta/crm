@@ -5,9 +5,12 @@ import { getCurrentUser } from '@/lib/auth';
 import { listAccounts, listContacts, listOpportunities, listPipelineStages } from '@/lib/data';
 import { formatCurrency, formatDate, formatUserName } from '@/lib/formatters';
 import { Card } from '@/components/ui/card';
+import { FloatingInput } from '@/components/ui/floating-field';
+import { Button } from '@/components/ui/button';
 import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { getPipelineStageLabel } from '@/lib/labels';
 import { getServerTranslations } from '@/lib/i18n/server';
+import { createTranslator } from '@/lib/i18n/translator';
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
@@ -20,17 +23,23 @@ export default async function OpportunitiesPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { locale, t } = await getServerTranslations('opportunities');
+  const { locale, t, messages } = await getServerTranslations('opportunities');
   const user = await getCurrentUser();
   const params = await searchParams;
+  const search = extractParam(params, 'search');
   const requestedPageSize = Number(extractParam(params, 'pageSize') || '20');
   const pageSize = [10, 20, 50, 100].includes(requestedPageSize) ? requestedPageSize : 20;
   const requestedPage = Number(extractParam(params, 'page') || '1');
   const page = Number.isNaN(requestedPage) || requestedPage < 1 ? 1 : requestedPage;
+  const tCommon = createTranslator(messages, 'common');
 
   const [boardOpportunities, tableOpportunities, accounts, stages, contacts] = await Promise.all([
     listOpportunities({ pageSize: 200 }),
-    listOpportunities({ page, pageSize }),
+    listOpportunities({
+      ...(search ? { search } : {}),
+      page,
+      pageSize,
+    }),
     listAccounts({ pageSize: 200 }),
     listPipelineStages(),
     listContacts({ pageSize: 200 }),
@@ -48,6 +57,7 @@ export default async function OpportunitiesPage({
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
+    if (search) params.set('search', search);
     params.set('page', targetPage.toString());
     params.set('pageSize', String(pageSize));
     const qs = params.toString();
@@ -100,12 +110,20 @@ export default async function OpportunitiesPage({
         <Card>
           <h2 className="text-lg font-semibold">{t('tableTitle')}</h2>
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <div className="flex-1" />
+            <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/opportunities" method="get">
+              <input type="hidden" name="page" value="1" />
+              <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
+              <div className="flex items-end justify-end">
+                <Button type="submit" variant="primary" size="sm">
+                  {tCommon('search')}
+                </Button>
+              </div>
+            </form>
             <div className="flex items-center justify-end">
               <PageSizeSelector
                 action="/opportunities"
                 pageSize={pageSize}
-                hiddenFields={{}}
+                hiddenFields={{ search }}
                 label={locale === 'ja' ? '最大表示数' : 'Max rows'}
               />
             </div>

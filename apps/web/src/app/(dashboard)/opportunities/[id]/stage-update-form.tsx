@@ -24,7 +24,10 @@ export function StageUpdateForm({
   formKey: string;
 }) {
   const router = useRouter();
-  const [state, formAction] = useActionState<OpportunityStageActionState | undefined, FormData>(action, undefined);
+  const [state, formAction] = useActionState<OpportunityStageActionState | undefined, FormData>(async (prev, form) => {
+    const result = await action(prev, form);
+    return result ?? undefined;
+  }, undefined);
   const { t: tToasts } = useI18n('toasts');
   const { t, locale } = useI18n('opportunities.detail');
   const { t: tErrors } = useI18n('opportunities.errors');

@@ -59,11 +59,12 @@ async function ensureOpportunity(opportunityId?: string) {
 }
 
 export async function listActivities(filters: ActivityFilterInput) {
-  const { type, userId, accountId, contactId, opportunityId, from, to, page, pageSize } = filters;
+  const { search, type, userId, accountId, contactId, opportunityId, from, to, page, pageSize } = filters;
   const { page: normalizedPage, pageSize: normalizedPageSize, skip, take } = normalizePagination({ page, pageSize });
 
   const where: Prisma.ActivityWhereInput = {};
 
+  if (search) where.subject = { contains: search, mode: 'insensitive' };
   if (type) where.type = type;
   if (userId) where.userId = userId;
   if (accountId) where.accountId = accountId;

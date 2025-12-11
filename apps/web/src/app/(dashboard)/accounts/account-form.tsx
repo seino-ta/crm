@@ -101,7 +101,10 @@ function snapshotFromFormData(formData: FormData): AccountFormSnapshot {
 
 export function AccountForm({ action, submitLabel, initialValues, successRedirect, formKey, matchSnapshot }: AccountFormProps) {
   const router = useRouter();
-  const [state, formAction] = useActionState<AccountActionState | undefined, FormData>(action, undefined);
+  const [state, formAction] = useActionState<AccountActionState | undefined, FormData>(async (prev, form) => {
+    const result = await action(prev, form);
+    return result ?? undefined;
+  }, undefined);
   const { t: tToasts } = useI18n('toasts');
   const { t: tAccounts, locale } = useI18n('accounts');
   const { t: tForm } = useI18n('accounts.form');
@@ -123,7 +126,7 @@ export function AccountForm({ action, submitLabel, initialValues, successRedirec
     matchInitialSnapshot: shouldMatchSnapshot,
     message: tToasts('accountSaved'),
   });
-  const lastHandledStateRef = useRef<AccountActionState | undefined>();
+  const lastHandledStateRef = useRef<AccountActionState | undefined>(undefined);
   const successToastTrigger = toastTrigger ?? undefined;
 
   useEffect(() => {

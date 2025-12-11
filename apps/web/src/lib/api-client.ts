@@ -103,13 +103,13 @@ export async function apiFetch<T>(path: string, init: FetchOptions = {}): Promis
     if (response.status === 401 && !init.skipAuth) {
       await handleUnauthorized();
     }
-    const message = !payload || 'error' in payload === false ? 'The request failed.' : payload.error.message;
-    throw new ApiError(message, response.status, 'error' in (payload ?? {}) ? payload.error.details : undefined);
+    const errorPayload = payload && 'error' in payload ? payload.error : { message: 'The request failed.', details: undefined };
+    throw new ApiError(errorPayload.message, response.status, errorPayload.details);
   }
 
   if (!payload?.success) {
     throw new ApiError('Unexpected API payload format.', response.status);
   }
 
-  return { data: payload.data, meta: payload.meta };
+  return { data: payload.data, ...(payload.meta ? { meta: payload.meta } : {}) };
 }

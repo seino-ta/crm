@@ -83,6 +83,14 @@ export default async function AccountsPage({
             {t('tabs.archived')}
           </Link>
         </div>
+        <div className="flex items-center">
+          <PageSizeSelector
+            action="/accounts"
+            pageSize={pageSize}
+            hiddenFields={{ search, view }}
+            label={locale === 'ja' ? '最大表示数' : 'Max rows'}
+          />
+        </div>
       </div>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <Card>
@@ -97,14 +105,6 @@ export default async function AccountsPage({
                 </Button>
               </div>
             </form>
-            <div className="flex items-center">
-              <PageSizeSelector
-                action="/accounts"
-                pageSize={pageSize}
-                hiddenFields={{ search, view }}
-                label={locale === 'ja' ? '最大表示数' : 'Max rows'}
-              />
-            </div>
           </div>
           {isLongList && (
             <div className="mt-4">
