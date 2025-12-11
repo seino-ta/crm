@@ -107,7 +107,7 @@ export function PaginationBar({
 }
 
 export function PaginationBarLite({
-  page,
+  page: _page,
   totalPages,
   prevHref,
   nextHref,
@@ -122,6 +122,7 @@ export function PaginationBarLite({
   nextLabel?: string;
 }) {
   if (totalPages <= 1) return null;
+  void _page; // reserved for future use
   const hasPrev = !!prevHref;
   const hasNext = !!nextHref;
   return (

@@ -120,9 +120,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
           <h2 className="text-lg font-semibold">{t('list.title')}</h2>
           <div className="mt-4 space-y-4">
             {leads.length === 0 && <p className="text-sm text-slate-500">{t('list.empty')}</p>}
-            {leads.map((lead) => {
-              const { label, tone } = getLeadStatusMeta(lead.status, locale);
-              return (
+            {leads.map((lead) => (
                 <div key={lead.id} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm " data-testid="lead-row">
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -151,8 +149,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
                   </div>
                   {lead.notes && <p className="mt-2 text-sm text-slate-700">{lead.notes}</p>}
                 </div>
-              );
-            })}
+            ))}
           </div>
           <PaginationBar
             page={meta?.page ?? 1}

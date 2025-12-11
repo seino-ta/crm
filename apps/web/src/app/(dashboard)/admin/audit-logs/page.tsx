@@ -2,8 +2,6 @@ import { notFound } from 'next/navigation';
 
 import { AuditAction } from '@prisma/client';
 
-import Link from 'next/link';
-
 import { Card } from '@/components/ui/card';
 import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';

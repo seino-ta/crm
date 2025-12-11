@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { apiCreateAccount, apiCreateLead, createSlug, login, safeGoto } from './support/crm-helpers';
+import { apiCreateAccount, createSlug, login, safeGoto } from './support/crm-helpers';
 
 test.describe('Leads', () => {
   test('create lead, change status, delete', async ({ page }, testInfo) => {
