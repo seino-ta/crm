@@ -1,0 +1,4 @@
+- [ ] 一覧ページを追加/変更した場合、`ListPageLayout` と `ListToolbar` を使用している
+- [ ] 見出しが「◯◯一覧」/“◯◯ List” の形式になっている
+- [ ] サマリ文言は `common.listSummary*` を使用している
+- [ ] PageSizeSelector + PaginationBarLite（上部）、PaginationBar（下部）が配置されている（対象ページのみ）

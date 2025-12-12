@@ -9,6 +9,8 @@ import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components
 import { getServerTranslations } from '@/lib/i18n/server';
 import { FloatingInput } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
+import { ListPageLayout } from '@/components/layout/list-page-layout';
+import { ListToolbar } from '@/components/ui/list-toolbar';
 import { createTranslator } from '@/lib/i18n/translator';
 import Link from 'next/link';
 
@@ -79,27 +81,30 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
   };
 
   return (
-    <div className="space-y-8" data-testid="activities-page">
-      <div className="page-header">
-        <h1>{t('title')}</h1>
-        <p>{t('description')}</p>
-      </div>
-      <Card>
-        <ActivitiesSearchForm search={search} tCommon={tCommon} />
-      </Card>
+    <ListPageLayout
+      title={t('title')}
+      description={t('description')}
+      data-testid="activities-page"
+      searchSection={
+        <Card>
+          <ActivitiesSearchForm search={search} tCommon={tCommon} />
+        </Card>
+      }
+    >
       <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
         <Card>
           <h2 className="text-lg font-semibold">{t('tableTitle')}</h2>
-          <p className="text-xs text-slate-500">{listSummary}</p>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex-1" />
-            <PageSizeSelector
-              action="/activities"
-              pageSize={pageSize}
-              hiddenFields={{ search }}
-              label={locale === 'ja' ? '最大表示数' : 'Max rows'}
-            />
-          </div>
+          <ListToolbar
+            summary={listSummary}
+            right={
+              <PageSizeSelector
+                action="/activities"
+                pageSize={pageSize}
+                hiddenFields={{ search }}
+                label={locale === 'ja' ? '最大表示数' : 'Max rows'}
+              />
+            }
+          />
           {isLongList && (
             <div className="mt-4">
               <PaginationBarLite
@@ -149,6 +154,6 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
           />
         </Card>
       </div>
-    </div>
+    </ListPageLayout>
   );
 }
