@@ -7,7 +7,17 @@ const compat = new FlatCompat({ baseDirectory: __dirname });
 
 module.exports = tseslint.config(
   {
-    ignores: ['dist', 'node_modules', 'coverage', 'crm-agent-runner', 'apps/api/dist', 'apps/web/.next', 'apps/web/out'],
+    ignores: [
+      'dist',
+      'node_modules',
+      'coverage',
+      'crm-agent-runner',
+      'apps/api/dist',
+      'apps/web/.next',
+      'apps/web/out',
+      'apps/web/tests/e2e/report',
+      'apps/web/tests/e2e/report/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,

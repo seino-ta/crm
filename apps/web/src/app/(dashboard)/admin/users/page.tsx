@@ -12,6 +12,7 @@ import type { UserRole } from '@/lib/types';
 import { formatDateTime } from '@/lib/formatters';
 import { InviteUserForm } from './invite-user-form';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { createTranslator } from '@/lib/i18n/translator';
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
@@ -26,7 +27,8 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
   if (user.role !== 'ADMIN') {
     notFound();
   }
-  const { t, locale } = await getServerTranslations('users');
+  const { t, locale, messages } = await getServerTranslations('users');
+  const tCommon = createTranslator(messages, 'common');
   const filters = await searchParams;
   const search = extractParam(filters, 'search');
   const role = extractParam(filters, 'role');
@@ -47,6 +49,12 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
   const hasPrev = (meta?.page ?? 1) > 1;
   const hasNext = meta ? meta.page < meta.totalPages : false;
   const isLongList = (meta?.totalPages ?? 1) > 2;
+  const totalPages = meta?.totalPages ?? 1;
+  const total = meta?.total;
+  const listSummary =
+    total !== undefined
+      ? tCommon('listSummaryWithTotal', { values: { total, pageSize } })
+      : tCommon('listSummaryPageSizeOnly', { values: { pageSize } });
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
@@ -59,6 +67,10 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
     return qs ? `/admin/users?${qs}` : '/admin/users';
   };
 
+  if (page > totalPages) {
+    return redirect(buildPageHref(totalPages));
+  }
+
   return (
     <div className="space-y-6" data-testid="admin-users-page">
       <div className="page-header">
@@ -67,66 +79,44 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
       </div>
       <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
         <Card>
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <form
-              className="grid gap-4 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))_auto]"
-              action="/admin/users"
-              method="get"
-            >
-              <input type="hidden" name="page" value="1" />
-              <FloatingInput
-                name="search"
-                label={t('filters.searchLabel')}
-                example={t('filters.searchPlaceholder')}
-                defaultValue={search}
-                containerClassName="md:col-span-1"
-              />
-              <FloatingSelect name="role" label={t('filters.role')} defaultValue={role ?? ''} forceFloatLabel>
-                <option value="">{t('filters.roleAll')}</option>
-                {roleOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {t(`roles.${option.toLowerCase()}`)}
-                  </option>
-                ))}
-              </FloatingSelect>
-              <FloatingSelect name="status" label={t('filters.status')} defaultValue={status ?? ''} forceFloatLabel>
-                <option value="">{t('filters.statusAll')}</option>
-                <option value="active">{t('filters.statusActive')}</option>
-                <option value="inactive">{t('filters.statusInactive')}</option>
-              </FloatingSelect>
-              <div className="flex flex-wrap items-end gap-2">
-                <Button type="submit" size="sm">
-                  {t('filters.submit')}
-                </Button>
-                <Link
-                  href="/admin/users"
-                  className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
-                >
-                  {t('filters.clear')}
-                </Link>
-              </div>
-            </form>
-            <div className="flex items-center">
-              <PageSizeSelector
-                action="/admin/users"
-                pageSize={pageSize}
-                hiddenFields={{ search, role, status }}
-                label={locale === 'ja' ? '最大表示数' : 'Max rows'}
-              />
+          <form
+            className="grid gap-4 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))_auto]"
+            action="/admin/users"
+            method="get"
+          >
+            <input type="hidden" name="page" value="1" />
+            <FloatingInput
+              name="search"
+              label={t('filters.searchLabel')}
+              example={t('filters.searchPlaceholder')}
+              defaultValue={search}
+              containerClassName="md:col-span-1"
+            />
+            <FloatingSelect name="role" label={t('filters.role')} defaultValue={role ?? ''} forceFloatLabel>
+              <option value="">{t('filters.roleAll')}</option>
+              {roleOptions.map((option) => (
+                <option key={option} value={option}>
+                  {t(`roles.${option.toLowerCase()}`)}
+                </option>
+              ))}
+            </FloatingSelect>
+            <FloatingSelect name="status" label={t('filters.status')} defaultValue={status ?? ''} forceFloatLabel>
+              <option value="">{t('filters.statusAll')}</option>
+              <option value="active">{t('filters.statusActive')}</option>
+              <option value="inactive">{t('filters.statusInactive')}</option>
+            </FloatingSelect>
+            <div className="flex flex-wrap items-end gap-2">
+              <Button type="submit" size="sm">
+                {t('filters.submit')}
+              </Button>
+              <Link
+                href="/admin/users"
+                className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+              >
+                {t('filters.clear')}
+              </Link>
             </div>
-          </div>
-          {isLongList && (
-            <div className="mt-4">
-              <PaginationBarLite
-                page={meta?.page ?? 1}
-                totalPages={meta?.totalPages ?? 1}
-                prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
-                nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
-                prevLabel={t('list.prev')}
-                nextLabel={t('list.next')}
-              />
-            </div>
-          )}
+          </form>
         </Card>
         <Card>
           <h2 className="text-lg font-semibold">{t('invite.title')}</h2>
@@ -134,7 +124,30 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
         </Card>
       </div>
       <Card>
-        <div className="overflow-x-auto">
+        <h2 className="text-lg font-semibold mb-3">{t('listTitle') ?? t('title')}</h2>
+        <p className="text-xs text-slate-500 mb-2">{listSummary}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex-1" />
+          <PageSizeSelector
+            action="/admin/users"
+            pageSize={pageSize}
+            hiddenFields={{ search, role, status }}
+            label={locale === 'ja' ? '最大表示数' : 'Max rows'}
+          />
+        </div>
+        {isLongList && (
+          <div className="mt-4">
+            <PaginationBarLite
+              page={meta?.page ?? 1}
+              totalPages={meta?.totalPages ?? 1}
+              prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
+              nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
+              prevLabel={t('list.prev')}
+              nextLabel={t('list.next')}
+            />
+          </div>
+        )}
+        <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="app-table-head">

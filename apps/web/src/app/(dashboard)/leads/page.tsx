@@ -13,6 +13,7 @@ import { formatDate, formatUserName } from '@/lib/formatters';
 import { getLeadStatusMeta } from '@/lib/labels';
 import { getServerTranslations } from '@/lib/i18n/server';
 import type { LeadStatus } from '@/lib/types';
+import { createTranslator } from '@/lib/i18n/translator';
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
@@ -25,7 +26,8 @@ const PAGE_SIZE = 20;
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function LeadsPage({ searchParams }: { searchParams: SearchParams }) {
-  const { locale, t } = await getServerTranslations('leads');
+  const { locale, t, messages } = await getServerTranslations('leads');
+  const tCommon = createTranslator(messages, 'common');
   const user = await getCurrentUser();
   const filters = await searchParams;
   const search = extractParam(filters, 'search');
@@ -54,6 +56,13 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
   const hasPrev = (meta?.page ?? 1) > 1;
   const hasNext = meta ? meta.page < meta.totalPages : false;
   const isLongList = (meta?.totalPages ?? 1) > 2;
+  const totalPages = meta?.totalPages ?? 1;
+  const total = meta?.total;
+  const listSummary =
+    total !== undefined
+      ? tCommon('listSummaryWithTotal', { values: { total, pageSize } })
+      : tCommon('listSummaryPageSizeOnly', { values: { pageSize } });
+  const clearHref = '/leads';
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
@@ -65,6 +74,10 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
     return qs ? `/leads?${qs}` : '/leads';
   };
 
+  if (page > totalPages) {
+    return redirect(buildPageHref(totalPages));
+  }
+
   return (
     <div className="space-y-8" data-testid="leads-page">
       <div className="page-header">
@@ -72,28 +85,39 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
         <p>{t('description')}</p>
       </div>
       <Card>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/leads" method="get">
-            <input type="hidden" name="page" value="1" />
-            <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
-            <FloatingSelect name="status" label={t('filters.status')} defaultValue={status} forceFloatLabel>
-              <option value="">{t('filters.statusAll')}</option>
-              {['NEW', 'CONTACTED', 'QUALIFIED', 'LOST', 'CONVERTED'].map((value) => {
-                const { label } = getLeadStatusMeta(value as LeadStatus, locale);
-                return (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                );
-              })}
-            </FloatingSelect>
-            <div className="flex items-end">
-              <Button type="submit" size="sm">
-                {t('filters.submit')}
-              </Button>
-            </div>
-          </form>
-          <div className="flex items-center">
+        <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/leads" method="get">
+          <input type="hidden" name="page" value="1" />
+          <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
+          <FloatingSelect name="status" label={t('filters.status')} defaultValue={status} forceFloatLabel>
+            <option value="">{t('filters.statusAll')}</option>
+            {['NEW', 'CONTACTED', 'QUALIFIED', 'LOST', 'CONVERTED'].map((value) => {
+              const { label } = getLeadStatusMeta(value as LeadStatus, locale);
+              return (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              );
+            })}
+          </FloatingSelect>
+          <div className="flex items-end gap-2">
+            <Button type="submit" size="sm">
+              {t('filters.submit')}
+            </Button>
+            <Link
+              href={clearHref}
+              className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+            >
+              {locale === 'ja' ? 'クリア' : 'Clear'}
+            </Link>
+          </div>
+        </form>
+      </Card>
+      <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
+        <Card>
+          <h2 className="text-lg font-semibold">{t('list.title')}</h2>
+          <p className="text-xs text-slate-500">{listSummary}</p>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex-1" />
             <PageSizeSelector
               action="/leads"
               pageSize={pageSize}
@@ -101,23 +125,18 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
               label={locale === 'ja' ? '最大表示数' : 'Max rows'}
             />
           </div>
-        </div>
-        {isLongList && (
-          <div className="mt-4">
-            <PaginationBarLite
-              page={meta?.page ?? 1}
-              totalPages={meta?.totalPages ?? 1}
-              prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
-              nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
-              prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
-              nextLabel={locale === 'ja' ? '次へ' : 'Next'}
-            />
-          </div>
-        )}
-      </Card>
-      <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
-        <Card>
-          <h2 className="text-lg font-semibold">{t('list.title')}</h2>
+          {isLongList && (
+            <div className="mt-4">
+              <PaginationBarLite
+                page={meta?.page ?? 1}
+                totalPages={meta?.totalPages ?? 1}
+                prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
+                nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
+                prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+                nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+              />
+            </div>
+          )}
           <div className="mt-4 space-y-4">
             {leads.length === 0 && <p className="text-sm text-slate-500">{t('list.empty')}</p>}
             {leads.map((lead) => (

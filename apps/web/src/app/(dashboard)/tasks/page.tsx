@@ -3,15 +3,36 @@ import { getCurrentUser } from '@/lib/auth';
 import { listAccounts, listOpportunities, listTasks } from '@/lib/data';
 import { formatDate, formatUserName } from '@/lib/formatters';
 import { getTaskStatusMeta } from '@/lib/labels';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { Card } from '@/components/ui/card';
-import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { DeleteTaskButton } from '@/components/tasks/delete-task-button';
 import { TaskStatusToggleButton } from '@/components/tasks/task-status-toggle-button';
-import { getServerTranslations } from '@/lib/i18n/server';
-import { FloatingInput } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { FloatingInput } from '@/components/ui/floating-field';
+import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { getServerTranslations } from '@/lib/i18n/server';
 import { createTranslator } from '@/lib/i18n/translator';
+import Link from 'next/link';
+
+function TasksSearchForm({ search, tCommon }: { search: string; tCommon: ReturnType<typeof createTranslator> }) {
+  return (
+    <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/tasks" method="get">
+      <input type="hidden" name="page" value="1" />
+      <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
+      <div className="flex items-end justify-end gap-2">
+        <Button type="submit" variant="primary" size="sm">
+          {tCommon('search')}
+        </Button>
+        <Link
+          href="/tasks"
+          className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+        >
+          {tCommon('clear') ?? 'Clear'}
+        </Link>
+      </div>
+    </form>
+  );
+}
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
@@ -43,6 +64,16 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const hasPrev = (tasks.meta?.page ?? 1) > 1;
   const hasNext = tasks.meta ? tasks.meta.page < tasks.meta.totalPages : false;
   const isLongList = (tasks.meta?.totalPages ?? 1) > 2;
+  const totalPages = tasks.meta?.totalPages ?? 1;
+  const total = tasks.meta?.total;
+  const listSummary =
+    total !== undefined
+      ? tCommon('listSummaryWithTotal', { values: { total, pageSize } })
+      : tCommon('listSummaryPageSizeOnly', { values: { pageSize } });
+
+  if (page > totalPages) {
+    return redirect(buildPageHref(totalPages));
+  }
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
@@ -59,19 +90,15 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
         <h1>{t('title')}</h1>
         <p>{t('description')}</p>
       </div>
+      <Card>
+        <TasksSearchForm search={search} tCommon={tCommon} />
+      </Card>
       <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
         <Card>
           <h2 className="text-lg font-semibold">{t('list.title')}</h2>
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/tasks" method="get">
-              <input type="hidden" name="page" value="1" />
-              <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
-              <div className="flex items-end justify-end">
-                <Button type="submit" variant="primary" size="sm">
-                  {tCommon('search')}
-                </Button>
-              </div>
-            </form>
+          <p className="text-xs text-slate-500">{listSummary}</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex-1" />
             <div className="flex items-center justify-end">
               <PageSizeSelector
                 action="/tasks"
@@ -119,6 +146,15 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
               );
             })}
           </div>
+          <PaginationBar
+            page={tasks.meta?.page ?? 1}
+            totalPages={tasks.meta?.totalPages ?? 1}
+            prevHref={hasPrev ? buildPageHref((tasks.meta?.page ?? 1) - 1) : null}
+            nextHref={hasNext ? buildPageHref((tasks.meta?.page ?? 1) + 1) : null}
+            pageLabel={locale === 'ja' ? 'ページ' : 'Page'}
+            prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+            nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+          />
         </Card>
         <Card>
           <h2 className="text-lg font-semibold">{t('form.title')}</h2>
@@ -129,15 +165,6 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           />
         </Card>
       </div>
-      <PaginationBar
-        page={tasks.meta?.page ?? 1}
-        totalPages={tasks.meta?.totalPages ?? 1}
-        prevHref={hasPrev ? buildPageHref((tasks.meta?.page ?? 1) - 1) : null}
-        nextHref={hasNext ? buildPageHref((tasks.meta?.page ?? 1) + 1) : null}
-        pageLabel={locale === 'ja' ? 'ページ' : 'Page'}
-        prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
-        nextLabel={locale === 'ja' ? '次へ' : 'Next'}
-      />
     </div>
   );
 }

@@ -8,6 +8,9 @@ export const en: JaMessages = {
       en: 'English',
     },
     search: 'Search',
+    clear: 'Clear',
+    listSummaryWithTotal: 'Total {total}, {pageSize} per page',
+    listSummaryPageSizeOnly: '{pageSize} per page',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -83,6 +86,7 @@ export const en: JaMessages = {
     addTitle: 'Add Account',
     addSubtitle: 'Start with minimal info and update later.',
     archivedInfo: 'Archived accounts are hidden from other lists. Restore them when needed.',
+    listTitle: 'Account List',
     emptyActive: 'No accounts found. Try adjusting your filters.',
     emptyArchived: 'No archived accounts.',
     statusLabel: 'Status',
@@ -152,7 +156,7 @@ export const en: JaMessages = {
   activities: {
     title: 'Activities',
     description: 'Log calls, emails and meetings to keep everyone aligned.',
-    tableTitle: 'Latest 20 entries',
+    tableTitle: 'Activity List',
     deleteConfirm: 'Delete this activity log?',
     deleteError: 'Failed to delete. Try again later.',
     form: {
@@ -184,7 +188,7 @@ export const en: JaMessages = {
       submit: 'Search',
     },
     list: {
-      title: 'All Contacts',
+      title: 'Contact List',
       empty: 'No contacts found.',
       headers: {
         name: 'Name',
@@ -252,7 +256,7 @@ export const en: JaMessages = {
       submit: 'Search',
     },
     list: {
-      title: 'All Leads',
+      title: 'Lead List',
       empty: 'No leads found.',
       companyFallback: 'Company not set',
       pagination: 'Page {page} of {totalPages}',
@@ -289,7 +293,8 @@ export const en: JaMessages = {
     },
   },
   users: {
-    title: 'User Management',
+    title: 'Users',
+    listTitle: 'User List',
     description: 'Invite teammates and manage roles and access.',
     filters: {
       searchLabel: 'Search',
@@ -300,7 +305,7 @@ export const en: JaMessages = {
       statusAll: 'All statuses',
       statusActive: 'Active',
       statusInactive: 'Inactive',
-      submit: 'Filter',
+      submit: 'Search',
       clear: 'Clear',
     },
     list: {
@@ -445,7 +450,7 @@ export const en: JaMessages = {
     title: 'Tasks',
     description: 'Track follow-ups for each opportunity over time.',
     list: {
-      title: 'All Tasks',
+      title: 'Task List',
       empty: 'No tasks yet.',
       dueLabel: 'Due {date}',
       noDueLabel: 'No due date',
@@ -495,6 +500,7 @@ export const en: JaMessages = {
   },
   auditLogs: {
     title: 'Audit Logs',
+    listTitle: 'Audit Log List',
     description: 'Review create/update/delete history for key entities.',
     filters: {
       entityLabel: 'Entity',
@@ -503,7 +509,7 @@ export const en: JaMessages = {
       actionAll: 'All actions',
       from: 'From',
       to: 'To',
-      submit: 'Filter',
+      submit: 'Search',
     },
     table: {
       datetime: 'Timestamp',

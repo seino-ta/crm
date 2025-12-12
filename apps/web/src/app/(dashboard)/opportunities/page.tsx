@@ -1,4 +1,3 @@
-import Link from 'next/link';
 
 import { OpportunityForm } from './opportunity-form';
 import { getCurrentUser } from '@/lib/auth';
@@ -11,11 +10,32 @@ import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components
 import { getPipelineStageLabel } from '@/lib/labels';
 import { getServerTranslations } from '@/lib/i18n/server';
 import { createTranslator } from '@/lib/i18n/translator';
+import Link from 'next/link';
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
   if (Array.isArray(value)) return value[0] ?? '';
   return value ?? '';
+}
+
+function OpportunitiesSearchForm({ search, tCommon }: { search: string; tCommon: ReturnType<typeof createTranslator> }) {
+  return (
+    <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/opportunities" method="get">
+      <input type="hidden" name="page" value="1" />
+      <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
+      <div className="flex items-end justify-end gap-2">
+        <Button type="submit" variant="primary" size="sm">
+          {tCommon('search')}
+        </Button>
+        <Link
+          href="/opportunities"
+          className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+        >
+          {tCommon('clear') ?? 'Clear'}
+        </Link>
+      </div>
+    </form>
+  );
 }
 
 export default async function OpportunitiesPage({
@@ -54,6 +74,11 @@ export default async function OpportunitiesPage({
   const hasPrev = (tableOpportunities.meta?.page ?? 1) > 1;
   const hasNext = tableOpportunities.meta ? tableOpportunities.meta.page < tableOpportunities.meta.totalPages : false;
   const isLongList = (tableOpportunities.meta?.totalPages ?? 1) > 2;
+  const total = tableOpportunities.meta?.total;
+  const listSummary =
+    total !== undefined
+      ? tCommon('listSummaryWithTotal', { values: { total, pageSize } })
+      : tCommon('listSummaryPageSizeOnly', { values: { pageSize } });
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
@@ -70,19 +95,22 @@ export default async function OpportunitiesPage({
         <h1>{t('title')}</h1>
         <p>{t('description')}</p>
       </div>
+      <Card>
+        <OpportunitiesSearchForm search={search} tCommon={tCommon} />
+      </Card>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <Card>
           <h2 className="text-lg font-semibold">{t('boardTitle')}</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {grouped.map(({ stage, items }) => (
-              <div key={stage.id} className="rounded-2xl border border-slate-100 bg-white p-4 " data-testid="opportunity-stage">
+              <div key={stage.id} className="rounded-2xl border border-slate-100 bg-white p-4" data-testid="opportunity-stage">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-900 ">{getPipelineStageLabel(stage.name, locale)}</p>
+                  <p className="text-sm font-semibold text-slate-900">{getPipelineStageLabel(stage.name, locale)}</p>
                   <span className="text-xs app-table-muted">{t('boardCount', { values: { count: items.length.toString() } })}</span>
                 </div>
                 <div className="mt-3 space-y-3">
                   {items.map((opp) => (
-                    <Link key={opp.id} href={`/opportunities/${opp.id}`} className="block rounded-xl bg-white p-3 shadow-sm transition hover:ring-2 hover:ring-blue-200 ">
+                    <Link key={opp.id} href={`/opportunities/${opp.id}`} className="block rounded-xl bg-white p-3 shadow-sm transition hover:ring-2 hover:ring-blue-200">
                       <p className="text-sm font-semibold app-link-accent">{opp.name}</p>
                       <p className="text-xs app-table-muted">
                         {opp.account?.name ?? '—'} ・ {formatCurrency(opp.amount)}
@@ -107,40 +135,31 @@ export default async function OpportunitiesPage({
           />
         </Card>
       </div>
-        <Card>
-          <h2 className="text-lg font-semibold">{t('tableTitle')}</h2>
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/opportunities" method="get">
-              <input type="hidden" name="page" value="1" />
-              <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
-              <div className="flex items-end justify-end">
-                <Button type="submit" variant="primary" size="sm">
-                  {tCommon('search')}
-                </Button>
-              </div>
-            </form>
-            <div className="flex items-center justify-end">
-              <PageSizeSelector
-                action="/opportunities"
-                pageSize={pageSize}
-                hiddenFields={{ search }}
-                label={locale === 'ja' ? '最大表示数' : 'Max rows'}
-              />
-            </div>
+      <Card>
+        <h2 className="text-lg font-semibold">{t('tableTitle')}</h2>
+        <p className="text-xs text-slate-500">{listSummary}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex-1" />
+          <PageSizeSelector
+            action="/opportunities"
+            pageSize={pageSize}
+            hiddenFields={{ search }}
+            label={locale === 'ja' ? '最大表示数' : 'Max rows'}
+          />
+        </div>
+        {isLongList && (
+          <div className="mt-4">
+            <PaginationBarLite
+              page={tableOpportunities.meta?.page ?? 1}
+              totalPages={tableOpportunities.meta?.totalPages ?? 1}
+              prevHref={hasPrev ? buildPageHref((tableOpportunities.meta?.page ?? 1) - 1) : null}
+              nextHref={hasNext ? buildPageHref((tableOpportunities.meta?.page ?? 1) + 1) : null}
+              prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+              nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+            />
           </div>
-          {isLongList && (
-            <div className="mt-4">
-              <PaginationBarLite
-                page={tableOpportunities.meta?.page ?? 1}
-                totalPages={tableOpportunities.meta?.totalPages ?? 1}
-                prevHref={hasPrev ? buildPageHref((tableOpportunities.meta?.page ?? 1) - 1) : null}
-                nextHref={hasNext ? buildPageHref((tableOpportunities.meta?.page ?? 1) + 1) : null}
-                prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
-                nextLabel={locale === 'ja' ? '次へ' : 'Next'}
-              />
-            </div>
-          )}
-          <div className="mt-4 overflow-x-auto">
+        )}
+        <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="text-xs uppercase text-slate-500">

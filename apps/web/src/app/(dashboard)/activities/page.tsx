@@ -10,6 +10,27 @@ import { getServerTranslations } from '@/lib/i18n/server';
 import { FloatingInput } from '@/components/ui/floating-field';
 import { Button } from '@/components/ui/button';
 import { createTranslator } from '@/lib/i18n/translator';
+import Link from 'next/link';
+
+function ActivitiesSearchForm({ search, tCommon }: { search: string; tCommon: ReturnType<typeof createTranslator> }) {
+  return (
+    <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/activities" method="get">
+      <input type="hidden" name="page" value="1" />
+      <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
+      <div className="flex items-end justify-end gap-2">
+        <Button type="submit" variant="primary" size="sm">
+          {tCommon('search')}
+        </Button>
+        <Link
+          href="/activities"
+          className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+        >
+          {tCommon('clear') ?? 'Clear'}
+        </Link>
+      </div>
+    </form>
+  );
+}
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
@@ -37,6 +58,16 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
   const hasPrev = (activities.meta?.page ?? 1) > 1;
   const hasNext = activities.meta ? activities.meta.page < activities.meta.totalPages : false;
   const isLongList = (activities.meta?.totalPages ?? 1) > 2;
+  const totalPages = activities.meta?.totalPages ?? 1;
+  const total = activities.meta?.total;
+  const listSummary =
+    total !== undefined
+      ? tCommon('listSummaryWithTotal', { values: { total, pageSize } })
+      : tCommon('listSummaryPageSizeOnly', { values: { pageSize } });
+
+  if (page > totalPages) {
+    return redirect(buildPageHref(totalPages));
+  }
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
@@ -53,27 +84,21 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
         <h1>{t('title')}</h1>
         <p>{t('description')}</p>
       </div>
+      <Card>
+        <ActivitiesSearchForm search={search} tCommon={tCommon} />
+      </Card>
       <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
         <Card>
           <h2 className="text-lg font-semibold">{t('tableTitle')}</h2>
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/activities" method="get">
-              <input type="hidden" name="page" value="1" />
-              <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
-              <div className="flex items-end justify-end">
-                <Button type="submit" variant="primary" size="sm">
-                  {tCommon('search')}
-                </Button>
-              </div>
-            </form>
-            <div className="flex items-center justify-end">
-              <PageSizeSelector
-                action="/activities"
-                pageSize={pageSize}
-                hiddenFields={{ search }}
-                label={locale === 'ja' ? '最大表示数' : 'Max rows'}
-              />
-            </div>
+          <p className="text-xs text-slate-500">{listSummary}</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex-1" />
+            <PageSizeSelector
+              action="/activities"
+              pageSize={pageSize}
+              hiddenFields={{ search }}
+              label={locale === 'ja' ? '最大表示数' : 'Max rows'}
+            />
           </div>
           {isLongList && (
             <div className="mt-4">
@@ -105,6 +130,15 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
               </div>
             ))}
           </div>
+          <PaginationBar
+            page={activities.meta?.page ?? 1}
+            totalPages={activities.meta?.totalPages ?? 1}
+            prevHref={hasPrev ? buildPageHref((activities.meta?.page ?? 1) - 1) : null}
+            nextHref={hasNext ? buildPageHref((activities.meta?.page ?? 1) + 1) : null}
+            pageLabel={locale === 'ja' ? 'ページ' : 'Page'}
+            prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
+            nextLabel={locale === 'ja' ? '次へ' : 'Next'}
+          />
         </Card>
         <Card>
           <h2 className="text-lg font-semibold">{t('form.submit')}</h2>
@@ -115,15 +149,6 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
           />
         </Card>
       </div>
-      <PaginationBar
-        page={activities.meta?.page ?? 1}
-        totalPages={activities.meta?.totalPages ?? 1}
-        prevHref={hasPrev ? buildPageHref((activities.meta?.page ?? 1) - 1) : null}
-        nextHref={hasNext ? buildPageHref((activities.meta?.page ?? 1) + 1) : null}
-        pageLabel={locale === 'ja' ? 'ページ' : 'Page'}
-        prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
-        nextLabel={locale === 'ja' ? '次へ' : 'Next'}
-      />
     </div>
   );
 }

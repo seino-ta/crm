@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { listAccounts, listContacts } from '@/lib/data';
 import { getServerTranslations } from '@/lib/i18n/server';
+import { createTranslator } from '@/lib/i18n/translator';
 import { ContactForm } from './contact-form';
 import { DeleteContactButton } from './delete-contact-button';
 import { formatDate } from '@/lib/formatters';
@@ -21,7 +22,8 @@ const PAGE_SIZE = 20;
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function ContactsPage({ searchParams }: { searchParams: SearchParams }) {
-  const { t, locale } = await getServerTranslations('contacts');
+  const { t, locale, messages } = await getServerTranslations('contacts');
+  const tCommon = createTranslator(messages, 'common');
   const filters = await searchParams;
   const search = extractParam(filters, 'search');
   const accountId = extractParam(filters, 'accountId');
@@ -43,6 +45,13 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
   const hasPrev = (meta?.page ?? 1) > 1;
   const hasNext = meta ? meta.page < meta.totalPages : false;
   const isLongList = (meta?.totalPages ?? 1) > 2;
+  const totalPages = meta?.totalPages ?? 1;
+  const total = meta?.total;
+  const listSummary =
+    total !== undefined
+      ? tCommon('listSummaryWithTotal', { values: { total, pageSize } })
+      : tCommon('listSummaryPageSizeOnly', { values: { pageSize } });
+  const clearHref = '/contacts';
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
@@ -54,6 +63,10 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
     return qs ? `/contacts?${qs}` : '/contacts';
   };
 
+  if (page > totalPages) {
+    return redirect(buildPageHref(totalPages));
+  }
+
   return (
     <div className="space-y-8" data-testid="contacts-page">
       <div className="page-header">
@@ -61,25 +74,36 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
         <p>{t('description')}</p>
       </div>
       <Card>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <form className="grid flex-1 min-w-[280px] gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/contacts" method="get">
-            <input type="hidden" name="page" value="1" />
-            <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
-            <FloatingSelect name="accountId" label={t('filters.account')} defaultValue={accountId ?? ''} forceFloatLabel>
-              <option value="">{t('filters.accountAll')}</option>
-              {accounts.data.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </FloatingSelect>
-            <div className="flex items-end">
-              <Button type="submit" size="sm">
-                {t('filters.submit')}
-              </Button>
-            </div>
-          </form>
-          <div className="flex items-center">
+        <form className="grid flex-1 min-w-[280px] gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/contacts" method="get">
+          <input type="hidden" name="page" value="1" />
+          <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
+          <FloatingSelect name="accountId" label={t('filters.account')} defaultValue={accountId ?? ''} forceFloatLabel>
+            <option value="">{t('filters.accountAll')}</option>
+            {accounts.data.map((account) => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
+          </FloatingSelect>
+          <div className="flex items-end gap-2">
+            <Button type="submit" size="sm">
+              {t('filters.submit')}
+            </Button>
+            <Link
+              href={clearHref}
+              className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+            >
+              {locale === 'ja' ? 'クリア' : 'Clear'}
+            </Link>
+          </div>
+        </form>
+      </Card>
+      <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
+        <Card>
+          <h2 className="text-lg font-semibold">{t('list.title')}</h2>
+          <p className="text-xs text-slate-500">{listSummary}</p>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex-1" />
             <PageSizeSelector
               action="/contacts"
               pageSize={pageSize}
@@ -87,23 +111,18 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
               label={locale === 'ja' ? '最大表示数' : 'Max rows'}
             />
           </div>
-        </div>
-        {isLongList && (
-          <div className="mt-4">
-            <PaginationBarLite
-              page={meta?.page ?? 1}
-              totalPages={meta?.totalPages ?? 1}
-              prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
-              nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
-              prevLabel={t('list.prev')}
-              nextLabel={t('list.next')}
-            />
-          </div>
-        )}
-      </Card>
-      <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
-        <Card>
-          <h2 className="text-lg font-semibold">{t('list.title')}</h2>
+          {isLongList && (
+            <div className="mt-4">
+              <PaginationBarLite
+                page={meta?.page ?? 1}
+                totalPages={meta?.totalPages ?? 1}
+                prevHref={hasPrev ? buildPageHref((meta?.page ?? 1) - 1) : null}
+                nextHref={hasNext ? buildPageHref((meta?.page ?? 1) + 1) : null}
+                prevLabel={t('list.prev')}
+                nextLabel={t('list.next')}
+              />
+            </div>
+          )}
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>

@@ -6,6 +6,9 @@ export const ja = {
       en: 'English',
     },
     search: '検索',
+    clear: 'クリア',
+    listSummaryWithTotal: '全 {total} 件・{pageSize} 件/ページ',
+    listSummaryPageSizeOnly: '{pageSize} 件/ページ',
   },
   nav: {
     dashboard: 'ダッシュボード',
@@ -16,7 +19,7 @@ export const ja = {
     activities: '活動ログ',
     tasks: 'タスク',
     reports: 'レポート',
-    users: 'ユーザー管理',
+    users: 'ユーザー',
     auditLogs: '監査ログ',
     adminMenu: '管理者メニュー',
   },
@@ -81,6 +84,7 @@ export const ja = {
     addTitle: 'アカウントを追加',
     addSubtitle: '最小限の情報で作成し、詳細は後から更新できます。',
     archivedInfo: 'アーカイブされたアカウントは各種一覧に表示されません。必要に応じて復元してください。',
+    listTitle: 'アカウント一覧',
     emptyActive: '一致するアカウントが見つかりません。検索条件を見直してください。',
     emptyArchived: 'アーカイブされたアカウントはありません。',
     statusLabel: 'ステータス',
@@ -150,7 +154,7 @@ export const ja = {
   activities: {
     title: '活動ログ',
     description: 'コール、メール、MTG を記録してチームで共有しましょう。',
-    tableTitle: '最新 20 件',
+    tableTitle: '活動ログ一覧',
     deleteConfirm: 'この活動ログを削除しますか？',
     deleteError: '削除に失敗しました。時間を置いて再実行してください。',
     form: {
@@ -182,7 +186,7 @@ export const ja = {
       submit: '検索',
     },
     list: {
-      title: '一覧',
+      title: 'コンタクト一覧',
       empty: '該当するコンタクトが見つかりません。',
       headers: {
         name: '氏名',
@@ -250,7 +254,7 @@ export const ja = {
       submit: '検索',
     },
     list: {
-      title: '一覧',
+      title: 'リード一覧',
       empty: '該当するリードがありません。',
       companyFallback: '会社未設定',
       pagination: '{page}/{totalPages} ページ',
@@ -287,7 +291,8 @@ export const ja = {
     },
   },
   users: {
-    title: 'ユーザー管理',
+    title: 'ユーザー',
+    listTitle: 'ユーザー一覧',
     description: 'チームメンバーを招待し、ロールや有効状態を管理します。',
     filters: {
       searchLabel: '検索',
@@ -298,7 +303,7 @@ export const ja = {
       statusAll: 'すべて',
       statusActive: '有効',
       statusInactive: '無効',
-      submit: '絞り込み',
+      submit: '検索',
       clear: 'クリア',
     },
     list: {
@@ -443,7 +448,7 @@ export const ja = {
     title: 'タスク',
     description: '案件に紐づくフォローアップを時系列で追跡します。',
     list: {
-      title: '全タスク',
+      title: 'タスク一覧',
       empty: 'まだタスクがありません。',
       dueLabel: '期限 {date}',
       noDueLabel: '期限未設定',
@@ -493,6 +498,7 @@ export const ja = {
   },
   auditLogs: {
     title: '監査ログ',
+    listTitle: '監査ログ一覧',
     description: '主要エンティティの作成・更新・削除履歴を時系列で確認できます。',
     filters: {
       entityLabel: 'エンティティ',
@@ -501,7 +507,7 @@ export const ja = {
       actionAll: 'すべてのアクション',
       from: '開始日',
       to: '終了日',
-      submit: '絞り込む',
+      submit: '検索',
     },
     table: {
       datetime: '日時',

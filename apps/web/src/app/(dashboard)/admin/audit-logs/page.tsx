@@ -10,6 +10,8 @@ import { listAuditLogs } from '@/lib/data';
 import { getCurrentUser } from '@/lib/auth';
 import { formatDateTime } from '@/lib/formatters';
 import { getServerTranslations } from '@/lib/i18n/server';
+import Link from 'next/link';
+import { createTranslator } from '@/lib/i18n/translator';
 
 const auditActionOptions = Object.values(AuditAction);
 
@@ -22,7 +24,8 @@ function extractParam(params: Record<string, string | string[] | undefined>, key
 }
 
 export default async function AuditLogsPage({ searchParams }: { searchParams: SearchParams }) {
-  const { t, locale } = await getServerTranslations('auditLogs');
+  const { t, locale, messages } = await getServerTranslations('auditLogs');
+  const tCommon = createTranslator(messages, 'common');
   const user = await getCurrentUser();
   if (user.role !== 'ADMIN') {
     notFound();
@@ -50,6 +53,12 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
   const hasPrev = (meta?.page ?? 1) > 1;
   const hasNext = meta ? meta.page < meta.totalPages : false;
   const isLongList = (meta?.totalPages ?? 1) > 2;
+  const totalPages = meta?.totalPages ?? 1;
+  const total = meta?.total;
+  const listSummary =
+    total !== undefined
+      ? tCommon('listSummaryWithTotal', { values: { total, pageSize } })
+      : tCommon('listSummaryPageSizeOnly', { values: { pageSize } });
 
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
@@ -63,6 +72,10 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
     return qs ? `/admin/audit-logs?${qs}` : '/admin/audit-logs';
   };
 
+  if (page > totalPages) {
+    return redirect(buildPageHref(totalPages));
+  }
+
   return (
     <div className="space-y-8" data-testid="audit-logs-page">
       <div className="page-header">
@@ -70,35 +83,44 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
         <p>{t('description')}</p>
       </div>
       <Card>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <form className="grid gap-4 md:grid-cols-4 flex-1 min-w-[280px]" action="/admin/audit-logs" method="get">
-            <input type="hidden" name="page" value="1" />
-            <FloatingInput name="entityType" label={t('filters.entityLabel')} example={t('filters.entityPlaceholder')} defaultValue={entityType} />
-            <FloatingSelect name="action" label={t('filters.actionLabel')} defaultValue={action ?? ''} forceFloatLabel>
-              <option value="">{t('filters.actionAll')}</option>
-              {auditActionOptions.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </FloatingSelect>
-            <FloatingInput type="date" name="from" label={t('filters.from')} defaultValue={from} />
-            <FloatingInput type="date" name="to" label={t('filters.to')} defaultValue={to} />
-            <div className="md:col-span-4 flex justify-end">
-              <Button type="submit" size="sm">
-                {t('filters.submit')}
-              </Button>
-            </div>
-          </form>
-          <div className="flex items-center">
-            <PageSizeSelector
-              action="/admin/audit-logs"
-              pageSize={pageSize}
-              hiddenFields={{ entityType, action, from, to }}
-              id="audit-toolbar-page-size"
-              label={locale === 'ja' ? '最大表示数' : 'Max rows'}
-            />
+        <form className="grid gap-4 md:grid-cols-4 flex-1 min-w-[280px]" action="/admin/audit-logs" method="get">
+          <input type="hidden" name="page" value="1" />
+          <FloatingInput name="entityType" label={t('filters.entityLabel')} example={t('filters.entityPlaceholder')} defaultValue={entityType} />
+          <FloatingSelect name="action" label={t('filters.actionLabel')} defaultValue={action ?? ''} forceFloatLabel>
+            <option value="">{t('filters.actionAll')}</option>
+            {auditActionOptions.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </FloatingSelect>
+          <FloatingInput type="date" name="from" label={t('filters.from')} defaultValue={from} />
+          <FloatingInput type="date" name="to" label={t('filters.to')} defaultValue={to} />
+          <div className="md:col-span-4 flex flex-wrap items-end justify-end gap-2">
+            <Button type="submit" size="sm">
+              {t('filters.submit')}
+            </Button>
+            <Link
+              href="/admin/audit-logs"
+              className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+            >
+              {locale === 'ja' ? 'クリア' : 'Clear'}
+            </Link>
           </div>
+        </form>
+      </Card>
+      <Card>
+        <h2 className="text-lg font-semibold mb-3">{t('listTitle') ?? t('title')}</h2>
+        <p className="text-xs text-slate-500 mb-2">{listSummary}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex-1" />
+          <PageSizeSelector
+            action="/admin/audit-logs"
+            pageSize={pageSize}
+            hiddenFields={{ entityType, action, from, to }}
+            id="audit-toolbar-page-size"
+            label={locale === 'ja' ? '最大表示数' : 'Max rows'}
+          />
         </div>
         {isLongList && (
           <div className="mt-4">
@@ -112,9 +134,7 @@ export default async function AuditLogsPage({ searchParams }: { searchParams: Se
             />
           </div>
         )}
-      </Card>
-      <Card>
-        <div className="overflow-x-auto">
+        <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="app-table-head">

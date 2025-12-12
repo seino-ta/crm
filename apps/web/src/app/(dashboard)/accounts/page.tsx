@@ -1,4 +1,3 @@
-import Link from 'next/link';
 
 import { AccountForm } from './account-form';
 import { createAccountAction } from '@/lib/actions/accounts';
@@ -13,6 +12,38 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { RestoreAccountButton } from '@/components/accounts/restore-account-button';
 import { getServerTranslations } from '@/lib/i18n/server';
 import { createTranslator } from '@/lib/i18n/translator';
+import Link from 'next/link';
+
+function AccountsSearchForm({
+  search,
+  view,
+  tCommon,
+  tForm,
+}: {
+  search: string;
+  view: 'active' | 'archived';
+  tCommon: ReturnType<typeof createTranslator>;
+  tForm: ReturnType<typeof createTranslator>;
+}) {
+  return (
+    <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/accounts" method="get">
+      {view === 'archived' && <input type="hidden" name="view" value="archived" />}
+      <input type="hidden" name="page" value="1" />
+      <FloatingInput name="search" label={tCommon('search')} example={tForm('namePlaceholder')} defaultValue={search} />
+      <div className="flex items-end justify-end gap-2">
+        <Button type="submit" variant="primary" size="sm">
+          {tCommon('search')}
+        </Button>
+        <Link
+          href={view === 'archived' ? '/accounts?view=archived' : '/accounts'}
+          className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+        >
+          {tCommon('clear') ?? 'Clear'}
+        </Link>
+      </div>
+    </form>
+  );
+}
 
 export default async function AccountsPage({
   searchParams,
@@ -61,6 +92,11 @@ export default async function AccountsPage({
   const hasPrev = (meta?.page ?? 1) > 1;
   const hasNext = meta ? meta.page < meta.totalPages : false;
   const isLongList = (meta?.totalPages ?? 1) > 2;
+  const total = meta?.total;
+  const listSummary =
+    total !== undefined
+      ? tCommon('listSummaryWithTotal', { values: { total, pageSize } })
+      : tCommon('listSummaryPageSizeOnly', { values: { pageSize } });
 
   return (
     <div className="space-y-10" data-testid="accounts-page">
@@ -83,28 +119,22 @@ export default async function AccountsPage({
             {t('tabs.archived')}
           </Link>
         </div>
-        <div className="flex items-center">
-          <PageSizeSelector
-            action="/accounts"
-            pageSize={pageSize}
-            hiddenFields={{ search, view }}
-            label={locale === 'ja' ? '最大表示数' : 'Max rows'}
-          />
-        </div>
       </div>
+      <Card>
+        <AccountsSearchForm search={search} view={view} tCommon={tCommon} tForm={tForm} />
+      </Card>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <Card>
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/accounts" method="get">
-              {view === 'archived' && <input type="hidden" name="view" value="archived" />}
-              <input type="hidden" name="page" value="1" />
-              <FloatingInput name="search" label={tCommon('search')} example={tForm('namePlaceholder')} defaultValue={search} />
-              <div className="flex items-end justify-end">
-                <Button type="submit" variant="primary" size="sm">
-                  {tCommon('search')}
-                </Button>
-              </div>
-            </form>
+          <h2 className="text-lg font-semibold">{t('listTitle')}</h2>
+          <p className="text-xs text-slate-500">{listSummary}</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex-1" />
+            <PageSizeSelector
+              action="/accounts"
+              pageSize={pageSize}
+              hiddenFields={{ search, view }}
+              label={locale === 'ja' ? '最大表示数' : 'Max rows'}
+            />
           </div>
           {isLongList && (
             <div className="mt-4">
