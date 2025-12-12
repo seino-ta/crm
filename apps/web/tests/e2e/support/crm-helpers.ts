@@ -141,7 +141,7 @@ export async function apiCreateAccount(page: Page, params: { name: string; indus
     headers: { ...authHeaders(), 'content-type': 'application/json' },
     data: {
       name: params.name,
-      industry: params.industry ?? null,
+      ...(params.industry ? { industry: params.industry } : {}),
     },
   });
   if (!response.ok()) {

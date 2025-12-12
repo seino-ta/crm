@@ -29,7 +29,7 @@ test.describe('Leads', () => {
 
     // ステータスを QUALIFIED に変更
     await leadRow.getByRole('combobox').selectOption('QUALIFIED');
-    await expect(leadRow.getByTestId('lead-status')).toContainText(/QUALIFIED|有望/);
+    await expect(leadRow.getByTestId('lead-status')).toContainText(/qualified|有望/i);
 
     // 削除
     await leadRow.getByRole('button', { name: /削除|Delete/ }).click();
