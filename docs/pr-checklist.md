@@ -2,3 +2,4 @@
 - [ ] 見出しが「◯◯一覧」/“◯◯ List” の形式になっている
 - [ ] サマリ文言は `common.listSummary*` を使用している
 - [ ] PageSizeSelector + PaginationBarLite（上部）、PaginationBar（下部）が配置されている（対象ページのみ）
+- [ ] 日付入力/空状態/検索カードは共通コンポーネント（DateInput/DateRangeInput, ListSearchCard, EmptyState など）を優先利用したか確認

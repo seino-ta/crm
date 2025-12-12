@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { listAccounts, listContacts } from '@/lib/data';
 import { getServerTranslations } from '@/lib/i18n/server';
+import { EmptyState } from '@/components/ui/empty-state';
 import { createTranslator } from '@/lib/i18n/translator';
 import { ContactForm } from './contact-form';
 import { DeleteContactButton } from './delete-contact-button';
@@ -139,8 +140,8 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
               <tbody>
                 {contacts.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-3 py-6 text-center text-sm text-slate-500">
-                      {t('list.empty')}
+                    <td colSpan={7} className="px-3 py-6">
+                      <EmptyState title={t('list.empty')} />
                     </td>
                   </tr>
                 ) : (
