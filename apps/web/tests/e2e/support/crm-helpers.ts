@@ -18,6 +18,14 @@ export async function safeGoto(page: Page, path: string) {
     }
   }
   await page.waitForLoadState('domcontentloaded');
+
+  // Firefox でまれに別ページ（/accounts など）に留まるケースがあるため、URL を確認してリトライする
+  const expected = new URL(path, page.url()).pathname;
+  const current = new URL(page.url()).pathname;
+  if (current !== expected) {
+    await page.goto(path);
+    await page.waitForLoadState('domcontentloaded');
+  }
 }
 
 export function createSlug(testInfo: TestInfo) {
