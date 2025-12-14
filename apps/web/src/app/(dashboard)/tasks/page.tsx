@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation';
+
 import { TaskForm } from './task-form';
 import { getCurrentUser } from '@/lib/auth';
 import { listAccounts, listOpportunities, listTasks } from '@/lib/data';

@@ -1,0 +1,202 @@
+import { test, expect } from '@playwright/test';
+import {
+  login,
+  createSlug,
+  apiCreateAccount,
+  apiCreateOpportunity,
+  safeGoto,
+  createTask,
+} from './support/crm-helpers';
+
+test.describe('List flows (search / paging / size / CRUD guards)', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('Accounts: search, change page size, paginate', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const prefix = `Acct ${slug}`;
+    // create 12 accounts to force a second page
+    for (let i = 0; i < 12; i += 1) {
+      await apiCreateAccount(page, { name: `${prefix}-${i}`, industry: 'Testing' });
+    }
+
+    await safeGoto(page, '/accounts');
+    await page.getByRole('textbox', { name: /search/i }).fill(prefix);
+    await page.getByRole('button', { name: /search/i }).click();
+    await page.waitForURL(/accounts/);
+
+    await page.selectOption('select[name="pageSize"]', '10');
+    await page.waitForURL(/pageSize=10/);
+
+    const rows = page.getByTestId('account-link');
+    await expect(rows).toHaveCount(10);
+    await page.getByText(/next/i).first().click();
+    await page.waitForURL(/page=2/);
+    const countPage2 = await rows.count();
+    expect(countPage2).toBeGreaterThan(0);
+    await expect(page).toHaveURL(/search=/);
+  });
+
+  test('Tasks: search change resets page to 1', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const accountName = `Task Acc ${slug}`;
+    await apiCreateAccount(page, { name: accountName });
+    await createTask(page, { title: `Alpha ${slug}`, accountName });
+    await createTask(page, { title: `Beta ${slug}`, accountName });
+
+    await safeGoto(page, '/tasks');
+    await page.getByRole('textbox', { name: /search/i }).fill('Alpha');
+    await page.getByRole('button', { name: /search/i }).click();
+    await page.waitForURL(/tasks/);
+    await page.selectOption('select[name="pageSize"]', '10');
+    await page.waitForURL(/pageSize=10/);
+
+    // change search to Beta and ensure page resets
+    await page.getByRole('textbox', { name: /search/i }).fill(`Beta ${slug}`);
+    await page.getByRole('button', { name: /search/i }).click();
+    await page.waitForURL(/tasks/);
+    const params = new URL(page.url()).searchParams;
+    const pageParam = params.get('page');
+    expect(pageParam === null || pageParam === '1').toBeTruthy();
+    await expect(page.getByTestId('task-row').filter({ hasText: `Beta ${slug}` }).first()).toBeVisible();
+  });
+
+  test('Accounts: search change resets page to 1', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const prefixA = `AcctA-${slug}`;
+    const prefixB = `AcctB-${slug}`;
+
+    for (let i = 0; i < 12; i += 1) {
+      await apiCreateAccount(page, { name: `${prefixA}-${i}`, industry: 'Testing' });
+    }
+    await apiCreateAccount(page, { name: `${prefixB}-only`, industry: 'Testing' });
+
+    await safeGoto(page, '/accounts');
+    await page.getByRole('textbox', { name: /search/i }).fill(prefixA);
+    await page.getByRole('button', { name: /search/i }).click();
+    await page.waitForURL(/accounts/);
+    await page.selectOption('select[name="pageSize"]', '10');
+    await page.waitForURL(/pageSize=10/);
+    const accountsNext = page.getByRole('link', { name: /next|次へ/i }).first();
+    await expect(accountsNext).toBeVisible();
+    await accountsNext.click();
+    await page.waitForURL(/page=2/);
+
+    await page.getByRole('textbox', { name: /search/i }).fill(prefixB);
+    await page.getByRole('button', { name: /search/i }).click();
+    await page.waitForURL(/accounts/);
+    const params = new URL(page.url()).searchParams;
+    const pageParam = params.get('page');
+    expect(pageParam === null || pageParam === '1').toBeTruthy();
+    await expect(page.getByTestId('account-link').filter({ hasText: prefixB })).toBeVisible();
+  });
+
+  test('Opportunities: search, change page size, paginate', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const accountName = `OppList-${slug}`;
+    const prefix = `Opp-${slug}`;
+    const account = await apiCreateAccount(page, { name: accountName, industry: 'SaaS' });
+
+    for (let i = 0; i < 12; i += 1) {
+      await apiCreateOpportunity(page, { name: `${prefix}-${i}`, accountId: account.id });
+    }
+
+    await safeGoto(page, '/opportunities');
+    await page.getByRole('textbox', { name: /search/i }).fill(prefix);
+    await page.getByRole('button', { name: /search/i }).click();
+    await page.waitForURL(/opportunities/);
+
+    await page.selectOption('select[name="pageSize"]', '10');
+    await page.waitForURL(/pageSize=10/);
+    const rows = page.getByTestId('opportunity-link');
+    await expect(rows).toHaveCount(10);
+    const oppNext = page.getByRole('link', { name: /next|次へ/i }).first();
+    await expect(oppNext).toBeVisible();
+    await oppNext.click();
+    await page.waitForURL(/page=2/);
+    await expect(rows.first()).toBeVisible();
+    await expect(page).toHaveURL(/search=/);
+  });
+
+  test('Users: page size keeps filters', async ({ page }) => {
+    await safeGoto(page, '/admin/users?status=active');
+    await page.selectOption('select[name="pageSize"]', '10');
+    await page.waitForURL(/status=active/);
+    await expect(page).toHaveURL(/pageSize=10/);
+  });
+
+  test('Contacts: empty state when no results', async ({ page }, testInfo) => {
+    const term = `NoHit-${createSlug(testInfo)}`;
+    await safeGoto(page, '/contacts');
+    await page.getByRole('textbox', { name: /search/i }).fill(term);
+    await page.getByRole('button', { name: /search/i }).click();
+    await expect(page.getByText(/No contacts found|該当するコンタクトが見つかりません。/)).toBeVisible();
+  });
+
+  test('Tasks: page>total redirects to last page', async ({ page }) => {
+    await safeGoto(page, '/tasks?page=999&pageSize=20');
+    // リダイレクト後のクエリを確認
+    const params = new URL(page.url()).searchParams;
+    const pageParam = Number(params.get('page') ?? '1');
+    expect(pageParam).toBeLessThan(999);
+  });
+
+  test('Audit Logs: filters stay when paging and page size changes', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const prefix = `AuditAcc-${slug}`;
+    for (let i = 0; i < 12; i += 1) {
+      await apiCreateAccount(page, { name: `${prefix}-${i}`, industry: 'Logs' });
+    }
+
+    await safeGoto(page, `/admin/audit-logs?entityType=Account&pageSize=5`);
+    await page.getByTestId('audit-logs-page');
+    await expect(page.locator('tbody tr').first()).toBeVisible();
+
+    const auditNext = page.getByRole('link', { name: /next|次へ/i }).first();
+    await expect(auditNext).toBeVisible();
+    await auditNext.click();
+    await page.waitForURL(/page=2/);
+    await expect(page).toHaveURL(/entityType=Account/);
+
+    await page.selectOption('#audit-toolbar-page-size', '10');
+    await page.waitForURL(/pageSize=10/);
+    await expect(page).toHaveURL(/entityType=Account/);
+  });
+
+  test('Tasks: validation error is shown when title is too short', async ({ page }) => {
+    await safeGoto(page, '/tasks');
+    await page.getByTestId('tasks-page');
+    await page.locator('form[data-testid="task-form"] input[name="title"]').fill('x');
+    await page.getByTestId('task-form').locator('button[type="submit"]').click();
+    await expect(page.getByText(/入力内容を確認してください。|Check the form fields./)).toBeVisible();
+  });
+
+  test('Permissions: REP は管理メニューにアクセスできない', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const email = `rep-${slug}@crm.local`;
+    const firstName = `Rep ${slug}`;
+
+    await safeGoto(page, '/admin/users');
+    await page.getByTestId('admin-users-page');
+    await page.getByTestId('invite-user-form').locator('input[name="email"]').fill(email);
+    await page.getByTestId('invite-user-form').locator('input[name="firstName"]').fill(firstName);
+    await page.getByTestId('invite-user-form').locator('input[name="lastName"]').fill('Tester');
+    await page.getByTestId('invite-user-form').locator('select[name="role"]').selectOption('REP');
+    await page.getByTestId('invite-submit').click();
+    const tempPasswordBlock = page.getByTestId('invite-temp-password');
+    await expect(tempPasswordBlock).toBeVisible();
+    const tempPasswordText = await tempPasswordBlock.innerText();
+    const tempPassword = tempPasswordText.trim().split('\n').pop()?.trim() ?? '';
+    expect(tempPassword.length).toBeGreaterThan(5);
+
+    await page.context().clearCookies();
+    await login(page, { email, password: tempPassword });
+
+    await expect(page.getByTestId('nav-users')).toHaveCount(0);
+    await expect(page.getByTestId('nav-auditLogs')).toHaveCount(0);
+
+    await safeGoto(page, '/admin/audit-logs');
+    await expect(page.getByText(/Not Found|見つかりません|404/)).toBeVisible();
+  });
+});

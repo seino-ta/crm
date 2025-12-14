@@ -32,9 +32,14 @@ export function createSlug(testInfo: TestInfo) {
   return `${Date.now()}-${testInfo.project.name}-${testInfo.workerIndex}`;
 }
 
-export async function login(page: Page) {
+export async function login(page: Page, credentials?: { email: string; password: string }) {
+  const email = credentials?.email ?? adminEmail;
+  const password = credentials?.password ?? adminPassword;
+  sessionToken = null;
+  sessionUserId = null;
+  defaultStageId = null;
   const response = await page.request.post(`${apiBaseUrl}/auth/login`, {
-    data: { email: adminEmail, password: adminPassword },
+    data: { email, password },
   });
   if (!response.ok()) {
     throw new Error(`Failed to login via API: ${response.status()} ${response.statusText()}`);
