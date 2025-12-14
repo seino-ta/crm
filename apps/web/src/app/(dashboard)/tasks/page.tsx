@@ -5,34 +5,15 @@ import { formatDate, formatUserName } from '@/lib/formatters';
 import { getTaskStatusMeta } from '@/lib/labels';
 import { DeleteTaskButton } from '@/components/tasks/delete-task-button';
 import { TaskStatusToggleButton } from '@/components/tasks/task-status-toggle-button';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { FloatingInput } from '@/components/ui/floating-field';
+import { ListPageLayout } from '@/components/layout/list-page-layout';
+import { ListToolbar } from '@/components/ui/list-toolbar';
+import { ListSearchCard } from '@/components/ui/list-search-card';
 import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { getServerTranslations } from '@/lib/i18n/server';
 import { createTranslator } from '@/lib/i18n/translator';
-import Link from 'next/link';
-
-function TasksSearchForm({ search, tCommon }: { search: string; tCommon: ReturnType<typeof createTranslator> }) {
-  return (
-    <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/tasks" method="get">
-      <input type="hidden" name="page" value="1" />
-      <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
-      <div className="flex items-end justify-end gap-2">
-        <Button type="submit" variant="primary" size="sm">
-          {tCommon('search')}
-        </Button>
-        <Link
-          href="/tasks"
-          className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
-        >
-          {tCommon('clear') ?? 'Clear'}
-        </Link>
-      </div>
-    </form>
-  );
-}
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
@@ -85,29 +66,35 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   }
 
   return (
-    <div className="space-y-8" data-testid="tasks-page">
-      <div className="page-header">
-        <h1>{t('title')}</h1>
-        <p>{t('description')}</p>
-      </div>
-      <Card>
-        <TasksSearchForm search={search} tCommon={tCommon} />
-      </Card>
+    <ListPageLayout
+      title={t('title')}
+      description={t('description')}
+      data-testid="tasks-page"
+      searchSection={
+        <ListSearchCard
+          action="/tasks"
+          submitLabel={tCommon('search')}
+          clearLabel={tCommon('clear') ?? 'Clear'}
+          clearHref="/tasks"
+        >
+          <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
+        </ListSearchCard>
+      }
+    >
       <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
         <Card>
           <h2 className="text-lg font-semibold">{t('list.title')}</h2>
-          <p className="text-xs text-slate-500">{listSummary}</p>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex-1" />
-            <div className="flex items-center justify-end">
+          <ListToolbar
+            summary={listSummary}
+            right={
               <PageSizeSelector
                 action="/tasks"
                 pageSize={pageSize}
                 hiddenFields={{ search }}
                 label={locale === 'ja' ? '最大表示数' : 'Max rows'}
               />
-            </div>
-          </div>
+            }
+          />
           {isLongList && (
             <div className="mt-4">
               <PaginationBarLite
@@ -165,6 +152,6 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           />
         </Card>
       </div>
-    </div>
+    </ListPageLayout>
   );
 }
