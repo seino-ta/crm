@@ -191,6 +191,22 @@ export async function apiCreateOpportunity(page: Page, params: { name: string; a
   return payload.data;
 }
 
+export async function apiInviteUser(page: Page, params: { email: string; firstName?: string; lastName?: string; role?: 'ADMIN' | 'MANAGER' | 'REP' }) {
+  const response = await page.request.post(`${apiBaseUrl}/users`, {
+    headers: { ...authHeaders(), 'content-type': 'application/json' },
+    data: {
+      email: params.email,
+      firstName: params.firstName,
+      lastName: params.lastName,
+      role: params.role ?? 'REP',
+    },
+  });
+  if (!response.ok()) {
+    throw new Error(`Failed to invite user via API: ${response.status()} ${response.statusText()}`);
+  }
+  return response.json();
+}
+
 export async function apiCreateLead(page: Page, params: { name: string; ownerId?: string; status?: string; accountId?: string }) {
   const ownerId = params.ownerId ?? (await ensureUserId(page));
   const response = await page.request.post(`${apiBaseUrl}/leads`, {

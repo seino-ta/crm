@@ -4,6 +4,7 @@ import {
   createSlug,
   apiCreateAccount,
   apiCreateOpportunity,
+  apiInviteUser,
   safeGoto,
   createTask,
 } from './support/crm-helpers';
@@ -170,6 +171,28 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await page.locator('form[data-testid="task-form"] input[name="title"]').fill('x');
     await page.getByTestId('task-form').locator('button[type="submit"]').click();
     await expect(page.getByText(/入力内容を確認してください。|Check the form fields./)).toBeVisible();
+  });
+
+  test('Audit Logs: invalid date range shows empty state', async ({ page }) => {
+    await safeGoto(page, '/admin/audit-logs?from=2030-01-02&to=2030-01-01');
+    await page.getByTestId('audit-logs-page');
+    await expect(page.getByText(/監査ログはありません|No audit logs match the filters/)).toBeVisible();
+  });
+
+  test('Users: duplicate email shows request error', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const email = `dup-${slug}@crm.local`;
+    await login(page);
+    await apiInviteUser(page, { email, firstName: 'Dup', lastName: 'Seed', role: 'REP' });
+
+    await safeGoto(page, '/admin/users');
+    await page.getByTestId('admin-users-page');
+    await page.getByTestId('invite-user-form').locator('input[name="email"]').fill(email);
+    await page.getByTestId('invite-user-form').locator('input[name="firstName"]').fill('Dup');
+    await page.getByTestId('invite-user-form').locator('input[name="lastName"]').fill('Again');
+    await page.getByTestId('invite-user-form').locator('select[name="role"]').selectOption('REP');
+    await page.getByTestId('invite-submit').click();
+    await expect(page.getByText(/リクエストに失敗しました|Request failed/)).toBeVisible();
   });
 
   test('Permissions: REP は管理メニューにアクセスできない', async ({ page }, testInfo) => {

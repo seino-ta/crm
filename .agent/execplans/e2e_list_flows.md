@@ -49,11 +49,13 @@
 ## Surprises & Discoveries
 - Server Actions 経由の API 呼び出しはブラウザ側からの route mock が効かないため、4xx/5xx モックは別途仕込みが必要。今回はバリデーションエラー（min length）で先にカバー。
 - Tasks 一覧ページで `redirect` 未 import により page>total でもクエリが 999 のままになる潜在バグを発見し修正。
+- 500 系モックは未対応だが、重複メール招待で 4xx エラートーストを再現する E2E を追加。日付境界（from>to）の空ケースは Audit Logs でカバー。
 
 ## Decision Log
 - 一覧フロー強化として Accounts/Opportunities/Audit Logs の検索×ページサイズ×ページング、ページリセット、Empty 状態、バリデーション、権限差分 (ADMIN vs REP) を list-flows E2E に追加。
 - API 500 系のモックは Server Action 経路をどう扱うか検討後に追加予定。
 - Tasks page の page overflow 時リダイレクトを有効にするため `next/navigation` から redirect を import する修正を採用。
+- Error handling については、Users 招待の重複メールで requestFailed を検証するシナリオを追加し、優先度を 4xx -> 500 の順で拡張する方針。
 
 ## Outcomes & Retrospective
 - (未記入)
