@@ -73,7 +73,7 @@ export default async function OpportunitiesPage({
 
   const hasPrev = (tableOpportunities.meta?.page ?? 1) > 1;
   const hasNext = tableOpportunities.meta ? tableOpportunities.meta.page < tableOpportunities.meta.totalPages : false;
-  const isLongList = (tableOpportunities.meta?.totalPages ?? 1) > 2;
+  const isLongList = (tableOpportunities.meta?.totalPages ?? 1) > 1;
   const total = tableOpportunities.meta?.total;
   const listSummary =
     total !== undefined

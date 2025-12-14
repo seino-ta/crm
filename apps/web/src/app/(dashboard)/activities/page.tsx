@@ -38,8 +38,8 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
 
   const hasPrev = (activities.meta?.page ?? 1) > 1;
   const hasNext = activities.meta ? activities.meta.page < activities.meta.totalPages : false;
-  const isLongList = (activities.meta?.totalPages ?? 1) > 2;
   const totalPages = activities.meta?.totalPages ?? 1;
+  const isLongList = totalPages > 1;
   const total = activities.meta?.total;
   const listSummary =
     total !== undefined

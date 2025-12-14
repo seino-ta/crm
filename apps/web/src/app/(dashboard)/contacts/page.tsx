@@ -45,8 +45,8 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
 
   const hasPrev = (meta?.page ?? 1) > 1;
   const hasNext = meta ? meta.page < meta.totalPages : false;
-  const isLongList = (meta?.totalPages ?? 1) > 2;
   const totalPages = meta?.totalPages ?? 1;
+  const isLongList = totalPages > 1;
   const total = meta?.total;
   const listSummary =
     total !== undefined

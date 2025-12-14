@@ -57,7 +57,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
 
   const hasPrev = (meta?.page ?? 1) > 1;
   const hasNext = meta ? meta.page < meta.totalPages : false;
-  const isLongList = (meta?.totalPages ?? 1) > 2;
+  const isLongList = (meta?.totalPages ?? 1) > 1;
   const totalPages = meta?.totalPages ?? 1;
   const total = meta?.total;
   const listSummary =

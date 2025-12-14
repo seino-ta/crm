@@ -61,10 +61,19 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     listOpportunities({ pageSize: 100 }),
   ]);
 
+  const buildPageHref = (targetPage: number) => {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    params.set('page', targetPage.toString());
+    params.set('pageSize', String(pageSize));
+    const qs = params.toString();
+    return qs ? `/tasks?${qs}` : '/tasks';
+  };
+
   const hasPrev = (tasks.meta?.page ?? 1) > 1;
   const hasNext = tasks.meta ? tasks.meta.page < tasks.meta.totalPages : false;
-  const isLongList = (tasks.meta?.totalPages ?? 1) > 2;
   const totalPages = tasks.meta?.totalPages ?? 1;
+  const isLongList = totalPages > 1;
   const total = tasks.meta?.total;
   const listSummary =
     total !== undefined
@@ -74,15 +83,6 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   if (page > totalPages) {
     return redirect(buildPageHref(totalPages));
   }
-
-  const buildPageHref = (targetPage: number) => {
-    const params = new URLSearchParams();
-    if (search) params.set('search', search);
-    params.set('page', targetPage.toString());
-    params.set('pageSize', String(pageSize));
-    const qs = params.toString();
-    return qs ? `/tasks?${qs}` : '/tasks';
-  };
 
   return (
     <div className="space-y-8" data-testid="tasks-page">
