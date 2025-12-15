@@ -127,10 +127,15 @@ export default async function AccountsPage({
           </Link>
         </div>
       </div>
+      {view === 'archived' && (
+        <Card className="bg-slate-50 border-slate-200">
+          <p className="text-sm text-slate-600">{t('archivedInfo')}</p>
+        </Card>
+      )}
       <Card>
         <AccountsSearchForm search={search} view={view} tCommon={tCommon} tForm={tForm} locale={locale} />
       </Card>
-      <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+      <div className={view === 'active' ? 'grid gap-6 lg:grid-cols-[2fr,1fr]' : 'grid gap-6'}>
         <Card>
           <h2 className="text-lg font-semibold">{t('listTitle')}</h2>
           <p className="text-xs text-slate-500">{listSummary}</p>
@@ -214,16 +219,11 @@ export default async function AccountsPage({
             nextLabel={locale === 'ja' ? '次へ' : 'Next'}
           />
         </Card>
-        {view === 'active' ? (
+        {view === 'active' && (
           <Card>
             <h2 className="text-lg font-semibold">{t('addTitle')}</h2>
             <p className="mb-4 text-sm text-slate-500">{t('addSubtitle')}</p>
             <AccountForm action={createAccountAction} submitLabel={tForm('submitCreate')} successRedirect="/accounts" formKey="create" />
-          </Card>
-        ) : (
-          <Card>
-            <h2 className="text-lg font-semibold">{t('tabs.archived')}</h2>
-            <p className="text-sm text-slate-500">{t('archivedInfo')}</p>
           </Card>
         )}
       </div>
