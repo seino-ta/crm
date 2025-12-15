@@ -85,7 +85,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           clearLabel={tCommon('clear') ?? 'Clear'}
           clearHref="/tasks"
         >
-          <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
+          <FloatingInput name="search" label={locale === 'ja' ? 'キーワード' : 'Keyword'} defaultValue={search} />
           <div className="md:col-span-2 grid gap-3 md:grid-cols-2">
             <FloatingInput name="dueAfter" type="date" label={locale === 'ja' ? '開始日' : 'From'} defaultValue={dueAfter} />
             <FloatingInput name="dueBefore" type="date" label={locale === 'ja' ? '終了日' : 'To'} defaultValue={dueBefore} />

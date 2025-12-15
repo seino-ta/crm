@@ -18,11 +18,11 @@ function extractParam(params: Record<string, string | string[] | undefined>, key
   return value ?? '';
 }
 
-function OpportunitiesSearchForm({ search, tCommon }: { search: string; tCommon: ReturnType<typeof createTranslator> }) {
+function OpportunitiesSearchForm({ search, tCommon, locale }: { search: string; tCommon: ReturnType<typeof createTranslator>; locale: string }) {
   return (
     <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/opportunities" method="get">
       <input type="hidden" name="page" value="1" />
-      <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
+      <FloatingInput name="search" label={locale === 'ja' ? 'キーワード' : 'Keyword'} defaultValue={search} />
       <div className="flex items-end justify-end gap-2">
         <Button type="submit" variant="primary" size="sm">
           {tCommon('search')}
@@ -96,7 +96,7 @@ export default async function OpportunitiesPage({
         <p>{t('description')}</p>
       </div>
       <Card>
-        <OpportunitiesSearchForm search={search} tCommon={tCommon} />
+        <OpportunitiesSearchForm search={search} tCommon={tCommon} locale={locale} />
       </Card>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <Card>

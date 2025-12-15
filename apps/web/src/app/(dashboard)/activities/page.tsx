@@ -83,7 +83,7 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
           clearLabel={tCommon('clear') ?? 'Clear'}
           clearHref="/activities"
         >
-          <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
+          <FloatingInput name="search" label={locale === 'ja' ? 'キーワード' : 'Keyword'} defaultValue={search} />
           <div className="md:col-span-2 grid gap-3 md:grid-cols-2">
             <FloatingInput name="from" type="date" label={locale === 'ja' ? '開始日' : 'From'} defaultValue={from} />
             <FloatingInput name="to" type="date" label={locale === 'ja' ? '終了日' : 'To'} defaultValue={to} />

@@ -19,17 +19,24 @@ function AccountsSearchForm({
   view,
   tCommon,
   tForm,
+  locale,
 }: {
   search: string;
   view: 'active' | 'archived';
   tCommon: ReturnType<typeof createTranslator>;
   tForm: ReturnType<typeof createTranslator>;
+  locale: string;
 }) {
   return (
     <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/accounts" method="get">
       {view === 'archived' && <input type="hidden" name="view" value="archived" />}
       <input type="hidden" name="page" value="1" />
-      <FloatingInput name="search" label={tCommon('search')} example={tForm('namePlaceholder')} defaultValue={search} />
+      <FloatingInput
+        name="search"
+        label={locale === 'ja' ? 'キーワード' : 'Keyword'}
+        example={tForm('namePlaceholder')}
+        defaultValue={search}
+      />
       <div className="flex items-end justify-end gap-2">
         <Button type="submit" variant="primary" size="sm">
           {tCommon('search')}
@@ -121,7 +128,7 @@ export default async function AccountsPage({
         </div>
       </div>
       <Card>
-        <AccountsSearchForm search={search} view={view} tCommon={tCommon} tForm={tForm} />
+        <AccountsSearchForm search={search} view={view} tCommon={tCommon} tForm={tForm} locale={locale} />
       </Card>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <Card>
