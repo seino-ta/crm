@@ -258,6 +258,18 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await expect(page.getByText(`Act-Late-${slug}`)).toHaveCount(0);
   });
 
+  test('Activities: search matches subject and type keyword', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const account = await apiCreateAccount(page, { name: `ActType-${slug}`, industry: 'TypeTest' });
+    await apiCreateActivity(page, { subject: `TypeEmail-${slug}`, accountId: account.id, type: 'EMAIL' });
+    await apiCreateActivity(page, { subject: `TypeCall-${slug}`, accountId: account.id, type: 'CALL' });
+
+    await safeGoto(page, `/activities?search=email&accountId=${account.id}`);
+    await page.getByTestId('activities-page');
+    await expect(page.getByText(`TypeEmail-${slug}`)).toBeVisible();
+    await expect(page.getByText(`TypeCall-${slug}`)).toHaveCount(0);
+  });
+
   test('Tasks: due date filter inputs persist and page size keeps params', async ({ page }) => {
     await safeGoto(page, '/tasks?dueAfter=2025-02-05&dueBefore=2025-02-05');
     await page.getByTestId('tasks-page');
@@ -267,6 +279,18 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await page.selectOption('select[name="pageSize"]', '50');
     await page.waitForURL(/dueAfter=2025-02-05/);
     await expect(page).toHaveURL(/dueBefore=2025-02-05/);
+  });
+
+  test('Tasks: search matches owner name as well as title', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const account = await apiCreateAccount(page, { name: `TaskOwner-${slug}`, industry: 'Test' });
+    const ownerKeyword = 'Aiko';
+
+    await apiCreateTask(page, { title: `OwnerMatch-${slug}`, accountId: account.id });
+
+    await safeGoto(page, `/tasks?search=${ownerKeyword}`);
+    await page.getByTestId('tasks-page');
+    await expect(page.getByText(`OwnerMatch-${slug}`)).toBeVisible();
   });
 
   test('Tasks: dueAfter only / dueBefore only / same-day filters', async ({ page }, testInfo) => {
@@ -292,6 +316,16 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await page.getByTestId('tasks-page');
     await expect(page.getByText(`Task-Early-${slug}`)).toBeVisible();
     await expect(page.getByText(`Task-Late-${slug}`)).toHaveCount(0);
+  });
+
+  test('Opportunities: search matches account name', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const account = await apiCreateAccount(page, { name: `OppAcc-${slug}`, industry: 'Acct' });
+    await apiCreateOpportunity(page, { name: `OppByAccount-${slug}`, accountId: account.id });
+
+    await safeGoto(page, `/opportunities?search=OppAcc-${slug}`);
+    await page.getByTestId('opportunities-page');
+    await expect(page.getByTestId('opportunity-link').filter({ hasText: `OppByAccount-${slug}` }).first()).toBeVisible();
   });
 
   test('Permissions: REP は管理メニューにアクセスできない', async ({ page }, testInfo) => {

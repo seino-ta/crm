@@ -1,4 +1,4 @@
-import { AuditAction, Prisma, UserRole } from '@prisma/client';
+import { AuditAction, Prisma, UserRole, ActivityType } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
@@ -64,7 +64,13 @@ export async function listActivities(filters: ActivityFilterInput) {
 
   const where: Prisma.ActivityWhereInput = {};
 
-  if (search) where.subject = { contains: search, mode: 'insensitive' };
+  if (search) {
+    const typeMatch = Object.values(ActivityType).find((v) => v.toLowerCase() === search.toLowerCase());
+    where.OR = [
+      { subject: { contains: search, mode: 'insensitive' } },
+      ...(typeMatch ? [{ type: typeMatch }] : []),
+    ];
+  }
   if (type) where.type = type;
   if (userId) where.userId = userId;
   if (accountId) where.accountId = accountId;

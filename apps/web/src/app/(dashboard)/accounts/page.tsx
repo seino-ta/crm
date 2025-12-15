@@ -34,7 +34,7 @@ function AccountsSearchForm({
       <FloatingInput
         name="search"
         label={locale === 'ja' ? 'キーワード' : 'Keyword'}
-        example={tForm('namePlaceholder')}
+        example={locale === 'ja' ? '名称・ドメイン・業種で検索' : 'Search by name, domain, industry'}
         defaultValue={search}
       />
       <div className="flex items-end justify-end gap-2">

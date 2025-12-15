@@ -74,7 +74,10 @@ export async function listOpportunities(query: OpportunityFilterQuery) {
     where.account = { deletedAt: null };
   }
   if (search) {
-    where.name = { contains: search, mode: 'insensitive' };
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { account: { name: { contains: search, mode: 'insensitive' } } },
+    ];
   }
 
   const [total, data] = await Promise.all([

@@ -22,7 +22,12 @@ function OpportunitiesSearchForm({ search, tCommon, locale }: { search: string; 
   return (
     <form className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]" action="/opportunities" method="get">
       <input type="hidden" name="page" value="1" />
-      <FloatingInput name="search" label={locale === 'ja' ? 'キーワード' : 'Keyword'} defaultValue={search} />
+      <FloatingInput
+        name="search"
+        label={locale === 'ja' ? 'キーワード' : 'Keyword'}
+        example={locale === 'ja' ? '案件名やアカウント名で検索' : 'Search by deal or account'}
+        defaultValue={search}
+      />
       <div className="flex items-end justify-end gap-2">
         <Button type="submit" variant="primary" size="sm">
           {tCommon('search')}

@@ -65,7 +65,20 @@ export async function listTasks(filters: TaskFilterInput) {
 
   const where: Prisma.TaskWhereInput = {};
 
-  if (search) where.title = { contains: search, mode: 'insensitive' };
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      {
+        owner: {
+          OR: [
+            { firstName: { contains: search, mode: 'insensitive' } },
+            { lastName: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+          ],
+        },
+      },
+    ];
+  }
   if (status) where.status = status;
   if (ownerId) where.ownerId = ownerId;
   if (accountId) where.accountId = accountId;
