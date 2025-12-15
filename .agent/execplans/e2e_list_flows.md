@@ -50,12 +50,19 @@
 - Server Actions 経由の API 呼び出しはブラウザ側からの route mock が効かないため、4xx/5xx モックは別途仕込みが必要。今回はバリデーションエラー（min length）で先にカバー。
 - Tasks 一覧ページで `redirect` 未 import により page>total でもクエリが 999 のままになる潜在バグを発見し修正。
 - 500 系モックは未対応だが、重複メール招待で 4xx エラートーストを再現する E2E を追加。日付境界（from>to）の空ケースは Audit Logs でカバー。
+- Tasks/Activities に日付フィルタを実装し、範囲指定／from>to での空状態、パラメータ保持を E2E で確認。
 
 ## Decision Log
 - 一覧フロー強化として Accounts/Opportunities/Audit Logs の検索×ページサイズ×ページング、ページリセット、Empty 状態、バリデーション、権限差分 (ADMIN vs REP) を list-flows E2E に追加。
 - API 500 系のモックは Server Action 経路をどう扱うか検討後に追加予定。
 - Tasks page の page overflow 時リダイレクトを有効にするため `next/navigation` から redirect を import する修正を採用。
 - Error handling については、Users 招待の重複メールで requestFailed を検証するシナリオを追加し、優先度を 4xx -> 500 の順で拡張する方針。
+- 日付フィルタ（Activities: from/to, Tasks: dueAfter/dueBefore）を UI とサーバーフェッチに追加し、E2E で確認する方針を完了。
 
 ## Outcomes & Retrospective
 - (未記入)
+
+## Next Steps / Backlog
+- Tasks / Activities に日付フィルタ UI が入ったら、境界ケース（from>to、同日、空結果）のE2Eを追加し、本プランをクローズする。→ 実装・テスト済み。
+- Server Action 経由で 500 系を再現するモック手段を決め、エラートースト検証を追加する。
+- Playwright 並列実行（workers>1）での安定性確認を行い、必要に応じて待機/リトライを調整する。

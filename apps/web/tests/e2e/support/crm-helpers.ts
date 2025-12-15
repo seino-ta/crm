@@ -207,6 +207,56 @@ export async function apiInviteUser(page: Page, params: { email: string; firstNa
   return response.json();
 }
 
+export async function apiCreateActivity(page: Page, params: {
+  subject: string;
+  accountId?: string;
+  opportunityId?: string;
+  type?: string;
+  occurredAt?: string;
+}) {
+  const userId = await ensureUserId(page);
+  const response = await page.request.post(`${apiBaseUrl}/activities`, {
+    headers: { ...authHeaders(), 'content-type': 'application/json' },
+    data: {
+      subject: params.subject,
+      type: params.type ?? 'CALL',
+      userId,
+      accountId: params.accountId,
+      opportunityId: params.opportunityId,
+      occurredAt: params.occurredAt,
+    },
+  });
+  if (!response.ok()) {
+    throw new Error(`Failed to create activity via API: ${response.status()} ${response.statusText()}`);
+  }
+  return response.json();
+}
+
+export async function apiCreateTask(page: Page, params: {
+  title: string;
+  accountId?: string;
+  opportunityId?: string;
+  dueDate?: string;
+  priority?: string;
+}) {
+  const ownerId = await ensureUserId(page);
+  const response = await page.request.post(`${apiBaseUrl}/tasks`, {
+    headers: { ...authHeaders(), 'content-type': 'application/json' },
+    data: {
+      title: params.title,
+      ownerId,
+      accountId: params.accountId,
+      opportunityId: params.opportunityId,
+      dueDate: params.dueDate,
+      priority: params.priority,
+    },
+  });
+  if (!response.ok()) {
+    throw new Error(`Failed to create task via API: ${response.status()} ${response.statusText()}`);
+  }
+  return response.json();
+}
+
 export async function apiCreateLead(page: Page, params: { name: string; ownerId?: string; status?: string; accountId?: string }) {
   const ownerId = params.ownerId ?? (await ensureUserId(page));
   const response = await page.request.post(`${apiBaseUrl}/leads`, {
@@ -289,13 +339,17 @@ export async function createActivity(page: Page, params: { subject: string; acco
   await expectToast(page, '活動を追加しました。', 'Activity added.');
 }
 
-export async function createTask(page: Page, params: { title: string; accountName: string; opportunityName?: string }) {
+export async function createTask(page: Page, params: { title: string; accountName: string; opportunityName?: string; dueDate?: string }) {
   await safeGoto(page, '/tasks');
   await page.getByTestId('tasks-page');
+  await page.getByTestId('task-form');
   await page.locator('form[data-testid="task-form"] input[name="title"]').fill(params.title);
   await page.locator('form[data-testid="task-form"] select[name="accountId"]').selectOption({ label: params.accountName });
   if (params.opportunityName) {
     await page.locator('form[data-testid="task-form"] select[name="opportunityId"]').selectOption({ label: params.opportunityName });
+  }
+  if (params.dueDate) {
+    await page.locator('form[data-testid="task-form"] input[name="dueDate"]').fill(params.dueDate);
   }
   await page.getByTestId('task-form').locator('button[type="submit"]').click();
   await expectToast(page, 'タスクを追加しました。', 'Task created.');

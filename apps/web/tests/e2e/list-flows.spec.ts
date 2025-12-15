@@ -5,6 +5,8 @@ import {
   apiCreateAccount,
   apiCreateOpportunity,
   apiInviteUser,
+  apiCreateActivity,
+  apiCreateTask,
   safeGoto,
   createTask,
 } from './support/crm-helpers';
@@ -193,6 +195,32 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await page.getByTestId('invite-user-form').locator('select[name="role"]').selectOption('REP');
     await page.getByTestId('invite-submit').click();
     await expect(page.getByText(/リクエストに失敗しました|Request failed/)).toBeVisible();
+  });
+
+  test('Activities: date range filters results and invalid range is empty', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const account = await apiCreateAccount(page, { name: `ActDate-${slug}`, industry: 'DateTest' });
+    await apiCreateActivity(page, { subject: `Old-${slug}`, accountId: account.id, occurredAt: '2025-01-01T00:00:00.000Z' });
+    await apiCreateActivity(page, { subject: `New-${slug}`, accountId: account.id, occurredAt: '2025-01-05T00:00:00.000Z' });
+
+    await safeGoto(page, `/activities?search=${slug}&from=2025-01-04&to=2025-01-06`);
+    await page.getByTestId('activities-page');
+    await expect(page.getByText(`New-${slug}`)).toBeVisible();
+    await expect(page.getByText(`Old-${slug}`)).toHaveCount(0);
+
+    await safeGoto(page, `/activities?search=${slug}&from=2025-01-06&to=2025-01-04`);
+    await expect(page.getByTestId('activity-row')).toHaveCount(0);
+  });
+
+  test('Tasks: due date filter inputs persist and page size keeps params', async ({ page }) => {
+    await safeGoto(page, '/tasks?dueAfter=2025-02-05&dueBefore=2025-02-05');
+    await page.getByTestId('tasks-page');
+    await expect(page.locator('input[type="date"][name="dueAfter"]')).toHaveValue('2025-02-05');
+    await expect(page.locator('input[type="date"][name="dueBefore"]')).toHaveValue('2025-02-05');
+
+    await page.selectOption('select[name="pageSize"]', '50');
+    await page.waitForURL(/dueAfter=2025-02-05/);
+    await expect(page).toHaveURL(/dueBefore=2025-02-05/);
   });
 
   test('Permissions: REP は管理メニューにアクセスできない', async ({ page }, testInfo) => {
