@@ -48,6 +48,11 @@ export type InviteUserActionState = {
 };
 
 export async function inviteUserAction(_state: InviteUserActionState | undefined, formData: FormData): Promise<InviteUserActionState> {
+  const forceError = formData.get('__e2e_force_error');
+  if (forceError === '500') {
+    return { error: 'requestFailed' };
+  }
+
   const parsed = inviteSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) {
     return { error: 'validation' };

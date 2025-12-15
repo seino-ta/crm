@@ -197,6 +197,33 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await expect(page.getByText(/リクエストに失敗しました|Request failed/)).toBeVisible();
   });
 
+  test('Users: invite shows server error toast when forced 500', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const email = `force500-${slug}@crm.local`;
+
+    await login(page);
+    await safeGoto(page, '/admin/users');
+    await page.getByTestId('admin-users-page');
+
+    await page.evaluate(() => {
+      const form = document.querySelector('[data-testid="invite-user-form"]');
+      if (!form) return;
+      const hidden = document.createElement('input');
+      hidden.type = 'hidden';
+      hidden.name = '__e2e_force_error';
+      hidden.value = '500';
+      form.appendChild(hidden);
+    });
+
+    await page.getByTestId('invite-user-form').locator('input[name="email"]').fill(email);
+    await page.getByTestId('invite-user-form').locator('input[name="firstName"]').fill('Err');
+    await page.getByTestId('invite-user-form').locator('input[name="lastName"]').fill('Case');
+    await page.getByTestId('invite-user-form').locator('select[name="role"]').selectOption('REP');
+    await page.getByTestId('invite-submit').click();
+
+    await expect(page.getByText(/リクエストに失敗しました|Request failed/)).toBeVisible();
+  });
+
   test('Activities: date range filters results and invalid range is empty', async ({ page }, testInfo) => {
     const slug = createSlug(testInfo);
     const account = await apiCreateAccount(page, { name: `ActDate-${slug}`, industry: 'DateTest' });
