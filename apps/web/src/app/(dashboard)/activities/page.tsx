@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 
 import { ActivityForm } from './activity-form';
+import { ActivityType } from '@prisma/client';
+import Link from 'next/link';
 import { getCurrentUser } from '@/lib/auth';
 import { listAccounts, listActivities, listOpportunities } from '@/lib/data';
 import { formatDateTime, formatUserName } from '@/lib/formatters';
@@ -9,7 +11,8 @@ import { DeleteActivityButton } from '@/components/activities/delete-activity-bu
 import { Card } from '@/components/ui/card';
 import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { getServerTranslations } from '@/lib/i18n/server';
-import { FloatingInput } from '@/components/ui/floating-field';
+import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
+import { Button } from '@/components/ui/button';
 import { ListPageLayout } from '@/components/layout/list-page-layout';
 import { ListToolbar } from '@/components/ui/list-toolbar';
 import { ListSearchCard } from '@/components/ui/list-search-card';
@@ -26,6 +29,7 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
   const user = await getCurrentUser();
   const filters = await searchParams;
   const search = extractParam(filters, 'search');
+  const type = extractParam(filters, 'type');
   const from = extractParam(filters, 'from');
   const to = extractParam(filters, 'to');
   const requestedPageSize = Number(extractParam(filters, 'pageSize') || '20');
@@ -37,6 +41,7 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
   const [activities, accounts, opportunities] = await Promise.all([
     listActivities({
       ...(search ? { search } : {}),
+      ...(type ? { type: type as ActivityType } : {}),
       ...(from ? { from } : {}),
       ...(to ? { to } : {}),
       page,
@@ -59,6 +64,7 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
+    if (type) params.set('type', type);
     if (from) params.set('from', from);
     if (to) params.set('to', to);
     params.set('page', targetPage.toString());
@@ -77,23 +83,40 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
       description={t('description')}
       data-testid="activities-page"
       searchSection={
-        <ListSearchCard
-          action="/activities"
-          submitLabel={tCommon('search')}
-          clearLabel={tCommon('clear') ?? 'Clear'}
-          clearHref="/activities"
-        >
-          <FloatingInput
-            name="search"
-            label={locale === 'ja' ? 'キーワード' : 'Keyword'}
-            example={locale === 'ja' ? '件名やタイプで検索' : 'Search by subject or type'}
-            defaultValue={search}
-          />
-          <div className="md:col-span-2 grid gap-3 md:grid-cols-2">
-            <FloatingInput name="from" type="date" label={locale === 'ja' ? '開始日' : 'From'} defaultValue={from} />
-            <FloatingInput name="to" type="date" label={locale === 'ja' ? '終了日' : 'To'} defaultValue={to} />
-          </div>
-        </ListSearchCard>
+        <Card>
+          <form className="grid gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))_auto]" action="/activities" method="get">
+            <input type="hidden" name="page" value="1" />
+            <FloatingInput
+              name="search"
+              label={locale === 'ja' ? 'キーワード' : 'Keyword'}
+              example={locale === 'ja' ? '件名で検索' : 'Search by subject'}
+              defaultValue={search}
+            />
+            <FloatingSelect name="type" label={locale === 'ja' ? '活動タイプ' : 'Type'} defaultValue={type} forceFloatLabel>
+              <option value="">{locale === 'ja' ? 'すべて' : 'All'}</option>
+              {Object.values(ActivityType).map((value) => (
+                <option key={value} value={value}>
+                  {getActivityTypeLabel(value, locale)}
+                </option>
+              ))}
+            </FloatingSelect>
+            <div className="grid grid-cols-2 gap-3">
+              <FloatingInput name="from" type="date" label={locale === 'ja' ? '開始日' : 'From'} defaultValue={from} />
+              <FloatingInput name="to" type="date" label={locale === 'ja' ? '終了日' : 'To'} defaultValue={to} />
+            </div>
+            <div className="flex items-end justify-end gap-2">
+              <Button type="submit" size="sm">
+                {tCommon('search')}
+              </Button>
+              <Link
+                href="/activities"
+                className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+              >
+                {tCommon('clear') ?? 'Clear'}
+              </Link>
+            </div>
+          </form>
+        </Card>
       }
     >
       <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
@@ -105,7 +128,7 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
               <PageSizeSelector
                 action="/activities"
                 pageSize={pageSize}
-                hiddenFields={{ search, from, to }}
+                hiddenFields={{ search, type, from, to }}
                 label={locale === 'ja' ? '最大表示数' : 'Max rows'}
               />
             }

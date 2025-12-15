@@ -1,4 +1,4 @@
-import { AuditAction, Prisma, UserRole, ActivityType } from '@prisma/client';
+import { AuditAction, Prisma, UserRole } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
@@ -62,30 +62,29 @@ export async function listActivities(filters: ActivityFilterInput) {
   const { search, type, userId, accountId, contactId, opportunityId, from, to, page, pageSize } = filters;
   const { page: normalizedPage, pageSize: normalizedPageSize, skip, take } = normalizePagination({ page, pageSize });
 
-  const where: Prisma.ActivityWhereInput = {};
+  const conditions: Prisma.ActivityWhereInput[] = [];
 
   if (search) {
-    const typeMatch = Object.values(ActivityType).find((v) => v.toLowerCase() === search.toLowerCase());
-    where.OR = [
-      { subject: { contains: search, mode: 'insensitive' } },
-      ...(typeMatch ? [{ type: typeMatch }] : []),
-    ];
+    conditions.push({ subject: { contains: search, mode: 'insensitive' } });
   }
-  if (type) where.type = type;
-  if (userId) where.userId = userId;
-  if (accountId) where.accountId = accountId;
-  if (contactId) where.contactId = contactId;
-  if (opportunityId) where.opportunityId = opportunityId;
+  if (type) conditions.push({ type });
+  if (userId) conditions.push({ userId });
+  if (accountId) conditions.push({ accountId });
+  if (contactId) conditions.push({ contactId });
+  if (opportunityId) conditions.push({ opportunityId });
   if (from || to) {
     const occurredAt: Prisma.DateTimeFilter<'Activity'> = {};
     if (from) occurredAt.gte = from;
     if (to) occurredAt.lte = to;
-    where.occurredAt = occurredAt;
+    conditions.push({ occurredAt });
   }
 
+  // 非指定時はアクティブアカウントのみ
   if (!accountId) {
-    where.OR = [{ accountId: null }, { account: { deletedAt: null } }];
+    conditions.push({ OR: [{ accountId: null }, { account: { deletedAt: null } }] });
   }
+
+  const where: Prisma.ActivityWhereInput = conditions.length ? { AND: conditions } : {};
 
   const [total, data] = await Promise.all([
     prisma.activity.count({ where }),

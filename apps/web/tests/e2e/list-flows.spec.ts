@@ -258,16 +258,31 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await expect(page.getByText(`Act-Late-${slug}`)).toHaveCount(0);
   });
 
-  test('Activities: search matches subject and type keyword', async ({ page }, testInfo) => {
+  test('Activities: type filter selects activity type', async ({ page }, testInfo) => {
     const slug = createSlug(testInfo);
+    await login(page);
     const account = await apiCreateAccount(page, { name: `ActType-${slug}`, industry: 'TypeTest' });
     await apiCreateActivity(page, { subject: `TypeEmail-${slug}`, accountId: account.id, type: 'EMAIL' });
     await apiCreateActivity(page, { subject: `TypeCall-${slug}`, accountId: account.id, type: 'CALL' });
 
-    await safeGoto(page, `/activities?search=email&accountId=${account.id}`);
+    await safeGoto(page, `/activities?type=EMAIL&search=TypeEmail-${slug}`);
     await page.getByTestId('activities-page');
-    await expect(page.getByText(`TypeEmail-${slug}`)).toBeVisible();
+    const emailRows = page.getByTestId('activity-row').filter({ hasText: `TypeEmail-${slug}` });
+    await expect.poll(async () => emailRows.count()).toBeGreaterThan(0);
     await expect(page.getByText(`TypeCall-${slug}`)).toHaveCount(0);
+  });
+
+  test('Activities: type + date range filters combined', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    await login(page);
+    const account = await apiCreateAccount(page, { name: `ActCombo-${slug}`, industry: 'Combo' });
+    await apiCreateActivity(page, { subject: `ComboHit-${slug}`, accountId: account.id, type: 'CALL', occurredAt: '2025-06-02T00:00:00.000Z' });
+    await apiCreateActivity(page, { subject: `ComboMiss-${slug}`, accountId: account.id, type: 'EMAIL', occurredAt: '2025-06-10T00:00:00.000Z' });
+
+    await safeGoto(page, `/activities?type=CALL&from=2025-06-01&to=2025-06-05&pageSize=50`);
+    await page.getByTestId('activities-page');
+    await expect(page.getByText(`ComboHit-${slug}`)).toBeVisible();
+    await expect(page.getByText(`ComboMiss-${slug}`)).toHaveCount(0);
   });
 
   test('Tasks: due date filter inputs persist and page size keeps params', async ({ page }) => {
@@ -291,6 +306,19 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await safeGoto(page, `/tasks?search=${ownerKeyword}`);
     await page.getByTestId('tasks-page');
     await expect(page.getByText(`OwnerMatch-${slug}`)).toBeVisible();
+  });
+
+  test('Tasks: owner keyword + due range works together', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    await login(page);
+    const account = await apiCreateAccount(page, { name: `TaskCombo-${slug}`, industry: 'Combo' });
+    await apiCreateTask(page, { title: `ComboHit-${slug}`, accountId: account.id, dueDate: '2025-07-01' });
+    await apiCreateTask(page, { title: `ComboMiss-${slug}`, accountId: account.id, dueDate: '2025-07-20' });
+
+    await safeGoto(page, `/tasks?search=Aiko&dueAfter=2025-06-25&dueBefore=2025-07-05&pageSize=50`);
+    await page.getByTestId('tasks-page');
+    await expect(page.getByText(`ComboHit-${slug}`)).toBeVisible();
+    await expect(page.getByText(`ComboMiss-${slug}`)).toHaveCount(0);
   });
 
   test('Tasks: dueAfter only / dueBefore only / same-day filters', async ({ page }, testInfo) => {
@@ -326,6 +354,21 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await safeGoto(page, `/opportunities?search=OppAcc-${slug}`);
     await page.getByTestId('opportunities-page');
     await expect(page.getByTestId('opportunity-link').filter({ hasText: `OppByAccount-${slug}` }).first()).toBeVisible();
+  });
+
+  test('Users: keyword + role + status keeps filters', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const email = `combo-${slug}@crm.local`;
+    await login(page);
+    await apiInviteUser(page, { email, firstName: 'Combo', lastName: 'User', role: 'REP' });
+
+    await safeGoto(page, `/admin/users?search=${slug}&role=REP&status=active&pageSize=50`);
+    await page.getByTestId('admin-users-page');
+    await expect(page.getByTestId('user-row').filter({ hasText: email })).toBeVisible();
+    await page.selectOption('select[name=\"pageSize\"]', '20');
+    await page.waitForURL(/search=/);
+    await expect(page).toHaveURL(/role=REP/);
+    await expect(page).toHaveURL(/status=active/);
   });
 
   test('Permissions: REP は管理メニューにアクセスできない', async ({ page }, testInfo) => {

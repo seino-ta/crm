@@ -63,37 +63,41 @@ export async function listTasks(filters: TaskFilterInput) {
   const { search, status, ownerId, accountId, opportunityId, activityId, dueBefore, dueAfter, page, pageSize } = filters;
   const { page: normalizedPage, pageSize: normalizedPageSize, skip, take } = normalizePagination({ page, pageSize });
 
-  const where: Prisma.TaskWhereInput = {};
+  const conditions: Prisma.TaskWhereInput[] = [];
 
   if (search) {
-    where.OR = [
-      { title: { contains: search, mode: 'insensitive' } },
-      {
-        owner: {
-          OR: [
-            { firstName: { contains: search, mode: 'insensitive' } },
-            { lastName: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ],
+    conditions.push({
+      OR: [
+        { title: { contains: search, mode: 'insensitive' } },
+        {
+          owner: {
+            OR: [
+              { firstName: { contains: search, mode: 'insensitive' } },
+              { lastName: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          },
         },
-      },
-    ];
+      ],
+    });
   }
-  if (status) where.status = status;
-  if (ownerId) where.ownerId = ownerId;
-  if (accountId) where.accountId = accountId;
-  if (opportunityId) where.opportunityId = opportunityId;
-  if (activityId) where.activityId = activityId;
+  if (status) conditions.push({ status });
+  if (ownerId) conditions.push({ ownerId });
+  if (accountId) conditions.push({ accountId });
+  if (opportunityId) conditions.push({ opportunityId });
+  if (activityId) conditions.push({ activityId });
   if (dueBefore || dueAfter) {
     const dueDate: Prisma.DateTimeNullableFilter<'Task'> = {};
     if (dueAfter) dueDate.gte = dueAfter;
     if (dueBefore) dueDate.lte = dueBefore;
-    where.dueDate = dueDate;
+    conditions.push({ dueDate });
   }
 
   if (!accountId) {
-    where.OR = [{ accountId: null }, { account: { deletedAt: null } }];
+    conditions.push({ OR: [{ accountId: null }, { account: { deletedAt: null } }] });
   }
+
+  const where: Prisma.TaskWhereInput = conditions.length ? { AND: conditions } : {};
 
   const [total, data] = await Promise.all([
     prisma.task.count({ where }),
