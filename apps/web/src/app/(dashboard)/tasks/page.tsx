@@ -84,11 +84,12 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           submitLabel={tCommon('search')}
           clearLabel={tCommon('clear') ?? 'Clear'}
           clearHref="/tasks"
-          hiddenFields={{ dueAfter, dueBefore }}
         >
           <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
-          <FloatingInput name="dueAfter" type="date" label={locale === 'ja' ? '開始日' : 'From'} defaultValue={dueAfter} />
-          <FloatingInput name="dueBefore" type="date" label={locale === 'ja' ? '終了日' : 'To'} defaultValue={dueBefore} />
+          <div className="md:col-span-2 grid gap-3 md:grid-cols-2">
+            <FloatingInput name="dueAfter" type="date" label={locale === 'ja' ? '開始日' : 'From'} defaultValue={dueAfter} />
+            <FloatingInput name="dueBefore" type="date" label={locale === 'ja' ? '終了日' : 'To'} defaultValue={dueBefore} />
+          </div>
         </ListSearchCard>
       }
     >

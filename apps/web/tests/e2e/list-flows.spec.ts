@@ -212,6 +212,25 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await expect(page.getByTestId('activity-row')).toHaveCount(0);
   });
 
+  test('Activities: from only / to only keep correct subset', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const account = await apiCreateAccount(page, { name: `ActDate2-${slug}`, industry: 'DateTest' });
+    await apiCreateActivity(page, { subject: `Act-Early-${slug}`, accountId: account.id, occurredAt: '2025-03-01T00:00:00.000Z' });
+    await apiCreateActivity(page, { subject: `Act-Late-${slug}`, accountId: account.id, occurredAt: '2025-03-10T00:00:00.000Z' });
+
+    // from only should include late, exclude early
+    await safeGoto(page, `/activities?search=${slug}&from=2025-03-05`);
+    await page.getByTestId('activities-page');
+    await expect(page.getByText(`Act-Late-${slug}`)).toBeVisible();
+    await expect(page.getByText(`Act-Early-${slug}`)).toHaveCount(0);
+
+    // to only should include early, exclude late
+    await safeGoto(page, `/activities?search=${slug}&to=2025-03-05`);
+    await page.getByTestId('activities-page');
+    await expect(page.getByText(`Act-Early-${slug}`)).toBeVisible();
+    await expect(page.getByText(`Act-Late-${slug}`)).toHaveCount(0);
+  });
+
   test('Tasks: due date filter inputs persist and page size keeps params', async ({ page }) => {
     await safeGoto(page, '/tasks?dueAfter=2025-02-05&dueBefore=2025-02-05');
     await page.getByTestId('tasks-page');
@@ -221,6 +240,31 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await page.selectOption('select[name="pageSize"]', '50');
     await page.waitForURL(/dueAfter=2025-02-05/);
     await expect(page).toHaveURL(/dueBefore=2025-02-05/);
+  });
+
+  test('Tasks: dueAfter only / dueBefore only / same-day filters', async ({ page }, testInfo) => {
+    const slug = createSlug(testInfo);
+    const account = await apiCreateAccount(page, { name: `TaskDate2-${slug}`, industry: 'DateTest' });
+    await apiCreateTask(page, { title: `Task-Early-${slug}`, accountId: account.id, dueDate: '2025-04-01' });
+    await apiCreateTask(page, { title: `Task-Late-${slug}`, accountId: account.id, dueDate: '2025-04-10' });
+
+    // dueAfter only -> lateのみ
+    await safeGoto(page, `/tasks?search=${slug}&dueAfter=2025-04-05`);
+    await page.getByTestId('tasks-page');
+    await expect(page.getByText(`Task-Late-${slug}`)).toBeVisible();
+    await expect(page.getByText(`Task-Early-${slug}`)).toHaveCount(0);
+
+    // dueBefore only -> earlyのみ
+    await safeGoto(page, `/tasks?search=${slug}&dueBefore=2025-04-05`);
+    await page.getByTestId('tasks-page');
+    await expect(page.getByText(`Task-Early-${slug}`)).toBeVisible();
+    await expect(page.getByText(`Task-Late-${slug}`)).toHaveCount(0);
+
+    // same-day range -> earlyのみ
+    await safeGoto(page, `/tasks?search=${slug}&dueAfter=2025-04-01&dueBefore=2025-04-01`);
+    await page.getByTestId('tasks-page');
+    await expect(page.getByText(`Task-Early-${slug}`)).toBeVisible();
+    await expect(page.getByText(`Task-Late-${slug}`)).toHaveCount(0);
   });
 
   test('Permissions: REP は管理メニューにアクセスできない', async ({ page }, testInfo) => {
