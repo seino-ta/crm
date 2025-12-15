@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation';
+
 import { ActivityForm } from './activity-form';
 import { getCurrentUser } from '@/lib/auth';
 import { listAccounts, listActivities, listOpportunities } from '@/lib/data';
@@ -24,6 +26,8 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
   const user = await getCurrentUser();
   const filters = await searchParams;
   const search = extractParam(filters, 'search');
+  const from = extractParam(filters, 'from');
+  const to = extractParam(filters, 'to');
   const requestedPageSize = Number(extractParam(filters, 'pageSize') || '20');
   const pageSize = [10, 20, 50, 100].includes(requestedPageSize) ? requestedPageSize : 20;
   const requestedPage = Number(extractParam(filters, 'page') || '1');
@@ -31,7 +35,13 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
   const tCommon = createTranslator(messages, 'common');
 
   const [activities, accounts, opportunities] = await Promise.all([
-    listActivities({ ...(search ? { search } : {}), page, pageSize }),
+    listActivities({
+      ...(search ? { search } : {}),
+      ...(from ? { from } : {}),
+      ...(to ? { to } : {}),
+      page,
+      pageSize,
+    }),
     listAccounts({ pageSize: 100 }),
     listOpportunities({ pageSize: 100 }),
   ]);
@@ -46,18 +56,20 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
       ? tCommon('listSummaryWithTotal', { values: { total, pageSize } })
       : tCommon('listSummaryPageSizeOnly', { values: { pageSize } });
 
-  if (page > totalPages) {
-    return redirect(buildPageHref(totalPages));
-  }
-
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
     params.set('page', targetPage.toString());
     params.set('pageSize', String(pageSize));
     const qs = params.toString();
     return qs ? `/activities?${qs}` : '/activities';
   };
+
+  if (page > totalPages) {
+    return redirect(buildPageHref(totalPages));
+  }
 
   return (
     <ListPageLayout
@@ -70,8 +82,11 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
           submitLabel={tCommon('search')}
           clearLabel={tCommon('clear') ?? 'Clear'}
           clearHref="/activities"
+          hiddenFields={{ from, to }}
         >
           <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
+          <FloatingInput name="from" type="date" label={locale === 'ja' ? '開始日' : 'From'} defaultValue={from} />
+          <FloatingInput name="to" type="date" label={locale === 'ja' ? '終了日' : 'To'} defaultValue={to} />
         </ListSearchCard>
       }
     >
@@ -84,7 +99,7 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
               <PageSizeSelector
                 action="/activities"
                 pageSize={pageSize}
-                hiddenFields={{ search }}
+                hiddenFields={{ search, from, to }}
                 label={locale === 'ja' ? '最大表示数' : 'Max rows'}
               />
             }

@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 
+import { redirect } from 'next/navigation';
+
 import { TaskForm } from './task-form';
 import { getCurrentUser } from '@/lib/auth';
 import { listAccounts, listOpportunities, listTasks } from '@/lib/data';
@@ -28,6 +30,8 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const user = await getCurrentUser();
   const filters = await searchParams;
   const search = extractParam(filters, 'search');
+  const dueAfter = extractParam(filters, 'dueAfter');
+  const dueBefore = extractParam(filters, 'dueBefore');
   const requestedPageSize = Number(extractParam(filters, 'pageSize') || '20');
   const pageSize = [10, 20, 50, 100].includes(requestedPageSize) ? requestedPageSize : 20;
   const requestedPage = Number(extractParam(filters, 'page') || '1');
@@ -37,6 +41,8 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const [tasks, accounts, opportunities] = await Promise.all([
     listTasks({
       ...(search ? { search } : {}),
+      ...(dueAfter ? { dueAfter } : {}),
+      ...(dueBefore ? { dueBefore } : {}),
       page,
       pageSize,
     }),
@@ -47,6 +53,8 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const buildPageHref = (targetPage: number) => {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
+    if (dueAfter) params.set('dueAfter', dueAfter);
+    if (dueBefore) params.set('dueBefore', dueBefore);
     params.set('page', targetPage.toString());
     params.set('pageSize', String(pageSize));
     const qs = params.toString();
@@ -78,8 +86,11 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           submitLabel={tCommon('search')}
           clearLabel={tCommon('clear') ?? 'Clear'}
           clearHref="/tasks"
+          hiddenFields={{ dueAfter, dueBefore }}
         >
           <FloatingInput name="search" label={tCommon('search')} defaultValue={search} />
+          <FloatingInput name="dueAfter" type="date" label={locale === 'ja' ? '開始日' : 'From'} defaultValue={dueAfter} />
+          <FloatingInput name="dueBefore" type="date" label={locale === 'ja' ? '終了日' : 'To'} defaultValue={dueBefore} />
         </ListSearchCard>
       }
     >
@@ -92,7 +103,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
               <PageSizeSelector
                 action="/tasks"
                 pageSize={pageSize}
-                hiddenFields={{ search }}
+                hiddenFields={{ search, dueAfter, dueBefore }}
                 label={locale === 'ja' ? '最大表示数' : 'Max rows'}
               />
             }

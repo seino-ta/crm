@@ -109,6 +109,8 @@ export async function listTasks(params?: {
   ownerId?: string;
   accountId?: string;
   opportunityId?: string;
+  dueAfter?: string;
+  dueBefore?: string;
   page?: number;
   pageSize?: number;
 }) {
