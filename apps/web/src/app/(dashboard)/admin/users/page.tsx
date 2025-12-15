@@ -87,7 +87,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
             <input type="hidden" name="page" value="1" />
             <FloatingInput
               name="search"
-              label={t('filters.searchLabel')}
+              label={locale === 'ja' ? 'キーワード' : 'Keyword'}
               example={t('filters.searchPlaceholder')}
               defaultValue={search}
               containerClassName="md:col-span-1"

@@ -89,7 +89,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
         <Card>
           <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/leads" method="get">
             <input type="hidden" name="page" value="1" />
-            <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
+            <FloatingInput
+              name="search"
+              label={locale === 'ja' ? 'キーワード' : 'Keyword'}
+              example={t('filters.searchPlaceholder')}
+              defaultValue={search}
+            />
             <FloatingSelect name="status" label={t('filters.status')} defaultValue={status} forceFloatLabel>
               <option value="">{t('filters.statusAll')}</option>
               {['NEW', 'CONTACTED', 'QUALIFIED', 'LOST', 'CONVERTED'].map((value) => {

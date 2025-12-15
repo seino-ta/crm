@@ -77,7 +77,12 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
       <Card>
         <form className="grid flex-1 min-w-[280px] gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/contacts" method="get">
           <input type="hidden" name="page" value="1" />
-          <FloatingInput name="search" label={t('filters.searchLabel')} example={t('filters.searchPlaceholder')} defaultValue={search} />
+          <FloatingInput
+            name="search"
+            label={locale === 'ja' ? 'キーワード' : 'Keyword'}
+            example={t('filters.searchPlaceholder')}
+            defaultValue={search}
+          />
           <FloatingSelect name="accountId" label={t('filters.account')} defaultValue={accountId ?? ''} forceFloatLabel>
             <option value="">{t('filters.accountAll')}</option>
             {accounts.data.map((account) => (
