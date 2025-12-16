@@ -15,7 +15,7 @@ type AccountFetchOptions = {
 
 type Actor = Express.AuthenticatedUser | undefined;
 
-function assertActor(actor: Actor) {
+function assertActor(actor: Actor): asserts actor is Express.AuthenticatedUser {
   if (!actor) {
     throw createError(401, 'Authentication required');
   }

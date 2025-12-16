@@ -14,7 +14,7 @@ import type {
 const DEFAULT_ORDER = { createdAt: 'desc' } as const;
 type Actor = Express.AuthenticatedUser | undefined;
 
-function assertActor(actor: Actor) {
+function assertActor(actor: Actor): asserts actor is Express.AuthenticatedUser {
   if (!actor) throw createError(401, 'Authentication required');
 }
 

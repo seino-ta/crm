@@ -30,7 +30,8 @@ const config = {
   nodeEnv,
   port: Number(process.env.PORT || 4000),
   logLevel: process.env.LOG_LEVEL || (nodeEnv === 'development' ? 'debug' : 'info'),
-  databaseUrl: process.env.DATABASE_URL || '',
+  // E2E/統合テスト時は DATABASE_URL_TEST を優先
+  databaseUrl: nodeEnv === 'test' && process.env.DATABASE_URL_TEST ? process.env.DATABASE_URL_TEST : process.env.DATABASE_URL || '',
   jwt: {
     secret: jwtSecret,
     expiresIn: process.env.JWT_EXPIRES_IN || '1d',
