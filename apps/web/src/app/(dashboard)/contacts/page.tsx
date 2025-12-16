@@ -11,6 +11,7 @@ import { createTranslator } from '@/lib/i18n/translator';
 import { ContactForm } from './contact-form';
 import { DeleteContactButton } from './delete-contact-button';
 import { formatDate } from '@/lib/formatters';
+import { CreateDrawer } from '@/components/ui/create-drawer';
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
@@ -74,6 +75,17 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
         <h1>{t('title')}</h1>
         <p>{t('description')}</p>
       </div>
+      <div className="flex items-center justify-between gap-4">
+        <div />
+        <CreateDrawer
+          title={t('form.title')}
+          description={t('form.subtitle', { fallback: '' })}
+          triggerLabel={t('form.title')}
+          triggerTestId="open-create-contact"
+        >
+          <ContactForm accounts={accounts.data.map((account) => ({ id: account.id, name: account.name }))} />
+        </CreateDrawer>
+      </div>
       <Card>
         <form className="grid flex-1 min-w-[280px] gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/contacts" method="get">
           <input type="hidden" name="page" value="1" />
@@ -104,7 +116,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
           </div>
         </form>
       </Card>
-      <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
+      <div className="space-y-6">
         <Card>
           <h2 className="text-lg font-semibold">{t('list.title')}</h2>
           <p className="text-xs text-slate-500">{listSummary}</p>
@@ -207,10 +219,6 @@ export default async function ContactsPage({ searchParams }: { searchParams: Sea
             prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
             nextLabel={locale === 'ja' ? '次へ' : 'Next'}
           />
-        </Card>
-        <Card>
-          <h2 className="text-lg font-semibold">{t('form.title')}</h2>
-          <ContactForm accounts={accounts.data.map((account) => ({ id: account.id, name: account.name }))} />
         </Card>
       </div>
     </div>

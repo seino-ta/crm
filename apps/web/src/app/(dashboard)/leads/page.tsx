@@ -16,6 +16,7 @@ import { ListPageLayout } from '@/components/layout/list-page-layout';
 import { ListToolbar } from '@/components/ui/list-toolbar';
 import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components/ui/pagination-controls';
 import { createTranslator } from '@/lib/i18n/translator';
+import { CreateDrawer } from '@/components/ui/create-drawer';
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
@@ -85,6 +86,28 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
       title={t('title')}
       description={t('description')}
       data-testid="leads-page"
+      actions={
+        <>
+          <CreateDrawer
+            title={t('form.title')}
+            description={t('description')}
+            triggerLabel={t('form.title')}
+            triggerTestId="open-create-lead"
+          >
+            <LeadForm
+              owners={owners.data.map((owner) => ({ id: owner.id, name: formatUserName(owner.firstName, owner.lastName, owner.email) }))}
+              accounts={accounts.data.map((account) => ({ id: account.id, name: account.name }))}
+              defaultOwnerId={user.id}
+            />
+          </CreateDrawer>
+          <Link
+            href="/leads/convert"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium hover:border-slate-400"
+          >
+            {t('convert.linkLabel', { fallback: 'Convert Lead (beta)' })}
+          </Link>
+        </>
+      }
       searchSection={
         <Card>
           <form className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]" action="/leads" method="get">
@@ -121,7 +144,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
         </Card>
       }
     >
-      <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
+      <div className="space-y-6">
         <Card>
           <h2 className="text-lg font-semibold">{t('list.title')}</h2>
           <ListToolbar
@@ -188,14 +211,6 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
             pageLabel={locale === 'ja' ? 'ページ' : 'Page'}
             prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
             nextLabel={locale === 'ja' ? '次へ' : 'Next'}
-          />
-        </Card>
-        <Card>
-          <h2 className="text-lg font-semibold">{t('form.title')}</h2>
-          <LeadForm
-            owners={owners.data.map((owner) => ({ id: owner.id, name: formatUserName(owner.firstName, owner.lastName, owner.email) }))}
-            accounts={accounts.data.map((account) => ({ id: account.id, name: account.name }))}
-            defaultOwnerId={user.id}
           />
         </Card>
       </div>

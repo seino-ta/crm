@@ -19,9 +19,11 @@ test.describe('Leads', () => {
     await page.getByTestId('leads-page');
 
     // 作成フォーム入力
+    await page.getByTestId('open-create-lead').click();
     await page.locator('form[data-testid="lead-form"] input[name="name"]').fill(leadName);
     await page.locator('form[data-testid="lead-form"] select[name="accountId"]').selectOption({ value: account.id });
     await page.getByTestId('lead-form').getByRole('button', { name: /リードを登録|Create lead/ }).click();
+    await page.keyboard.press('Escape'); // close drawer after creation
 
     // 作成されたリードを確認
     const leadRow = page.getByTestId('lead-row').filter({ hasText: leadName }).first();

@@ -14,7 +14,7 @@ const roles = [
   { value: 'REP', label: 'Rep' },
 ];
 
-export function InviteUserForm() {
+export function InviteUserForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [state, formAction] = useActionState<InviteUserActionState | undefined, FormData>(inviteUserAction, undefined);
   const { t } = useI18n('users.invite');
   const { t: tErrors } = useI18n('users.errors');

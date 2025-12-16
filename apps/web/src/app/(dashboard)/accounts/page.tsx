@@ -13,6 +13,7 @@ import { RestoreAccountButton } from '@/components/accounts/restore-account-butt
 import { getServerTranslations } from '@/lib/i18n/server';
 import { createTranslator } from '@/lib/i18n/translator';
 import Link from 'next/link';
+import { CreateDrawer } from '@/components/ui/create-drawer';
 
 function AccountsSearchForm({
   search,
@@ -126,6 +127,21 @@ export default async function AccountsPage({
             {t('tabs.archived')}
           </Link>
         </div>
+        {view === 'active' && (
+          <CreateDrawer
+            title={t('addTitle')}
+            description={t('addSubtitle')}
+            triggerLabel={t('addTitle')}
+            triggerTestId="open-create-account"
+          >
+            <AccountForm
+              action={createAccountAction}
+              submitLabel={tForm('submitCreate')}
+              successRedirect="/accounts"
+              formKey="create"
+            />
+          </CreateDrawer>
+        )}
       </div>
       {view === 'archived' && (
         <Card className="bg-slate-50 border-slate-200">
@@ -219,13 +235,6 @@ export default async function AccountsPage({
             nextLabel={locale === 'ja' ? '次へ' : 'Next'}
           />
         </Card>
-        {view === 'active' && (
-          <Card>
-            <h2 className="text-lg font-semibold">{t('addTitle')}</h2>
-            <p className="mb-4 text-sm text-slate-500">{t('addSubtitle')}</p>
-            <AccountForm action={createAccountAction} submitLabel={tForm('submitCreate')} successRedirect="/accounts" formKey="create" />
-          </Card>
-        )}
       </div>
     </div>
   );

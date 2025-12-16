@@ -17,6 +17,7 @@ import { ListPageLayout } from '@/components/layout/list-page-layout';
 import { ListToolbar } from '@/components/ui/list-toolbar';
 import { ListSearchCard } from '@/components/ui/list-search-card';
 import { createTranslator } from '@/lib/i18n/translator';
+import { CreateDrawer } from '@/components/ui/create-drawer';
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
@@ -82,6 +83,20 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
       title={t('title')}
       description={t('description')}
       data-testid="activities-page"
+      actions={
+        <CreateDrawer
+          title={t('form.submit')}
+          description={t('description')}
+          triggerLabel={t('form.submit')}
+          triggerTestId="open-create-activity"
+        >
+          <ActivityForm
+            userId={user.id}
+            accounts={accounts.data.map((account) => ({ id: account.id, name: account.name }))}
+            opportunities={opportunities.data.map((opp) => ({ id: opp.id, name: opp.name, accountId: opp.accountId }))}
+          />
+        </CreateDrawer>
+      }
       searchSection={
         <Card>
           <form className="grid gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))_auto]" action="/activities" method="get">
@@ -119,7 +134,7 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
         </Card>
       }
     >
-      <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
+      <div className="space-y-6">
         <Card>
           <h2 className="text-lg font-semibold">{t('tableTitle')}</h2>
           <ListToolbar
@@ -171,14 +186,6 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
             pageLabel={locale === 'ja' ? 'ページ' : 'Page'}
             prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
             nextLabel={locale === 'ja' ? '次へ' : 'Next'}
-          />
-        </Card>
-        <Card>
-          <h2 className="text-lg font-semibold">{t('form.submit')}</h2>
-          <ActivityForm
-            userId={user.id}
-            accounts={accounts.data.map((account) => ({ id: account.id, name: account.name }))}
-            opportunities={opportunities.data.map((opp) => ({ id: opp.id, name: opp.name, accountId: opp.accountId }))}
           />
         </Card>
       </div>

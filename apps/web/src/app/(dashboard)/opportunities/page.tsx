@@ -11,6 +11,7 @@ import { getPipelineStageLabel } from '@/lib/labels';
 import { getServerTranslations } from '@/lib/i18n/server';
 import { createTranslator } from '@/lib/i18n/translator';
 import Link from 'next/link';
+import { CreateDrawer } from '@/components/ui/create-drawer';
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
@@ -100,10 +101,26 @@ export default async function OpportunitiesPage({
         <h1>{t('title')}</h1>
         <p>{t('description')}</p>
       </div>
+      <div className="flex items-center justify-between gap-4">
+        <div />
+        <CreateDrawer
+          title={t('addTitle')}
+          description={t('description')}
+          triggerLabel={t('addTitle')}
+          triggerTestId="open-create-opportunity"
+        >
+          <OpportunityForm
+            accounts={accounts.data.map((account) => ({ id: account.id, name: account.name }))}
+            stages={stages}
+            contacts={contactOptions}
+            ownerId={user.id}
+          />
+        </CreateDrawer>
+      </div>
       <Card>
         <OpportunitiesSearchForm search={search} tCommon={tCommon} locale={locale} />
       </Card>
-      <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+      <div className="space-y-6">
         <Card>
           <h2 className="text-lg font-semibold">{t('boardTitle')}</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -129,15 +146,6 @@ export default async function OpportunitiesPage({
               </div>
             ))}
           </div>
-        </Card>
-        <Card>
-          <h2 className="text-lg font-semibold">{t('addTitle')}</h2>
-          <OpportunityForm
-            accounts={accounts.data.map((account) => ({ id: account.id, name: account.name }))}
-            stages={stages}
-            contacts={contactOptions}
-            ownerId={user.id}
-          />
         </Card>
       </div>
       <Card>

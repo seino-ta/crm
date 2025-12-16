@@ -107,8 +107,20 @@ function ContactFormBase({ accounts, action, initialValues, submitLabel, toastMe
   );
 }
 
-export function ContactForm({ accounts }: { accounts: { id: string; name: string }[] }) {
-  return <ContactFormBase accounts={accounts} action={createContactAction} submitTestId="contact-submit" />;
+export function ContactForm({ accounts, onSuccess }: { accounts: { id: string; name: string }[]; onSuccess?: () => void }) {
+  return (
+    <ContactFormBase
+      accounts={accounts}
+      action={async (state, form) => {
+        const next = await createContactAction(state, form);
+        if (next?.ok) {
+          onSuccess?.();
+        }
+        return next;
+      }}
+      submitTestId="contact-submit"
+    />
+  );
 }
 
 export function ContactEditForm({ contact, accounts }: { contact: Contact; accounts: { id: string; name: string }[] }) {

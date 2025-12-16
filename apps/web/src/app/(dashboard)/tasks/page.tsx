@@ -16,6 +16,7 @@ import { PageSizeSelector, PaginationBar, PaginationBarLite } from '@/components
 import { StatusBadge } from '@/components/ui/status-badge';
 import { getServerTranslations } from '@/lib/i18n/server';
 import { createTranslator } from '@/lib/i18n/translator';
+import { CreateDrawer } from '@/components/ui/create-drawer';
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
@@ -78,13 +79,22 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
       title={t('title')}
       description={t('description')}
       data-testid="tasks-page"
-      searchSection={
-        <ListSearchCard
-          action="/tasks"
-          submitLabel={tCommon('search')}
-          clearLabel={tCommon('clear') ?? 'Clear'}
-          clearHref="/tasks"
+      actions={
+        <CreateDrawer
+          title={t('form.title')}
+          description={t('form.subtitle', { fallback: '' })}
+          triggerLabel={t('form.title')}
+          triggerTestId="open-create-task"
         >
+          <TaskForm
+            ownerId={user.id}
+            accounts={accounts.data.map((account) => ({ id: account.id, name: account.name }))}
+            opportunities={opportunities.data.map((opp) => ({ id: opp.id, name: opp.name, accountId: opp.accountId }))}
+          />
+        </CreateDrawer>
+      }
+      searchSection={
+        <ListSearchCard action="/tasks" submitLabel={tCommon('search')} clearLabel={tCommon('clear') ?? 'Clear'} clearHref="/tasks">
           <FloatingInput
             name="search"
             label={locale === 'ja' ? 'キーワード' : 'Keyword'}
@@ -98,7 +108,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
         </ListSearchCard>
       }
     >
-      <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
+      <div className="space-y-6">
         <Card>
           <h2 className="text-lg font-semibold">{t('list.title')}</h2>
           <ListToolbar
@@ -158,14 +168,6 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
             pageLabel={locale === 'ja' ? 'ページ' : 'Page'}
             prevLabel={locale === 'ja' ? '前へ' : 'Prev'}
             nextLabel={locale === 'ja' ? '次へ' : 'Next'}
-          />
-        </Card>
-        <Card>
-          <h2 className="text-lg font-semibold">{t('form.title')}</h2>
-          <TaskForm
-            ownerId={user.id}
-            accounts={accounts.data.map((account) => ({ id: account.id, name: account.name }))}
-            opportunities={opportunities.data.map((opp) => ({ id: opp.id, name: opp.name, accountId: opp.accountId }))}
           />
         </Card>
       </div>

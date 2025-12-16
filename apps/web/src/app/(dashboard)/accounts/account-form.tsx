@@ -19,6 +19,7 @@ type AccountFormProps = {
   successRedirect?: string;
   formKey: string;
   matchSnapshot?: boolean;
+  onSuccess?: () => void;
   initialValues?: Partial<{
     name: string;
     domain: string | null;
@@ -99,7 +100,7 @@ function snapshotFromFormData(formData: FormData): AccountFormSnapshot {
   };
 }
 
-export function AccountForm({ action, submitLabel, initialValues, successRedirect, formKey, matchSnapshot }: AccountFormProps) {
+export function AccountForm({ action, submitLabel, initialValues, successRedirect, formKey, matchSnapshot, onSuccess }: AccountFormProps) {
   const router = useRouter();
   const [state, formAction] = useActionState<AccountActionState | undefined, FormData>(async (prev, form) => {
     const result = await action(prev, form);
@@ -134,6 +135,7 @@ export function AccountForm({ action, submitLabel, initialValues, successRedirec
     if (state.ok) {
       if (lastHandledStateRef.current === state) return;
       lastHandledStateRef.current = state;
+      onSuccess?.();
       triggerImmediateToast();
       handleSuccessPersist();
       statusContext?.setStatus(statusValue);

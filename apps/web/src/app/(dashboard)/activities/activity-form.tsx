@@ -16,9 +16,10 @@ type ActivityFormProps = {
   accounts: { id: string; name: string }[];
   opportunities: { id: string; name: string; accountId: string }[];
   userId: string;
+  onSuccess?: () => void;
 };
 
-export function ActivityForm({ accounts, opportunities, userId }: ActivityFormProps) {
+export function ActivityForm({ accounts, opportunities, userId, onSuccess }: ActivityFormProps) {
   const router = useRouter();
   const [state, formAction] = useActionState<ActivityActionState | undefined, FormData>(createActivityAction, undefined);
   const { t: tToast } = useI18n('toasts');
@@ -52,6 +53,7 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
   useEffect(() => {
     if (!state) return;
     if (state.ok) {
+      onSuccess?.();
       triggerImmediateToast();
       handleSuccessPersist();
       setTimeout(() => {
@@ -60,7 +62,7 @@ export function ActivityForm({ accounts, opportunities, userId }: ActivityFormPr
     } else if (state.error) {
       handleErrorCleanup();
     }
-  }, [state, router, handleSuccessPersist, handleErrorCleanup, triggerImmediateToast]);
+  }, [state, router, handleSuccessPersist, handleErrorCleanup, triggerImmediateToast, onSuccess]);
 
   return (
     <form

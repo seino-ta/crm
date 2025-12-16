@@ -15,9 +15,10 @@ type TaskFormProps = {
   accounts: { id: string; name: string }[];
   opportunities: { id: string; name: string; accountId: string }[];
   ownerId: string;
+  onSuccess?: () => void;
 };
 
-export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
+export function TaskForm({ accounts, opportunities, ownerId, onSuccess }: TaskFormProps) {
   const router = useRouter();
   const [state, formAction] = useActionState<TaskActionState | undefined, FormData>(createTaskAction, undefined);
   const { t: tToast } = useI18n('toasts');
@@ -51,6 +52,7 @@ export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
   useEffect(() => {
     if (!state) return;
     if (state.ok) {
+      onSuccess?.();
       triggerImmediateToast();
       handleSuccessPersist();
       setTimeout(() => {
@@ -59,7 +61,7 @@ export function TaskForm({ accounts, opportunities, ownerId }: TaskFormProps) {
     } else if (state.error) {
       handleErrorCleanup();
     }
-  }, [state, router, handleSuccessPersist, handleErrorCleanup, triggerImmediateToast]);
+  }, [state, router, handleSuccessPersist, handleErrorCleanup, triggerImmediateToast, onSuccess]);
 
   return (
     <form

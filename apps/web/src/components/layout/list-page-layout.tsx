@@ -4,6 +4,7 @@ import clsx from 'clsx';
 type ListPageLayoutProps = {
   title: string;
   description?: string;
+  actions?: ReactNode;
   searchSection?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -19,6 +20,7 @@ type ListPageLayoutProps = {
 export function ListPageLayout({
   title,
   description,
+  actions,
   searchSection,
   children,
   className,
@@ -27,9 +29,17 @@ export function ListPageLayout({
   return (
     <div className={clsx('space-y-8', className)} data-testid={dataTestId}>
       <div className="page-header">
-        <h1>{title}</h1>
-        {description ? <p>{description}</p> : null}
+        <div>
+          <h1>{title}</h1>
+          {description ? <p>{description}</p> : null}
+        </div>
       </div>
+      {actions ? (
+        <div className="page-actions">
+          <div className="page-actions__spacer" aria-hidden />
+          <div className="flex items-center gap-2">{actions}</div>
+        </div>
+      ) : null}
       {searchSection}
       {children}
     </div>

@@ -16,9 +16,10 @@ export type OpportunityFormProps = {
   stages: { id: string; name: string }[];
   contacts: { id: string; name: string }[];
   ownerId: string;
+  onSuccess?: () => void;
 };
 
-export function OpportunityForm({ accounts, stages, contacts, ownerId }: OpportunityFormProps) {
+export function OpportunityForm({ accounts, stages, contacts, ownerId, onSuccess }: OpportunityFormProps) {
   const router = useRouter();
   const [state, formAction] = useActionState<OpportunityActionState | undefined, FormData>(createOpportunityAction, undefined);
   const { t: tToast } = useI18n('toasts');
@@ -37,6 +38,7 @@ export function OpportunityForm({ accounts, stages, contacts, ownerId }: Opportu
   useEffect(() => {
     if (!state) return;
     if (state.ok) {
+      onSuccess?.();
       triggerImmediateToast();
       handleSuccessPersist();
       setTimeout(() => {
@@ -45,7 +47,7 @@ export function OpportunityForm({ accounts, stages, contacts, ownerId }: Opportu
     } else if (state.error) {
       handleErrorCleanup();
     }
-  }, [state, router, handleSuccessPersist, handleErrorCleanup, triggerImmediateToast]);
+  }, [state, router, handleSuccessPersist, handleErrorCleanup, triggerImmediateToast, onSuccess]);
 
   return (
     <form

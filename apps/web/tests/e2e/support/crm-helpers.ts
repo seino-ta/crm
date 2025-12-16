@@ -74,6 +74,7 @@ export async function expectToast(page: Page, ...texts: string[]) {
 export async function createAccount(page: Page, params: { name: string; industry?: string; revenue?: string }) {
   await safeGoto(page, '/accounts');
   await page.getByTestId('accounts-page');
+  await page.getByTestId('open-create-account').click();
   await page.locator('form[data-testid="account-form"] input[name="name"]').fill(params.name);
   if (params.industry) {
     await page.locator('form[data-testid="account-form"] input[name="industry"]').fill(params.industry);
@@ -83,6 +84,7 @@ export async function createAccount(page: Page, params: { name: string; industry
   }
   await page.getByTestId('account-submit').click();
   await expectToast(page, 'アカウントを保存しました。', 'Account saved.');
+  await page.keyboard.press('Escape');
 }
 
 export async function openAccountDetail(page: Page, accountName: string) {
@@ -288,6 +290,7 @@ export async function createContact(page: Page, params: {
 }) {
   await safeGoto(page, '/contacts');
   await page.getByTestId('contacts-page');
+  await page.getByTestId('open-create-contact').click();
   await page.locator('form[data-testid="contact-form"] input[name="firstName"]').fill(params.firstName);
   await page.locator('form[data-testid="contact-form"] input[name="lastName"]').fill(params.lastName);
   await page.locator('form[data-testid="contact-form"] input[name="kanaFirstName"]').fill(params.kanaFirst ?? 'テスト');
@@ -296,6 +299,7 @@ export async function createContact(page: Page, params: {
   await page.locator('form[data-testid="contact-form"] select[name="accountId"]').selectOption({ label: params.accountName });
   await page.getByTestId('contact-submit').click();
   await expectToast(page, 'コンタクトを追加しました。', 'Contact created.');
+  await page.keyboard.press('Escape');
   return `${params.lastName} ${params.firstName}`;
 }
 
@@ -307,6 +311,7 @@ export async function createOpportunity(page: Page, params: {
 }) {
   await safeGoto(page, '/opportunities');
   await page.getByTestId('opportunities-page');
+  await page.getByTestId('open-create-opportunity').click();
   await page.locator('form[data-testid="opportunity-form"] input[name="name"]').fill(params.name);
   await page.locator('form[data-testid="opportunity-form"] select[name="accountId"]').selectOption({ label: params.accountName });
   const stageSelect = page.locator('form[data-testid="opportunity-form"] select[name="stageId"]');
@@ -325,11 +330,13 @@ export async function createOpportunity(page: Page, params: {
   }
   await page.getByTestId('opportunity-form').locator('button[type="submit"]').click();
   await expectToast(page, '案件を登録しました。', 'Opportunity created.');
+  await page.keyboard.press('Escape');
 }
 
 export async function createActivity(page: Page, params: { subject: string; accountName: string; opportunityName?: string }) {
   await safeGoto(page, '/activities');
   await page.getByTestId('activities-page');
+  await page.getByTestId('open-create-activity').click();
   await page.locator('form[data-testid="activity-form"] input[name="subject"]').fill(params.subject);
   await page.locator('form[data-testid="activity-form"] select[name="accountId"]').selectOption({ label: params.accountName });
   if (params.opportunityName) {
@@ -337,11 +344,13 @@ export async function createActivity(page: Page, params: { subject: string; acco
   }
   await page.getByTestId('activity-form').locator('button[type="submit"]').click();
   await expectToast(page, '活動を追加しました。', 'Activity added.');
+  await page.keyboard.press('Escape');
 }
 
 export async function createTask(page: Page, params: { title: string; accountName: string; opportunityName?: string; dueDate?: string }) {
   await safeGoto(page, '/tasks');
   await page.getByTestId('tasks-page');
+  await page.getByTestId('open-create-task').click();
   await page.getByTestId('task-form');
   await page.locator('form[data-testid="task-form"] input[name="title"]').fill(params.title);
   await page.locator('form[data-testid="task-form"] select[name="accountId"]').selectOption({ label: params.accountName });
@@ -353,4 +362,5 @@ export async function createTask(page: Page, params: { title: string; accountNam
   }
   await page.getByTestId('task-form').locator('button[type="submit"]').click();
   await expectToast(page, 'タスクを追加しました。', 'Task created.');
+  await page.keyboard.press('Escape');
 }

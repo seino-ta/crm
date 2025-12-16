@@ -13,12 +13,15 @@ test.describe('Admin Users', () => {
     await safeGoto(page, '/admin/users');
     await page.getByTestId('admin-users-page');
 
+    await page.getByTestId('open-invite-user').click();
     await page.getByTestId('invite-user-form').locator('input[name="email"]').fill(email);
     await page.getByTestId('invite-user-form').locator('input[name="firstName"]').fill(firstName);
     await page.getByTestId('invite-user-form').locator('input[name="lastName"]').fill(lastName);
     await page.getByTestId('invite-user-form').locator('select[name="role"]').selectOption('REP');
     await page.getByTestId('invite-submit').click();
     await expect(page.getByTestId('invite-temp-password')).toBeVisible();
+    await page.keyboard.press('Escape'); // close drawer
+    await expect(page.getByTestId('open-invite-user')).toBeVisible();
     const userRow = page.getByTestId('user-row').filter({ hasText: email }).first();
     await expect(userRow).toBeVisible();
 

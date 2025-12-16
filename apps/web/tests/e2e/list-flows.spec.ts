@@ -25,7 +25,8 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     }
 
     await safeGoto(page, '/accounts');
-    await page.getByRole('textbox', { name: /search/i }).fill(prefix);
+    const accountSearch = page.locator('form[action="/accounts"] input[name="search"]');
+    await accountSearch.first().fill(prefix);
     await page.getByRole('button', { name: /search/i }).click();
     await page.waitForURL(/accounts/);
 
@@ -49,14 +50,15 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await createTask(page, { title: `Beta ${slug}`, accountName });
 
     await safeGoto(page, '/tasks');
-    await page.getByRole('textbox', { name: /search/i }).fill('Alpha');
+    const taskSearch = page.locator('form[action="/tasks"] input[name="search"]');
+    await taskSearch.first().fill('Alpha');
     await page.getByRole('button', { name: /search/i }).click();
     await page.waitForURL(/tasks/);
     await page.selectOption('select[name="pageSize"]', '10');
     await page.waitForURL(/pageSize=10/);
 
     // change search to Beta and ensure page resets
-    await page.getByRole('textbox', { name: /search/i }).fill(`Beta ${slug}`);
+    await taskSearch.first().fill(`Beta ${slug}`);
     await page.getByRole('button', { name: /search/i }).click();
     await page.waitForURL(/tasks/);
     const params = new URL(page.url()).searchParams;
@@ -76,7 +78,8 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await apiCreateAccount(page, { name: `${prefixB}-only`, industry: 'Testing' });
 
     await safeGoto(page, '/accounts');
-    await page.getByRole('textbox', { name: /search/i }).fill(prefixA);
+    const accountSearch2 = page.locator('form[action="/accounts"] input[name="search"]');
+    await accountSearch2.first().fill(prefixA);
     await page.getByRole('button', { name: /search/i }).click();
     await page.waitForURL(/accounts/);
     await page.selectOption('select[name="pageSize"]', '10');
@@ -86,7 +89,7 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await accountsNext.click();
     await page.waitForURL(/page=2/);
 
-    await page.getByRole('textbox', { name: /search/i }).fill(prefixB);
+    await accountSearch2.first().fill(prefixB);
     await page.getByRole('button', { name: /search/i }).click();
     await page.waitForURL(/accounts/);
     const params = new URL(page.url()).searchParams;
@@ -106,7 +109,8 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     }
 
     await safeGoto(page, '/opportunities');
-    await page.getByRole('textbox', { name: /search/i }).fill(prefix);
+    const oppSearch = page.locator('form[action="/opportunities"] input[name="search"]');
+    await oppSearch.first().fill(prefix);
     await page.getByRole('button', { name: /search/i }).click();
     await page.waitForURL(/opportunities/);
 
@@ -132,7 +136,8 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
   test('Contacts: empty state when no results', async ({ page }, testInfo) => {
     const term = `NoHit-${createSlug(testInfo)}`;
     await safeGoto(page, '/contacts');
-    await page.getByRole('textbox', { name: /search/i }).fill(term);
+    const contactSearch = page.locator('form[action="/contacts"] input[name="search"]');
+    await contactSearch.first().fill(term);
     await page.getByRole('button', { name: /search/i }).click();
     await expect(page.getByText(/No contacts found|該当するコンタクトが見つかりません。/)).toBeVisible();
   });
@@ -170,6 +175,7 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
   test('Tasks: validation error is shown when title is too short', async ({ page }) => {
     await safeGoto(page, '/tasks');
     await page.getByTestId('tasks-page');
+    await page.getByTestId('open-create-task').click();
     await page.locator('form[data-testid="task-form"] input[name="title"]').fill('x');
     await page.getByTestId('task-form').locator('button[type="submit"]').click();
     await expect(page.getByText(/入力内容を確認してください。|Check the form fields./)).toBeVisible();

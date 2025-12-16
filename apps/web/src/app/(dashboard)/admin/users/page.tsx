@@ -13,6 +13,7 @@ import { formatDateTime } from '@/lib/formatters';
 import { InviteUserForm } from './invite-user-form';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { createTranslator } from '@/lib/i18n/translator';
+import { CreateDrawer } from '@/components/ui/create-drawer';
 
 function extractParam(params: Record<string, string | string[] | undefined>, key: string) {
   const value = params[key];
@@ -77,52 +78,57 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
         <h1>{t('title')}</h1>
         <p>{t('description')}</p>
       </div>
-      <div className="grid gap-6 lg:grid-cols-[1.5fr,0.5fr]">
-        <Card>
-          <form
-            className="grid gap-4 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))_auto]"
-            action="/admin/users"
-            method="get"
-          >
-            <input type="hidden" name="page" value="1" />
-            <FloatingInput
-              name="search"
-              label={locale === 'ja' ? 'キーワード' : 'Keyword'}
-              example={t('filters.searchPlaceholder')}
-              defaultValue={search}
-              containerClassName="md:col-span-1"
-            />
-            <FloatingSelect name="role" label={t('filters.role')} defaultValue={role ?? ''} forceFloatLabel>
-              <option value="">{t('filters.roleAll')}</option>
-              {roleOptions.map((option) => (
-                <option key={option} value={option}>
-                  {t(`roles.${option.toLowerCase()}`)}
-                </option>
-              ))}
-            </FloatingSelect>
-            <FloatingSelect name="status" label={t('filters.status')} defaultValue={status ?? ''} forceFloatLabel>
-              <option value="">{t('filters.statusAll')}</option>
-              <option value="active">{t('filters.statusActive')}</option>
-              <option value="inactive">{t('filters.statusInactive')}</option>
-            </FloatingSelect>
-            <div className="flex flex-wrap items-end gap-2">
-              <Button type="submit" size="sm">
-                {t('filters.submit')}
-              </Button>
-              <Link
-                href="/admin/users"
-                className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
-              >
-                {t('filters.clear')}
-              </Link>
-            </div>
-          </form>
-        </Card>
-        <Card>
-          <h2 className="text-lg font-semibold">{t('invite.title')}</h2>
+      <div className="flex items-center justify-between gap-4">
+        <div />
+        <CreateDrawer
+          title={t('invite.title')}
+          description={t('invite.subtitle', { fallback: '' })}
+          triggerLabel={t('invite.title')}
+          triggerTestId="open-invite-user"
+        >
           <InviteUserForm />
-        </Card>
+        </CreateDrawer>
       </div>
+      <Card>
+        <form
+          className="grid gap-4 md:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))_auto]"
+          action="/admin/users"
+          method="get"
+        >
+          <input type="hidden" name="page" value="1" />
+          <FloatingInput
+            name="search"
+            label={locale === 'ja' ? 'キーワード' : 'Keyword'}
+            example={t('filters.searchPlaceholder')}
+            defaultValue={search}
+            containerClassName="md:col-span-1"
+          />
+          <FloatingSelect name="role" label={t('filters.role')} defaultValue={role ?? ''} forceFloatLabel>
+            <option value="">{t('filters.roleAll')}</option>
+            {roleOptions.map((option) => (
+              <option key={option} value={option}>
+                {t(`roles.${option.toLowerCase()}`)}
+              </option>
+            ))}
+          </FloatingSelect>
+          <FloatingSelect name="status" label={t('filters.status')} defaultValue={status ?? ''} forceFloatLabel>
+            <option value="">{t('filters.statusAll')}</option>
+            <option value="active">{t('filters.statusActive')}</option>
+            <option value="inactive">{t('filters.statusInactive')}</option>
+          </FloatingSelect>
+          <div className="flex flex-wrap items-end gap-2">
+            <Button type="submit" size="sm">
+              {t('filters.submit')}
+            </Button>
+            <Link
+              href="/admin/users"
+              className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 transition hover:border-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+            >
+              {t('filters.clear')}
+            </Link>
+          </div>
+        </form>
+      </Card>
       <Card>
         <h2 className="text-lg font-semibold mb-3">{t('listTitle') ?? t('title')}</h2>
         <p className="text-xs text-slate-500 mb-2">{listSummary}</p>

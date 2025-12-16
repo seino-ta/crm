@@ -47,6 +47,17 @@ h4 {
   font-size: 0.95rem;
 }
 
+.page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.page-actions__spacer {
+  flex: 1 1 0;
+}
+
 @layer components {
   .app-form-label {
     @apply text-sm font-medium text-slate-600;

@@ -15,9 +15,10 @@ type LeadFormProps = {
   owners: { id: string; name: string }[];
   accounts: { id: string; name: string }[];
   defaultOwnerId: string;
+  onSuccess?: () => void;
 };
 
-export function LeadForm({ owners, accounts, defaultOwnerId }: LeadFormProps) {
+export function LeadForm({ owners, accounts, defaultOwnerId, onSuccess }: LeadFormProps) {
   const router = useRouter();
   const [state, formAction] = useActionState<LeadActionState | undefined, FormData>(createLeadAction, undefined);
   const { t: tToast } = useI18n('toasts');
@@ -36,13 +37,14 @@ export function LeadForm({ owners, accounts, defaultOwnerId }: LeadFormProps) {
   useEffect(() => {
     if (!state) return;
     if (state.ok) {
+      onSuccess?.();
       triggerImmediateToast();
       handleSuccessPersist();
       setTimeout(() => router.refresh(), 0);
     } else if (state.error) {
       handleErrorCleanup();
     }
-  }, [state, router, handleErrorCleanup, handleSuccessPersist, triggerImmediateToast]);
+  }, [state, router, handleErrorCleanup, handleSuccessPersist, triggerImmediateToast, onSuccess]);
 
   return (
     <form
