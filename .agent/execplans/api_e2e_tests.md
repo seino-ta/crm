@@ -73,6 +73,7 @@
 - 2025-12-15: Accounts CRUD E2E テストを追加（accounts.test.ts）
 - 2025-12-15: CRM 全メニューのハッピーパス＋検索カバレッジを追加（crm-flows.test.ts）
 - 2025-12-15: globalSetup でテストDBを `migrate reset`→`deploy`→`seed` に変更し、種データ未投入による認証失敗を解消。`@types/supertest` 追加。E2E 全件成功を確認。
+- 2025-12-16: Reports API E2E を追加（pipeline-stage / owner 両エンドポイントで新規商談を検証）
 
 ## Surprises & Discoveries
 - (未記入)

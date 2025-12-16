@@ -70,6 +70,7 @@
 ### WS4: Playwright + UI 検証フロー
 - `npx playwright install` を実行し、`playwright.config.ts` を monorepo ルートに配置。
 - e2e テスト: 認証 → アカウント CRUD → 案件ステージ更新 → 活動作成 → タスク完了 → レポート表示のハッピーパス。
+- **レポート検証を強化**: 作成した案件がステージ別・オーナー別テーブル/チャートに反映されることを検証（reports.spec.ts 更新）。
 - `tests/e2e/screenshots/*.png` 生成ユーティリティを作り README に反映。`npm run ui:snapshots` で Playwright screenshot。
 - README に「npx playwright codegen http://localhost:3000」「npx playwright show-report」などの手順と Playwright 用 npm script を追記。
 
