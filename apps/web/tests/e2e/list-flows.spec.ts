@@ -195,6 +195,8 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
 
     await safeGoto(page, '/admin/users');
     await page.getByTestId('admin-users-page');
+    await page.getByTestId('open-invite-user').click();
+    await page.getByTestId('invite-user-form');
     await page.getByTestId('invite-user-form').locator('input[name="email"]').fill(email);
     await page.getByTestId('invite-user-form').locator('input[name="firstName"]').fill('Dup');
     await page.getByTestId('invite-user-form').locator('input[name="lastName"]').fill('Again');
@@ -210,6 +212,8 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     await login(page);
     await safeGoto(page, '/admin/users');
     await page.getByTestId('admin-users-page');
+    await page.getByTestId('open-invite-user').click();
+    await page.getByTestId('invite-user-form');
 
     await page.evaluate(() => {
       const form = document.querySelector('[data-testid="invite-user-form"]');
@@ -382,8 +386,11 @@ test.describe('List flows (search / paging / size / CRUD guards)', () => {
     const email = `rep-${slug}@crm.local`;
     const firstName = `Rep ${slug}`;
 
+    await login(page);
     await safeGoto(page, '/admin/users');
     await page.getByTestId('admin-users-page');
+    await page.getByTestId('open-invite-user').click();
+    await page.getByTestId('invite-user-form');
     await page.getByTestId('invite-user-form').locator('input[name="email"]').fill(email);
     await page.getByTestId('invite-user-form').locator('input[name="firstName"]').fill(firstName);
     await page.getByTestId('invite-user-form').locator('input[name="lastName"]').fill('Tester');

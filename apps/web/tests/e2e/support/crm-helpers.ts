@@ -169,9 +169,16 @@ export async function apiCreateAccount(page: Page, params: { name: string; indus
   return payload.data;
 }
 
-export async function apiCreateOpportunity(page: Page, params: { name: string; accountId: string; amount?: string; probability?: string }) {
-  const ownerId = await ensureUserId(page);
-  const stageId = await ensureDefaultStageId(page);
+export async function apiCreateOpportunity(page: Page, params: {
+  name: string;
+  accountId: string;
+  amount?: string;
+  probability?: string;
+  stageId?: string;
+  ownerId?: string;
+}) {
+  const ownerId = params.ownerId ?? (await ensureUserId(page));
+  const stageId = params.stageId ?? (await ensureDefaultStageId(page));
   const response = await page.request.post(`${apiBaseUrl}/opportunities`, {
     headers: { ...authHeaders(), 'content-type': 'application/json' },
     data: {
@@ -206,7 +213,48 @@ export async function apiInviteUser(page: Page, params: { email: string; firstNa
   if (!response.ok()) {
     throw new Error(`Failed to invite user via API: ${response.status()} ${response.statusText()}`);
   }
-  return response.json();
+  const payload = (await response.json()) as { data?: { user?: { id: string } } };
+  return payload.data ?? payload;
+}
+
+export async function apiCreatePipelineStage(page: Page, params: {
+  name: string;
+  order?: number;
+  probability?: number;
+  isWon?: boolean;
+  isLost?: boolean;
+}) {
+  let order = params.order;
+  if (order === undefined) {
+    const response = await page.request.get(`${apiBaseUrl}/pipeline-stages`, {
+      headers: authHeaders(),
+    });
+    if (response.ok()) {
+      const payload = (await response.json()) as { data?: Array<{ order: number }> };
+      const maxOrder = payload.data?.reduce((max, stage) => Math.max(max, stage.order), 0) ?? 0;
+      order = maxOrder + 1;
+    } else {
+      order = 999;
+    }
+  }
+  const response = await page.request.post(`${apiBaseUrl}/pipeline-stages`, {
+    headers: { ...authHeaders(), 'content-type': 'application/json' },
+    data: {
+      name: params.name,
+      order,
+      probability: params.probability ?? 10,
+      ...(params.isWon !== undefined ? { isWon: params.isWon } : {}),
+      ...(params.isLost !== undefined ? { isLost: params.isLost } : {}),
+    },
+  });
+  if (!response.ok()) {
+    throw new Error(`Failed to create pipeline stage via API: ${response.status()} ${response.statusText()}`);
+  }
+  const payload = (await response.json()) as { data?: { id: string; name: string } };
+  if (!payload.data) {
+    throw new Error('Pipeline stage API response missing data');
+  }
+  return payload.data;
 }
 
 export async function apiCreateActivity(page: Page, params: {
