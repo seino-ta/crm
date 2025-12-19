@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import createError from 'http-errors';
 
 import { authenticate } from '../middleware/auth';
@@ -17,65 +17,47 @@ import {
   softDeleteOpportunity,
   updateOpportunity,
 } from '../modules/opportunity/opportunity.service';
+import type { AppEnv } from '../types/runtime';
+import { getValidatedBody, requireUser } from '../utils/context';
 import { successResponse } from '../utils/response';
 
-const router = Router();
+const router = new Hono<AppEnv>();
 
-router.use(authenticate());
+router.use('*', authenticate());
 
-router.get('/', async (req, res, next) => {
-  try {
-    const parsed = opportunityFilterSchema.safeParse(req.query);
-    if (!parsed.success) {
-      return next(createError(422, 'Validation error', { details: parsed.error.flatten() }));
-    }
-
-    const result = await listOpportunities(parsed.data);
-    res.json(successResponse(result.data, result.meta));
-  } catch (error) {
-    next(error);
+router.get('/', async (c) => {
+  const parsed = opportunityFilterSchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    throw createError(422, 'Validation error', { details: parsed.error.flatten() });
   }
+
+  const result = await listOpportunities(parsed.data);
+  return c.json(successResponse(result.data, result.meta));
 });
 
-router.get('/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    const opportunity = await getOpportunityById(id);
-    res.json(successResponse(opportunity));
-  } catch (error) {
-    next(error);
-  }
+router.get('/:id', async (c) => {
+  const { id } = c.req.param();
+  const opportunity = await getOpportunityById(id);
+  return c.json(successResponse(opportunity));
 });
 
-router.post('/', validateBody(createOpportunitySchema), async (req, res, next) => {
-  try {
-    const payload = req.body as CreateOpportunityInput;
-    const opportunity = await createOpportunity(payload, req.user);
-    res.status(201).json(successResponse(opportunity));
-  } catch (error) {
-    next(error);
-  }
+router.post('/', validateBody(createOpportunitySchema), async (c) => {
+  const payload = getValidatedBody<CreateOpportunityInput>(c);
+  const opportunity = await createOpportunity(payload, requireUser(c));
+  return c.json(successResponse(opportunity), 201);
 });
 
-router.put('/:id', validateBody(updateOpportunitySchema), async (req, res, next) => {
-  try {
-    const payload = req.body as UpdateOpportunityInput;
-    const { id } = req.params as { id: string };
-    const opportunity = await updateOpportunity(id, payload, req.user);
-    res.json(successResponse(opportunity));
-  } catch (error) {
-    next(error);
-  }
+router.put('/:id', validateBody(updateOpportunitySchema), async (c) => {
+  const payload = getValidatedBody<UpdateOpportunityInput>(c);
+  const { id } = c.req.param();
+  const opportunity = await updateOpportunity(id, payload, requireUser(c));
+  return c.json(successResponse(opportunity));
 });
 
-router.delete('/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    await softDeleteOpportunity(id, req.user);
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
+router.delete('/:id', async (c) => {
+  const { id } = c.req.param();
+  await softDeleteOpportunity(id, requireUser(c));
+  return c.body(null, 204);
 });
 
 export default router;

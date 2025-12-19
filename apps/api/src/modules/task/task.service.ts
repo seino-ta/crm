@@ -3,14 +3,15 @@ import { AuditAction, TaskStatus, UserRole } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
+import type { AuthenticatedUser } from '../../types/runtime';
 import { buildPaginationMeta, normalizePagination } from '../../utils/pagination';
 import { createAuditLogEntry } from '../audit-log/audit-log.helper';
 
 import type { CreateTaskInput, TaskFilterInput, UpdateTaskInput } from './task.schema';
 
-type Actor = Express.AuthenticatedUser | undefined;
+type Actor = AuthenticatedUser | undefined;
 
-function assertActor(actor: Actor): asserts actor is Express.AuthenticatedUser {
+function assertActor(actor: Actor): asserts actor is AuthenticatedUser {
   if (!actor) {
     throw createError(401, 'Authentication required');
   }
@@ -68,13 +69,13 @@ export async function listTasks(filters: TaskFilterInput) {
   if (search) {
     conditions.push({
       OR: [
-        { title: { contains: search, mode: 'insensitive' } },
+        { title: { contains: search } },
         {
           owner: {
             OR: [
-              { firstName: { contains: search, mode: 'insensitive' } },
-              { lastName: { contains: search, mode: 'insensitive' } },
-              { email: { contains: search, mode: 'insensitive' } },
+              { firstName: { contains: search } },
+              { lastName: { contains: search } },
+              { email: { contains: search } },
             ],
           },
         },

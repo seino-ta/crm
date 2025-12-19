@@ -1,3 +1,0 @@
-ALTER TABLE "User"
-  ADD COLUMN "invitedAt" TIMESTAMP,
-  ADD COLUMN "lastLoginAt" TIMESTAMP;

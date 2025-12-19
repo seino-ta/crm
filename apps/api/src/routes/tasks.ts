@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import createError from 'http-errors';
 
 import { authenticate } from '../middleware/auth';
@@ -11,65 +11,47 @@ import {
   type UpdateTaskInput,
 } from '../modules/task/task.schema';
 import { createTask, deleteTask, getTaskById, listTasks, updateTask } from '../modules/task/task.service';
+import type { AppEnv } from '../types/runtime';
+import { getValidatedBody, requireUser } from '../utils/context';
 import { successResponse } from '../utils/response';
 
-const router = Router();
+const router = new Hono<AppEnv>();
 
-router.use(authenticate());
+router.use('*', authenticate());
 
-router.get('/', async (req, res, next) => {
-  try {
-    const parsed = taskFilterSchema.safeParse(req.query);
-    if (!parsed.success) {
-      return next(createError(422, 'Validation error', { details: parsed.error.flatten() }));
-    }
-
-    const result = await listTasks(parsed.data);
-    res.json(successResponse(result.data, result.meta));
-  } catch (error) {
-    next(error);
+router.get('/', async (c) => {
+  const parsed = taskFilterSchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    throw createError(422, 'Validation error', { details: parsed.error.flatten() });
   }
+
+  const result = await listTasks(parsed.data);
+  return c.json(successResponse(result.data, result.meta));
 });
 
-router.get('/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    const task = await getTaskById(id);
-    res.json(successResponse(task));
-  } catch (error) {
-    next(error);
-  }
+router.get('/:id', async (c) => {
+  const { id } = c.req.param();
+  const task = await getTaskById(id);
+  return c.json(successResponse(task));
 });
 
-router.post('/', validateBody(createTaskSchema), async (req, res, next) => {
-  try {
-    const payload = req.body as CreateTaskInput;
-    const task = await createTask(payload, req.user);
-    res.status(201).json(successResponse(task));
-  } catch (error) {
-    next(error);
-  }
+router.post('/', validateBody(createTaskSchema), async (c) => {
+  const payload = getValidatedBody<CreateTaskInput>(c);
+  const task = await createTask(payload, requireUser(c));
+  return c.json(successResponse(task), 201);
 });
 
-router.put('/:id', validateBody(updateTaskSchema), async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    const payload = req.body as UpdateTaskInput;
-    const task = await updateTask(id, payload, req.user);
-    res.json(successResponse(task));
-  } catch (error) {
-    next(error);
-  }
+router.put('/:id', validateBody(updateTaskSchema), async (c) => {
+  const { id } = c.req.param();
+  const payload = getValidatedBody<UpdateTaskInput>(c);
+  const task = await updateTask(id, payload, requireUser(c));
+  return c.json(successResponse(task));
 });
 
-router.delete('/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    await deleteTask(id, req.user);
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
+router.delete('/:id', async (c) => {
+  const { id } = c.req.param();
+  await deleteTask(id, requireUser(c));
+  return c.body(null, 204);
 });
 
 export default router;

@@ -1,16 +1,22 @@
-import type { NextFunction, Request, Response } from 'express';
+import type { MiddlewareHandler } from 'hono';
 import createError from 'http-errors';
 import type { ZodSchema } from 'zod';
 
-export const validateBody = <T>(schema: ZodSchema<T>) =>
-  (req: Request, _res: Response, next: NextFunction): void => {
-    const result = schema.safeParse(req.body as unknown);
+import type { AppBindings, AppVariables } from '../types/runtime';
 
-    if (!result.success) {
-      next(createError(422, 'Validation error', { details: result.error.flatten() }));
-      return;
+export const validateBody = <T>(schema: ZodSchema<T>): MiddlewareHandler<{ Bindings: AppBindings; Variables: AppVariables }> =>
+  async (c, next) => {
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      throw createError(400, 'Invalid JSON payload');
     }
 
-    (req as Request & { body: T }).body = result.data;
-    next();
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) {
+      throw createError(422, 'Validation error', { details: parsed.error.flatten() });
+    }
+    c.set('validatedBody', parsed.data);
+    await next();
   };

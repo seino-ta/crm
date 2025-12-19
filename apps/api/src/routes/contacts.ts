@@ -1,68 +1,58 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import createError from 'http-errors';
 
 import { authenticate } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
-import { contactFilterSchema, createContactSchema, updateContactSchema, type CreateContactInput, type UpdateContactInput } from '../modules/contact/contact.schema';
+import {
+  contactFilterSchema,
+  createContactSchema,
+  updateContactSchema,
+  type CreateContactInput,
+  type UpdateContactInput,
+} from '../modules/contact/contact.schema';
 import { createContact, getContactById, listContacts, softDeleteContact, updateContact } from '../modules/contact/contact.service';
+import type { AppEnv } from '../types/runtime';
+import { getValidatedBody, requireUser } from '../utils/context';
 import { successResponse } from '../utils/response';
 
-const router = Router();
+const router = new Hono<AppEnv>();
 
-router.use(authenticate());
+router.use('*', authenticate());
 
-router.get('/', async (req, res, next) => {
-  try {
-    const parsed = contactFilterSchema.safeParse(req.query);
-    if (!parsed.success) {
-      return next(createError(422, 'Validation error', { details: parsed.error.flatten() }));
-    }
-    const result = await listContacts(parsed.data);
-    res.json(successResponse(result.data, result.meta));
-  } catch (error) {
-    next(error);
+router.get('/', async (c) => {
+  const parsed = contactFilterSchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    throw createError(422, 'Validation error', { details: parsed.error.flatten() });
   }
+  const result = await listContacts(parsed.data);
+  return c.json(successResponse(result.data, result.meta));
 });
 
-router.get('/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    const contact = await getContactById(id);
-    res.json(successResponse(contact));
-  } catch (error) {
-    next(error);
-  }
+router.get('/:id', async (c) => {
+  const { id } = c.req.param();
+  const contact = await getContactById(id);
+  return c.json(successResponse(contact));
 });
 
-router.post('/', validateBody(createContactSchema), async (req, res, next) => {
-  try {
-    const payload = req.body as CreateContactInput;
-    const contact = await createContact(payload, req.user?.id);
-    res.status(201).json(successResponse(contact));
-  } catch (error) {
-    next(error);
-  }
+router.post('/', validateBody(createContactSchema), async (c) => {
+  const payload = getValidatedBody<CreateContactInput>(c);
+  const user = requireUser(c);
+  const contact = await createContact(payload, user.id);
+  return c.json(successResponse(contact), 201);
 });
 
-router.put('/:id', validateBody(updateContactSchema), async (req, res, next) => {
-  try {
-    const payload = req.body as UpdateContactInput;
-    const { id } = req.params as { id: string };
-    const contact = await updateContact(id, payload, req.user?.id);
-    res.json(successResponse(contact));
-  } catch (error) {
-    next(error);
-  }
+router.put('/:id', validateBody(updateContactSchema), async (c) => {
+  const { id } = c.req.param();
+  const payload = getValidatedBody<UpdateContactInput>(c);
+  const user = requireUser(c);
+  const contact = await updateContact(id, payload, user.id);
+  return c.json(successResponse(contact));
 });
 
-router.delete('/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    await softDeleteContact(id, req.user);
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
+router.delete('/:id', async (c) => {
+  const { id } = c.req.param();
+  await softDeleteContact(id, requireUser(c));
+  return c.body(null, 204);
 });
 
 export default router;

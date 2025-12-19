@@ -24,3 +24,7 @@ yarn-error.log*
 
 /src/generated/prisma
 apps/api/src/generated/prisma
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
+.wrangler
+apps/api/.wrangler

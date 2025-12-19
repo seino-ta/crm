@@ -2,6 +2,7 @@ import { ActivityType, AuditAction, OpportunityStatus, Prisma, TaskPriority, Tas
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
+import type { AuthenticatedUser } from '../../types/runtime';
 import { buildPaginationMeta, normalizePagination } from '../../utils/pagination';
 import { createAuditLogEntry } from '../audit-log/audit-log.helper';
 
@@ -12,9 +13,9 @@ import type {
 } from './opportunity.schema';
 
 const DEFAULT_ORDER = { createdAt: 'desc' } as const;
-type Actor = Express.AuthenticatedUser | undefined;
+type Actor = AuthenticatedUser | undefined;
 
-function assertActor(actor: Actor): asserts actor is Express.AuthenticatedUser {
+function assertActor(actor: Actor): asserts actor is AuthenticatedUser {
   if (!actor) throw createError(401, 'Authentication required');
 }
 
@@ -75,8 +76,8 @@ export async function listOpportunities(query: OpportunityFilterQuery) {
   }
   if (search) {
     where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { account: { name: { contains: search, mode: 'insensitive' } } },
+      { name: { contains: search } },
+      { account: { name: { contains: search } } },
     ];
   }
 

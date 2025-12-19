@@ -4,6 +4,7 @@ module.exports = {
   testEnvironment: 'node',
   rootDir: '.',
   testMatch: ['<rootDir>/tests/e2e/**/*.test.ts'],
+  setupFiles: ['<rootDir>/tests/setup/mock-prisma-d1.js'],
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.tests.json' }],
   },

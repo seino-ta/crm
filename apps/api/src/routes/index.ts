@@ -1,4 +1,6 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
+
+import type { AppEnv } from '../types/runtime';
 
 import accountsRouter from './accounts';
 import activitiesRouter from './activities';
@@ -13,19 +15,19 @@ import reportsRouter from './reports';
 import tasksRouter from './tasks';
 import usersRouter from './users';
 
-const router = Router();
+const router = new Hono<AppEnv>();
 
-router.use('/', healthRouter);
-router.use('/accounts', accountsRouter);
-router.use('/contacts', contactsRouter);
-router.use('/leads', leadsRouter);
-router.use('/activities', activitiesRouter);
-router.use('/tasks', tasksRouter);
-router.use('/opportunities', opportunitiesRouter);
-router.use('/reports', reportsRouter);
-router.use('/pipeline-stages', pipelineStagesRouter);
-router.use('/audit-logs', auditLogsRouter);
-router.use('/users', usersRouter);
-router.use('/auth', authRouter);
+router.route('/', healthRouter);
+router.route('/accounts', accountsRouter);
+router.route('/contacts', contactsRouter);
+router.route('/leads', leadsRouter);
+router.route('/activities', activitiesRouter);
+router.route('/tasks', tasksRouter);
+router.route('/opportunities', opportunitiesRouter);
+router.route('/reports', reportsRouter);
+router.route('/pipeline-stages', pipelineStagesRouter);
+router.route('/audit-logs', auditLogsRouter);
+router.route('/users', usersRouter);
+router.route('/auth', authRouter);
 
 export default router;

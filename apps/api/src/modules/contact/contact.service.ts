@@ -1,7 +1,9 @@
-import { AuditAction, Prisma, UserRole } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
+import { AuditAction, UserRole } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
+import type { AuthenticatedUser } from '../../types/runtime';
 import { buildPaginationMeta, normalizePagination } from '../../utils/pagination';
 import { createAuditLogEntry } from '../audit-log/audit-log.helper';
 
@@ -9,9 +11,9 @@ import type { ContactListQuery, CreateContactInput, UpdateContactInput } from '.
 
 const DEFAULT_ORDER = { createdAt: 'desc' } as const;
 
-type Actor = Express.AuthenticatedUser | undefined;
+type Actor = AuthenticatedUser | undefined;
 
-function assertActor(actor: Actor): asserts actor is Express.AuthenticatedUser {
+function assertActor(actor: Actor): asserts actor is AuthenticatedUser {
   if (!actor) {
     throw createError(401, 'Authentication required');
   }
@@ -48,11 +50,11 @@ export async function listContacts(query: ContactListQuery) {
 
   if (search) {
     where.OR = [
-      { firstName: { contains: search, mode: 'insensitive' } },
-      { lastName: { contains: search, mode: 'insensitive' } },
-      { kanaFirstName: { contains: search, mode: 'insensitive' } },
-      { kanaLastName: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
+      { firstName: { contains: search } },
+      { lastName: { contains: search } },
+      { kanaFirstName: { contains: search } },
+      { kanaLastName: { contains: search } },
+      { email: { contains: search } },
     ];
   }
 

@@ -1,9 +1,10 @@
-import { AuditAction, type Prisma } from '@prisma/client';
 import crypto from 'node:crypto';
+
+import { AuditAction, type Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import createError from 'http-errors';
 
-import env from '../../config/env';
+import { getRuntimeConfig } from '../../config/runtime';
 import prisma from '../../lib/prisma';
 import { buildPaginationMeta, normalizePagination } from '../../utils/pagination';
 import { createAuditLogEntry } from '../audit-log/audit-log.helper';
@@ -38,9 +39,9 @@ export async function listUsers(query: UserFilterQuery) {
   const where: Prisma.UserWhereInput = {};
   if (search) {
     where.OR = [
-      { email: { contains: search, mode: 'insensitive' } },
-      { firstName: { contains: search, mode: 'insensitive' } },
-      { lastName: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search } },
+      { firstName: { contains: search } },
+      { lastName: { contains: search } },
     ];
   }
   if (role) {
@@ -73,7 +74,8 @@ export async function inviteUser(payload: InviteUserInput, actorId?: string) {
   }
 
   const temporaryPassword = generateTemporaryPassword();
-  const passwordHash = await bcrypt.hash(temporaryPassword, env.security.bcryptSaltRounds);
+  const { security } = getRuntimeConfig();
+  const passwordHash = await bcrypt.hash(temporaryPassword, security.bcryptSaltRounds);
 
   const user = await prisma.user.create({
     data: {

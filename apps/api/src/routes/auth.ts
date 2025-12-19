@@ -1,44 +1,30 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 
 import { authenticate } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 import { loginSchema, signupSchema, type LoginInput, type SignupInput } from '../modules/auth/auth.schema';
-import { loginUser, signupUser, getCurrentUser } from '../modules/auth/auth.service';
+import { getCurrentUser, loginUser, signupUser } from '../modules/auth/auth.service';
+import type { AppEnv } from '../types/runtime';
+import { getValidatedBody, requireUser } from '../utils/context';
 import { successResponse } from '../utils/response';
 
-const router = Router();
+const router = new Hono<AppEnv>();
 
-router.post('/signup', validateBody(signupSchema), async (req, res, next) => {
-  try {
-    const body = req.body as SignupInput;
-    const result = await signupUser(body);
-    res.status(201).json(successResponse(result));
-  } catch (error) {
-    next(error);
-  }
+router.post('/signup', validateBody(signupSchema), async (c) => {
+  const body = getValidatedBody<SignupInput>(c);
+  const result = await signupUser(body);
+  return c.json(successResponse(result), 201);
 });
 
-router.post('/login', validateBody(loginSchema), async (req, res, next) => {
-  try {
-    const body = req.body as LoginInput;
-    const result = await loginUser(body);
-    res.json(successResponse(result));
-  } catch (error) {
-    next(error);
-  }
+router.post('/login', validateBody(loginSchema), async (c) => {
+  const body = getValidatedBody<LoginInput>(c);
+  const result = await loginUser(body);
+  return c.json(successResponse(result));
 });
 
-router.get('/me', authenticate(), async (req, res, next) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json(successResponse({ user: null }));
-    }
-
-    const user = await getCurrentUser(req.user.id);
-    res.json(successResponse({ user }));
-  } catch (error) {
-    next(error);
-  }
+router.get('/me', authenticate(), async (c) => {
+  const user = await getCurrentUser(requireUser(c).id);
+  return c.json(successResponse({ user }));
 });
 
 export default router;

@@ -1,7 +1,9 @@
-import { AuditAction, Prisma, UserRole } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
+import { AuditAction, UserRole } from '@prisma/client';
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
+import type { AuthenticatedUser } from '../../types/runtime';
 import { buildPaginationMeta, normalizePagination } from '../../utils/pagination';
 import { createAuditLogEntry } from '../audit-log/audit-log.helper';
 
@@ -11,9 +13,9 @@ import type {
   UpdateActivityInput,
 } from './activity.schema';
 
-type Actor = Express.AuthenticatedUser | undefined;
+type Actor = AuthenticatedUser | undefined;
 
-function assertActor(actor: Actor): asserts actor is Express.AuthenticatedUser {
+function assertActor(actor: Actor): asserts actor is AuthenticatedUser {
   if (!actor) {
     throw createError(401, 'Authentication required');
   }
@@ -65,7 +67,7 @@ export async function listActivities(filters: ActivityFilterInput) {
   const conditions: Prisma.ActivityWhereInput[] = [];
 
   if (search) {
-    conditions.push({ subject: { contains: search, mode: 'insensitive' } });
+    conditions.push({ subject: { contains: search } });
   }
   if (type) conditions.push({ type });
   if (userId) conditions.push({ userId });

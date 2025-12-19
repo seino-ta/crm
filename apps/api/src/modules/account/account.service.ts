@@ -2,6 +2,7 @@ import { AccountAssignmentRole, AuditAction, Prisma, UserRole } from '@prisma/cl
 import createError from 'http-errors';
 
 import prisma from '../../lib/prisma';
+import type { AuthenticatedUser } from '../../types/runtime';
 import { buildPaginationMeta, normalizePagination } from '../../utils/pagination';
 import { createAuditLogEntry } from '../audit-log/audit-log.helper';
 
@@ -13,15 +14,15 @@ type AccountFetchOptions = {
   includeDeleted?: boolean;
 };
 
-type Actor = Express.AuthenticatedUser | undefined;
+type Actor = AuthenticatedUser | undefined;
 
-function assertActor(actor: Actor): asserts actor is Express.AuthenticatedUser {
+function assertActor(actor: Actor): asserts actor is AuthenticatedUser {
   if (!actor) {
     throw createError(401, 'Authentication required');
   }
 }
 
-async function assertAccountManagePermission(_accountId: string, actor: Actor) {
+function assertAccountManagePermission(_accountId: string, actor: Actor) {
   assertActor(actor);
   if (actor.role !== UserRole.ADMIN) {
     throw createError(403, 'Insufficient permissions');
@@ -55,9 +56,9 @@ export async function listAccounts(query: AccountListQuery) {
 
   if (search) {
     where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { domain: { contains: search, mode: 'insensitive' } },
-      { industry: { contains: search, mode: 'insensitive' } },
+      { name: { contains: search } },
+      { domain: { contains: search } },
+      { industry: { contains: search } },
     ];
   }
 
@@ -145,7 +146,7 @@ export async function updateAccount(id: string, payload: UpdateAccountInput, act
 
 export async function softDeleteAccount(id: string, actor?: Actor) {
   await findAccountOrThrow(id);
-  await assertAccountManagePermission(id, actor);
+  assertAccountManagePermission(id, actor);
 
   await prisma.account.update({
     where: { id },
@@ -165,7 +166,7 @@ export async function restoreAccount(id: string, actor?: Actor) {
     throw createError(400, 'Account is not archived');
   }
 
-  await assertAccountManagePermission(id, actor);
+  assertAccountManagePermission(id, actor);
 
   const restored = await prisma.account.update({
     where: { id },

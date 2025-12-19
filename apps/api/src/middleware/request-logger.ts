@@ -1,12 +1,17 @@
-import pinoHttp from 'pino-http';
+import type { MiddlewareHandler } from 'hono';
 
-import env from '../config/env';
 import logger from '../lib/logger';
+import type { AppBindings, AppVariables } from '../types/runtime';
 
-const requestLogger = pinoHttp({
-  logger,
-  autoLogging: env.nodeEnv !== 'test',
-  redact: ['req.headers.authorization', 'req.body.password'],
-});
+export const requestLogger: MiddlewareHandler<{ Bindings: AppBindings; Variables: AppVariables }> = async (c, next) => {
+  const start = Date.now();
+  await next();
+  const duration = Date.now() - start;
 
-export default requestLogger;
+  logger.info({
+    method: c.req.method,
+    path: c.req.path,
+    status: c.res.status,
+    duration,
+  }, 'request completed');
+};

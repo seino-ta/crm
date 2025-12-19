@@ -1,78 +1,70 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import createError from 'http-errors';
 
 import { authenticate } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
-import { accountFilterSchema, createAccountSchema, updateAccountSchema, type CreateAccountInput, type UpdateAccountInput } from '../modules/account/account.schema';
-import { createAccount, getAccountById, listAccounts, restoreAccount, softDeleteAccount, updateAccount } from '../modules/account/account.service';
+import {
+  accountFilterSchema,
+  createAccountSchema,
+  updateAccountSchema,
+  type CreateAccountInput,
+  type UpdateAccountInput,
+} from '../modules/account/account.schema';
+import {
+  createAccount,
+  getAccountById,
+  listAccounts,
+  restoreAccount,
+  softDeleteAccount,
+  updateAccount,
+} from '../modules/account/account.service';
+import type { AppEnv } from '../types/runtime';
+import { getValidatedBody, requireUser } from '../utils/context';
 import { successResponse } from '../utils/response';
 
-const router = Router();
+const router = new Hono<AppEnv>();
 
-router.use(authenticate());
+router.use('*', authenticate());
 
-router.get('/', async (req, res, next) => {
-  try {
-    const parsed = accountFilterSchema.safeParse(req.query);
-    if (!parsed.success) {
-      return next(createError(422, 'Validation error', { details: parsed.error.flatten() }));
-    }
-    const result = await listAccounts(parsed.data);
-    res.json(successResponse(result.data, result.meta));
-  } catch (error) {
-    next(error);
+router.get('/', async (c) => {
+  const parsed = accountFilterSchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    throw createError(422, 'Validation error', { details: parsed.error.flatten() });
   }
+  const result = await listAccounts(parsed.data);
+  return c.json(successResponse(result.data, result.meta));
 });
 
-router.get('/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    const account = await getAccountById(id, { includeDeleted: true });
-    res.json(successResponse(account));
-  } catch (error) {
-    next(error);
-  }
+router.get('/:id', async (c) => {
+  const { id } = c.req.param();
+  const account = await getAccountById(id, { includeDeleted: true });
+  return c.json(successResponse(account));
 });
 
-router.post('/', validateBody(createAccountSchema), async (req, res, next) => {
-  try {
-    const payload = req.body as CreateAccountInput;
-    const account = await createAccount(payload, req.user);
-    res.status(201).json(successResponse(account));
-  } catch (error) {
-    next(error);
-  }
+router.post('/', validateBody(createAccountSchema), async (c) => {
+  const payload = getValidatedBody<CreateAccountInput>(c);
+  const account = await createAccount(payload, requireUser(c));
+  return c.json(successResponse(account), 201);
 });
 
-router.put('/:id', validateBody(updateAccountSchema), async (req, res, next) => {
-  try {
-    const payload = req.body as UpdateAccountInput;
-    const { id } = req.params as { id: string };
-    const account = await updateAccount(id, payload, req.user?.id);
-    res.json(successResponse(account));
-  } catch (error) {
-    next(error);
-  }
+router.put('/:id', validateBody(updateAccountSchema), async (c) => {
+  const payload = getValidatedBody<UpdateAccountInput>(c);
+  const { id } = c.req.param();
+  const user = requireUser(c);
+  const account = await updateAccount(id, payload, user.id);
+  return c.json(successResponse(account));
 });
 
-router.delete('/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    await softDeleteAccount(id, req.user);
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
+router.delete('/:id', async (c) => {
+  const { id } = c.req.param();
+  await softDeleteAccount(id, requireUser(c));
+  return c.body(null, 204);
 });
 
-router.post('/:id/restore', async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    const account = await restoreAccount(id, req.user);
-    res.json(successResponse(account));
-  } catch (error) {
-    next(error);
-  }
+router.post('/:id/restore', async (c) => {
+  const { id } = c.req.param();
+  const account = await restoreAccount(id, requireUser(c));
+  return c.json(successResponse(account));
 });
 
 export default router;

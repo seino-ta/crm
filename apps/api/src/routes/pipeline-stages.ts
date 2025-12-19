@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 
 import { authenticate } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
@@ -15,60 +15,42 @@ import {
   listPipelineStages,
   updatePipelineStage,
 } from '../modules/pipeline-stage/pipeline-stage.service';
+import type { AppEnv } from '../types/runtime';
+import { getValidatedBody } from '../utils/context';
 import { successResponse } from '../utils/response';
 
-const router = Router();
+const router = new Hono<AppEnv>();
 
-router.use(authenticate());
+router.use('*', authenticate());
 
-router.get('/', async (_req, res, next) => {
-  try {
-    const stages = await listPipelineStages();
-    res.json(successResponse(stages));
-  } catch (error) {
-    next(error);
-  }
+router.get('/', async (c) => {
+  const stages = await listPipelineStages();
+  return c.json(successResponse(stages));
 });
 
-router.get('/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    const stage = await getPipelineStageById(id);
-    res.json(successResponse(stage));
-  } catch (error) {
-    next(error);
-  }
+router.get('/:id', async (c) => {
+  const { id } = c.req.param();
+  const stage = await getPipelineStageById(id);
+  return c.json(successResponse(stage));
 });
 
-router.post('/', validateBody(createPipelineStageSchema), async (req, res, next) => {
-  try {
-    const payload = req.body as CreatePipelineStageInput;
-    const stage = await createPipelineStage(payload);
-    res.status(201).json(successResponse(stage));
-  } catch (error) {
-    next(error);
-  }
+router.post('/', validateBody(createPipelineStageSchema), async (c) => {
+  const payload = getValidatedBody<CreatePipelineStageInput>(c);
+  const stage = await createPipelineStage(payload);
+  return c.json(successResponse(stage), 201);
 });
 
-router.put('/:id', validateBody(updatePipelineStageSchema), async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    const payload = req.body as UpdatePipelineStageInput;
-    const stage = await updatePipelineStage(id, payload);
-    res.json(successResponse(stage));
-  } catch (error) {
-    next(error);
-  }
+router.put('/:id', validateBody(updatePipelineStageSchema), async (c) => {
+  const payload = getValidatedBody<UpdatePipelineStageInput>(c);
+  const { id } = c.req.param();
+  const stage = await updatePipelineStage(id, payload);
+  return c.json(successResponse(stage));
 });
 
-router.delete('/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    await deletePipelineStage(id);
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
+router.delete('/:id', async (c) => {
+  const { id } = c.req.param();
+  await deletePipelineStage(id);
+  return c.body(null, 204);
 });
 
 export default router;

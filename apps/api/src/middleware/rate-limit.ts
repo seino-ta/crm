@@ -1,15 +1,22 @@
-import type { NextFunction, Request, Response } from 'express';
+import type { MiddlewareHandler } from 'hono';
 
-import config from '../config/env';
+import { getRuntimeConfig } from '../config/runtime';
+import type { AppBindings, AppVariables } from '../types/runtime';
 
-type Counter = { count: number; resetAt: number };
+const buckets = new Map<string, { count: number; resetAt: number }>();
+const skipPaths = ['/api/healthz', '/api/readyz', '/api/auth/me'];
 
-const windowMs = config.security.rateLimit.windowMs;
-const limit = config.security.rateLimit.max;
-const buckets = new Map<string, Counter>();
+function cleanupBuckets(now: number) {
+  for (const [key, bucket] of buckets.entries()) {
+    if (bucket.resetAt <= now) {
+      buckets.delete(key);
+    }
+  }
+}
 
-function getBucket(key: string): Counter {
+function getBucket(windowMs: number, key: string) {
   const now = Date.now();
+  cleanupBuckets(now);
   const existing = buckets.get(key);
   if (existing && existing.resetAt > now) {
     return existing;
@@ -19,37 +26,31 @@ function getBucket(key: string): Counter {
   return bucket;
 }
 
-const skipPaths = ['/api/health', '/api/auth/me'];
-
-export function rateLimit(req: Request, res: Response, next: NextFunction) {
-  if (skipPaths.includes(req.path)) {
-    next();
+export const rateLimit: MiddlewareHandler<{ Bindings: AppBindings; Variables: AppVariables }> = async (c, next) => {
+  const path = c.req.path;
+  if (skipPaths.includes(path)) {
+    await next();
     return;
   }
 
-  const key = req.ip || 'unknown';
-  const bucket = getBucket(key);
+  const config = getRuntimeConfig();
+  const key = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for') || 'unknown';
+  const bucket = getBucket(config.security.rateLimit.windowMs, key);
   bucket.count += 1;
 
-  if (bucket.count > limit) {
-    res.status(429).json({
-      error: 'Too many requests',
-      retryAfterMs: Math.max(0, bucket.resetAt - Date.now()),
-    });
-    return;
+  if (bucket.count > config.security.rateLimit.max) {
+    return c.json({
+      success: false,
+      error: {
+        message: 'Too many requests',
+        details: { retryAfterMs: Math.max(0, bucket.resetAt - Date.now()) },
+      },
+    }, 429);
   }
 
-  res.setHeader('X-RateLimit-Limit', String(limit));
-  res.setHeader('X-RateLimit-Remaining', String(Math.max(0, limit - bucket.count)));
-  res.setHeader('X-RateLimit-Reset', String(bucket.resetAt));
+  c.res.headers.set('X-RateLimit-Limit', String(config.security.rateLimit.max));
+  c.res.headers.set('X-RateLimit-Remaining', String(Math.max(0, config.security.rateLimit.max - bucket.count)));
+  c.res.headers.set('X-RateLimit-Reset', String(bucket.resetAt));
 
-  next();
-}
-
-// Optional: periodic cleanup to avoid unbounded map growth
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, bucket] of buckets.entries()) {
-    if (bucket.resetAt <= now) buckets.delete(key);
-  }
-}, windowMs).unref();
+  await next();
+};

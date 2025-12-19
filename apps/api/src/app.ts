@@ -1,31 +1,27 @@
-import cors from 'cors';
-import express from 'express';
-import helmet from 'helmet';
+import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
+import { cors } from 'hono/cors';
 
-import errorHandler from './middleware/error-handler';
-import notFoundHandler from './middleware/not-found';
-import requestLogger from './middleware/request-logger';
+import { handleError } from './middleware/error-handler';
+import { handleNotFound } from './middleware/not-found';
 import { rateLimit } from './middleware/rate-limit';
+import { requestLogger } from './middleware/request-logger';
 import routes from './routes';
+import type { AppEnv } from './types/runtime';
 import { successResponse } from './utils/response';
 
-const app = express();
+const app = new Hono<AppEnv>();
 
-app.disable('x-powered-by');
-app.use(helmet());
-app.use(cors());
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true }));
-app.use(requestLogger);
-app.use(rateLimit);
+app.use('*', cors());
+app.use('*', bodyLimit({ maxSize: 1024 * 1024 }));
+app.use('*', requestLogger);
+app.use('*', rateLimit);
 
-app.get('/api', (_req, res) => {
-  res.json(successResponse({ message: 'CRM API root' }));
-});
+app.get('/api', (c) => c.json(successResponse({ message: 'CRM API root' })));
 
-app.use('/api', routes);
+app.route('/api', routes);
 
-app.use(notFoundHandler);
-app.use(errorHandler);
+app.notFound((c) => handleNotFound(c));
+app.onError((err, c) => handleError(err, c));
 
 export default app;

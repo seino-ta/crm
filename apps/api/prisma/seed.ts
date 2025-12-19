@@ -19,7 +19,7 @@ const DEFAULT_PASSWORD = process.env.SEED_USER_PASSWORD || 'ChangeMe123!';
 const SALT_ROUNDS = Number(process.env.BCRYPT_SALT_ROUNDS || 12);
 
 async function seedPipelineStages() {
-  const stageData = [
+  const stageData: Prisma.PipelineStageCreateManyInput[] = [
     { name: 'Prospecting', order: 10, probability: 10 },
     { name: 'Qualified', order: 20, probability: 25 },
     { name: 'Proposal', order: 30, probability: 50 },
@@ -28,7 +28,7 @@ async function seedPipelineStages() {
     { name: 'Closed Lost', order: 60, probability: 0, isLost: true },
   ];
 
-  await prisma.pipelineStage.createMany({ data: stageData, skipDuplicates: true });
+  await prisma.pipelineStage.createMany({ data: stageData });
 }
 
 async function main() {

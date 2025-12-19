@@ -1,28 +1,25 @@
 import { UserRole } from '@prisma/client';
-import { Router } from 'express';
+import { Hono } from 'hono';
 import createError from 'http-errors';
 
 import { authenticate } from '../middleware/auth';
 import { auditLogFilterSchema } from '../modules/audit-log/audit-log.schema';
 import { listAuditLogs } from '../modules/audit-log/audit-log.service';
+import type { AppEnv } from '../types/runtime';
 import { successResponse } from '../utils/response';
 
-const router = Router();
+const router = new Hono<AppEnv>();
 
-router.use(authenticate([UserRole.ADMIN]));
+router.use('*', authenticate([UserRole.ADMIN]));
 
-router.get('/', async (req, res, next) => {
-  try {
-    const parsed = auditLogFilterSchema.safeParse(req.query);
-    if (!parsed.success) {
-      return next(createError(422, 'Validation error', { details: parsed.error.flatten() }));
-    }
-
-    const { data, meta } = await listAuditLogs(parsed.data);
-    res.json(successResponse(data, meta));
-  } catch (error) {
-    next(error);
+router.get('/', async (c) => {
+  const parsed = auditLogFilterSchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    throw createError(422, 'Validation error', { details: parsed.error.flatten() });
   }
+
+  const { data, meta } = await listAuditLogs(parsed.data);
+  return c.json(successResponse(data, meta));
 });
 
 export default router;

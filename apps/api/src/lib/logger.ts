@@ -1,22 +1,34 @@
 import pino, { type LoggerOptions } from 'pino';
 
-import env from '../config/env';
+import { getRuntimeConfig } from '../config/runtime';
 
-const options: LoggerOptions = {
-  level: env.logLevel,
-  ...(env.nodeEnv === 'development'
-    ? {
-        transport: {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'SYS:standard',
+function buildOptions(): LoggerOptions {
+  let level = 'info';
+  let isDev = false;
+  try {
+    const config = getRuntimeConfig();
+    level = config.logLevel;
+    isDev = config.nodeEnv === 'development';
+  } catch {
+    // runtime config not initialized yet (tests or build). Keep defaults.
+  }
+
+  return {
+    level,
+    ...(isDev
+      ? {
+          transport: {
+            target: 'pino-pretty',
+            options: {
+              colorize: true,
+              translateTime: 'SYS:standard',
+            },
           },
-        },
-      }
-    : {}),
-};
+        }
+      : {}),
+  };
+}
 
-const logger = pino(options);
+const logger = pino(buildOptions());
 
 export default logger;

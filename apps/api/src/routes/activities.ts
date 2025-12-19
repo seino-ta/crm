@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Hono } from 'hono';
 import createError from 'http-errors';
 
 import { authenticate } from '../middleware/auth';
@@ -17,65 +17,47 @@ import {
   listActivities,
   updateActivity,
 } from '../modules/activity/activity.service';
+import type { AppEnv } from '../types/runtime';
+import { getValidatedBody, requireUser } from '../utils/context';
 import { successResponse } from '../utils/response';
 
-const router = Router();
+const router = new Hono<AppEnv>();
 
-router.use(authenticate());
+router.use('*', authenticate());
 
-router.get('/', async (req, res, next) => {
-  try {
-    const parsed = activityFilterSchema.safeParse(req.query);
-    if (!parsed.success) {
-      return next(createError(422, 'Validation error', { details: parsed.error.flatten() }));
-    }
-
-    const result = await listActivities(parsed.data);
-    res.json(successResponse(result.data, result.meta));
-  } catch (error) {
-    next(error);
+router.get('/', async (c) => {
+  const parsed = activityFilterSchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    throw createError(422, 'Validation error', { details: parsed.error.flatten() });
   }
+
+  const result = await listActivities(parsed.data);
+  return c.json(successResponse(result.data, result.meta));
 });
 
-router.get('/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    const activity = await getActivityById(id);
-    res.json(successResponse(activity));
-  } catch (error) {
-    next(error);
-  }
+router.get('/:id', async (c) => {
+  const { id } = c.req.param();
+  const activity = await getActivityById(id);
+  return c.json(successResponse(activity));
 });
 
-router.post('/', validateBody(createActivitySchema), async (req, res, next) => {
-  try {
-    const payload = req.body as CreateActivityInput;
-    const activity = await createActivity(payload, req.user);
-    res.status(201).json(successResponse(activity));
-  } catch (error) {
-    next(error);
-  }
+router.post('/', validateBody(createActivitySchema), async (c) => {
+  const payload = getValidatedBody<CreateActivityInput>(c);
+  const activity = await createActivity(payload, requireUser(c));
+  return c.json(successResponse(activity), 201);
 });
 
-router.put('/:id', validateBody(updateActivitySchema), async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    const payload = req.body as UpdateActivityInput;
-    const activity = await updateActivity(id, payload, req.user);
-    res.json(successResponse(activity));
-  } catch (error) {
-    next(error);
-  }
+router.put('/:id', validateBody(updateActivitySchema), async (c) => {
+  const { id } = c.req.param();
+  const payload = getValidatedBody<UpdateActivityInput>(c);
+  const activity = await updateActivity(id, payload, requireUser(c));
+  return c.json(successResponse(activity));
 });
 
-router.delete('/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params as { id: string };
-    await deleteActivity(id, req.user);
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
+router.delete('/:id', async (c) => {
+  const { id } = c.req.param();
+  await deleteActivity(id, requireUser(c));
+  return c.body(null, 204);
 });
 
 export default router;

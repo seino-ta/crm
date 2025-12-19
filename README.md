@@ -1,321 +1,153 @@
-# Full-Featured CRM — Backend Implementation (Node/Express/Prisma/PostgreSQL)
+# Full-Featured CRM — Backend & Web (Hono/Cloudflare Prisma D1 + Next.js)
 
-This repository is intentionally minimal.
-
-A coding agent (such as Codex) will design and build the entire backend
-CRM system from scratch using **ExecPlans**.
+このリポジトリは **Hono + Cloudflare Workers + Prisma D1** をベースにした API と、Next.js 19 (App Router) ベースの Web フロントエンドを含むモノレポ構成です。  
+実装・運用は ExecPlan (.agent/execplans/) を唯一のソースオブトゥルースとして進めます。
 
 ---
 
-# 🎯 Project Goal
+## 🧱 現在のアーキテクチャ
 
-Implement a **full-featured CRM** backend including all standard industry
-features:
-
-## Core CRM Entities
-- **Users & Authentication**
-- **Companies**
-- **Contacts**
-- **Deals**
-- **Activities**
-
-Additional features:
-- Pipeline stages
-- Filtering & searching
-- Basic analytics
-- Audit fields
+| レイヤー | 技術 |
+| --- | --- |
+| API | Hono / Cloudflare Workers (Wrangler dev), Node ランタイムは `@hono/node-server` で互換実行 |
+| DB | Cloudflare D1 (SQLite 相当) + Prisma ORM (`@prisma/adapter-d1`) |
+| Frontend | Next.js 19 + React 19 (App Router) |
+| Auth | JWT (RSA ではなく HMAC)、HttpOnly Cookie に保存 |
+| テスト | Jest (API unit/e2e)、Playwright (Web e2e) |
+| IaC | Wrangler `wrangler.toml`、DB マイグレーションは `sqlite3` で適用 |
 
 ---
 
-# 🧱 Technology Stack
-
-- Node.js
-- Express
-- Prisma
-- PostgreSQL
-- Optional: TypeScript, Zod
-
----
-
-# 🧩 Repository Structure (initial)
+## 📁 Monorepo 構成
 
 ```
-crm-app/
-  AGENTS.md
-  README.md
-  .agent/
-    PLANS.md
-    execplans/
+crm/
+├── apps/
+│   ├── api/   # Hono/Workers API
+│   └── web/   # Next.js フロント
+├── .agent/    # ExecPlan/PLANS (必ず参照)
+├── README.md
+└── ...
 ```
 
-The coding agent will create everything else.
+---
+
+## ⚙️ セットアップ手順
+
+1. **依存関係インストール**
+   ```bash
+   npm install
+   ```
+
+2. **環境変数**
+   - ルート: `cp .env.example .env`
+   - Web: `cp apps/web/.env.local.example apps/web/.env.local`
+   - 主要項目
+     | 変数 | 説明 |
+     | --- | --- |
+    | `DATABASE_URL` | `file:/Users/<you>/work/crm/apps/api/prisma/dev.db` のように **絶対パス** で設定。`$(pwd)` を使う場合は `DATABASE_URL="file:$(pwd)/apps/api/prisma/dev.db"` のように記述し、Wrangler/seed/テスト全てで同じ値を使う。 |
+     | `JWT_SECRET` | HMAC シークレット。Workers 環境では `wrangler secret put JWT_SECRET` で投入。 |
+     | `BCRYPT_SALT_ROUNDS` | `12` を推奨。 |
+     | `API_BASE_URL` / `NEXT_PUBLIC_API_BASE_URL` | Node ローカルなら `http://localhost:4000/api`、Workers dev なら `http://localhost:8787/api`。 |
+
+3. **DB 初期化 (SQLite)**
+   Cloudflare D1 互換の SQLite ファイルに直接マイグレーションを流します。
+   ```bash
+   cd apps/api
+   DB_PATH="$(pwd)/prisma/dev.db"
+   rm -f "$DB_PATH"
+   sqlite3 "$DB_PATH" < prisma/migrations/20251217075403_init/migration.sql
+   env DATABASE_URL="file:${DB_PATH}" \
+     npx ts-node --project tsconfig.prisma.json prisma/seed.ts
+   ```
+   `✅ Prisma seed data created.` が出れば成功。
+
+4. **サーバ起動**  
+   ※ `file:/.../dev.db` の部分は **自分のリポジトリの絶対パス** に置き換えてください。例: `file:/Users/<you>/work/crm/apps/api/prisma/dev.db`。  
+   - Node ランタイム (開発用):  
+     ```bash
+     DATABASE_URL="file:/Users/<you>/work/crm/apps/api/prisma/dev.db" \
+       npm --prefix apps/api run dev   # http://localhost:4000/api/healthz
+     ```
+     *(ルートで `pwd` が `~/work/crm` なら `DATABASE_URL="file:$(pwd)/apps/api/prisma/dev.db"` )*
+   - Cloudflare Workers (Wrangler dev):  
+     ```bash
+     DATABASE_URL="file:/Users/<you>/work/crm/apps/api/prisma/dev.db" \
+       npm --prefix apps/api run cf:dev   # http://localhost:8787/api/healthz
+     ```
+   - Web:  
+     `npm --prefix apps/web run dev` → http://localhost:3000
+
+5. **ユーザー**
+   シード済みユーザー: `admin@crm.local` / `ChangeMe123!`、`manager@crm.local` / `ChangeMe123!`  
+   `.env` の `SEED_USER_PASSWORD` を変更 → 再シードで反映。
 
 ---
 
-# 🚀 How Development Works
+## 📜 npm Scripts (代表)
 
-1. Agent reads AGENTS.md and .agent/PLANS.md  
-2. Agent creates `.agent/execplans/crm_mvp.md`  
-3. ExecPlan defines architecture, tasks, validations  
-4. Agent executes tasks and updates ExecPlan  
+| Script | 説明 |
+| --- | --- |
+| `npm run dev` | API(Node)+Web を並列起動 |
+| `npm --prefix apps/api run dev` | API(Node)のみ |
+| `npm --prefix apps/api run cf:dev` | Workers ローカル実行 (Wrangler) |
+| `npm --prefix apps/api run lint` | API ESLint |
+| `npm --prefix apps/api run test` | lint + unit |
+| `npm --prefix apps/api run test:e2e` | Jest E2E (SQLite DB を `sqlite3` + seed で生成) |
+| `npm --prefix apps/web run dev` | Web dev server |
+| `npm run test:e2e` | Playwright (Web) |
 
----
-
-# 📌 Human Requirements
-
-You only need to run commands the agent tells you (npm install, prisma migrate, etc.).
-
----
-
-# ✅ Summary
-
-This repository is prepared so that:
-
-- The agent creates the architecture  
-- The agent splits tasks  
-- The agent writes all code  
-- The agent manages ExecPlans  
+> **注意**: Prisma CLI (migrate reset など) は SQLite + Workers では動かないため、ローカルでは `sqlite3 < migration.sql` で直接適用します。本番 D1 では `wrangler d1 migrations apply` を利用してください。
 
 ---
 
-## 🧭 Monorepo (apps/api + apps/web)
+## ✅ 動作確認 TODO
 
-- `apps/api`: Express + Prisma + PostgreSQL で REST API を提供。`npm --prefix apps/api run dev` で単体起動、ポートは `4000`。
-- `apps/web`: Next.js 16 (App Router) + React 19 で SSR/CSR ハイブリッド UI を提供。`npm --prefix apps/web run dev` で単体起動、ポートは `3000`。
-- ルートの npm scripts (`npm run dev`, `npm run lint`, `npm run test`, `npm run test:e2e` など) は npm workspaces 経由で API/Web を同時に操作する。
-
-### セットアップ (API + Web)
-
-1. Node.js 20 系と npm 10+ を用意する。
-2. `cp .env.example .env` でルート環境ファイルを作成し、`DATABASE_URL`、`JWT_SECRET`、`SEED_USER_PASSWORD` などを設定する。
-3. `cp apps/web/.env.local.example apps/web/.env.local` を実行し、`NEXT_PUBLIC_API_BASE_URL` (例: `http://localhost:4000/api`) や `API_BASE_URL`、`WEB_PORT` を必要に応じて変更する。
-4. `npm install` でワークスペース全体の依存関係を解決する。
-5. `npm run dev` で API (http://localhost:4000) と Web (http://localhost:3000) を同時起動する。`.env` / `apps/web/.env.local` が揃っていれば `crm_token` クッキー発行まで確認できる。
-
-### 認証とログインフロー
-
-- シードユーザー: `admin@crm.local` / `ChangeMe123!`、`manager@crm.local` / `ChangeMe123!` (ともに `.env` の `SEED_USER_PASSWORD` を変更すると再シード時に更新される)。
-- `/login` フォーム送信は Server Action (`loginAction`) を経由し、成功時に HttpOnly の `crm_token` クッキーを 12 時間保存 → Dashboard (`/dashboard`) へ `redirect()`。
-- Next.js の `middleware.ts` が `crm_token` の有無で `/login` と `/dashboard` 配下を制御する。ログアウト (`logoutAction`) はクッキー削除後に `/login` へ戻す。
-
-### npm Scripts / DB マイグレーション
-
-- `npm run dev` — API + Web を並列起動。
-- `npm run lint` / `npm run lint:web` / `npm run lint:api` — ESLint (Flat config)。
-- `npm run test` — API (Jest) + Web (lint) をまとめて実行。
-- `npm run test:api` / `npm --prefix apps/api run test` — API ユニットテスト。
-- `npm --prefix apps/api run test:unit` — APIユニット（Leadサービスなど）。
-- `npm run test:e2e` — Playwright で Web フローを検証。
-- `npm --prefix apps/api run db:migrate` / `npm --prefix apps/api run db:seed` — Prisma でマイグレーション & シードを実行 (必要に応じて `DATABASE_URL=...` を前置)。
-
-### Playwright / UI スナップショット
-
-- `npm run test:e2e` — ログイン → 主要 CRM 画面を自動操作。スクリーンショットやビデオは `test-results/`、`apps/web/tests/e2e/screenshots/` に保存される。
-- `npm run ui:snapshots` — `@snapshot` タグ付きテストのみ実行し、UI の diff を確認。
-- `npm run playwright:codegen` — `PLAYWRIGHT_BASE_URL` (デフォルト `http://localhost:3000`) を基にブラウザ操作を記録。
-- Playwright の spec はメニュー/CRUD 単位で分割済み。必要な機能だけを検証したい場合は `npx playwright test tests/e2e/<spec>` を指定する。
-  - `accounts.spec.ts` — アカウント作成/更新
-  - `contacts.spec.ts` — コンタクト CRUD + アカウント詳細反映
-  - `opportunities.spec.ts` — 案件作成とステージ変更
-  - `activities.spec.ts` — 活動ログ追加
-  - `tasks.spec.ts` — タスク作成
-  - `leads.spec.ts` — リード作成・ステータス変更・削除
-  - `reports.spec.ts` — レポート画面表示
-  - `admin-users.spec.ts` — ユーザー招待/ロール変更/無効化
-  - `audit-logs.spec.ts` — 監査ログのフィルタリング
-- 例: `npx playwright test tests/e2e/contacts.spec.ts --headed` でコンタクト UI のみをヘッドレス/ヘッドフル任意で検証できる。
-- HTML レポート: `npx playwright show-report apps/web/tests/e2e/report`。テストが失敗した場合は `npx playwright show-trace test-results/<run>/trace.zip` で詳細を確認。
-
-### UI フォーム / トースト運用ガイド
-- すべてのフォーム/フィルターで `FloatingInput` / `FloatingSelect` / `FloatingTextarea` を使用する。検索系など初期値が空のセレクトは `forceFloatLabel` を付与してラベル位置を揃える。
-- プレースホルダーはロケール (`apps/web/src/locales/*`) で管理し、コンポーネントにベタ書きしない。例示テキストの追加は `...Placeholder` キーを作る。
-- 保存/更新成功時の通知は `useFormSuccessToast` を利用し、`triggerImmediateToast()` → `router.refresh()` の順で描画を保証する。即時に `router.replace()` するとトーストが消えるため、遷移が必要な場合はトースト表示後に遅延させる。
-- Select は `FloatingSelect` がデファクト。既存の `<select>` を更新する場合も本コンポーネントへ置き換える。
-
-### 機能カバレッジ（`config/feature.json` 準拠）
-| feature.id | status | 備考 |
-| --- | --- | --- |
-| auth_and_users | implemented | サインアップ/ログイン/`/auth/me` 実装済み |
-| role_based_access_control | partially_implemented | ロール (ADMIN/MANAGER/REP) による削除/更新権限制御を導入、データスコープは今後拡張予定 |
-| accounts_basic | implemented | CRUD + ソフトデリート/復元、作成者を自動で Account OWNER に割当 |
-| contacts_basic | implemented | CRUD + アーカイブ、アカウント権限に連動した削除制御 |
-| leads_management | implemented | 新規リード管理（DB/API/UI `/leads`、ステータス更新、削除） |
-| deals_pipeline | implemented | 案件 + ステージ管理、簡易レポート反映 |
-| activities_and_tasks | implemented | 活動/タスク CRUD、オーナー or 管理ロールのみが更新/削除可 |
-| notifications_basic | not_implemented | 今後の拡張枠 |
-| files_attachment | not_implemented | ストレージ設計未着手 |
-| dashboard_my | implemented | `/dashboard` に主要 KPI/最新ログ/タスクを表示 |
-| reports_simple | implemented | ステージ別・担当者別レポート |
-| import_export_basic | not_implemented | CSV I/O 未実装 |
-| audit_log | implemented | Admin 専用 API/UI で閲覧可 |
-
-RBACメモ: 破壊的操作（Account/Contact/Opportunity/Activity/Task/Lead の削除等）は ADMIN もしくはオーナー/マネージャーのみ許可。Account 作成時に作成者を OWNER として自動関連付けするが、アーカイブ/復元はカタログ準拠で ADMIN 限定。
-
-### トラブルシュート
-
-- `cookies()` の使用制限: Server Action / Route Handler / Middleware 以外 (例: `'use client'` コンポーネント) では `cookies()` を呼び出せない。クライアントからクッキーを操作したい場合は Server Action を経由して処理する。
-- ポート競合 (`EADDRINUSE: 3000` など): `lsof -ti tcp:3000 | xargs kill -9` で既存プロセスを終了するか、`.env.local` の `WEB_PORT` を変更した上で `npm run dev` を再実行する。
-- Playwright 失敗時: `test-results/<spec>/` にスクリーンショット・動画・トレースが保存される。`npx playwright show-report apps/web/tests/e2e/report` や `npx playwright show-trace test-results/.../trace.zip` で原因を特定する。
+1. `/api/healthz` が 200 を返す (Node/Workers 両方)  
+2. `POST /api/auth/login` でシードユーザーがログインできる  
+3. `/api/accounts`、`/api/contacts`、`/api/opportunities` 等 CRUD を1本ずつ確認  
+4. `npm --prefix apps/api run test` と `npm --prefix apps/api run test:e2e` がグリーン  
+5. `apps/web` からログインしダッシュボードや主要 screen をクリック
 
 ---
-
-## 🧑‍💻 開発セットアップ
-
-1. Node.js 20+ / npm 10+ を用意する (推奨: `nvm` で 20.x を選択)。
-2. `.env.example` をコピーして `.env` を作成し、必要に応じて値を変更する。
-3. 依存関係をインストール: `npm install`
-4. ローカル開発サーバーを起動: `npm run dev`
-
-### 主要 npm スクリプト
-
-- `npm run dev` — ts-node-dev でホットリロード起動
-- `npm run build` — TypeScript を `dist/` にコンパイル
-- `npm start` — ビルド済みアプリを実行
-- `npm run lint` / `npm run lint:fix` — ESLint (Flat config)
-- `npm run format` / `npm run format:check` — Prettier
-
-### Docker Compose での起動
-
-```
-cp .env.example .env
-docker compose up --build
-```
-
-- `api` サービスが Express アプリをビルドして 4000 番ポートで公開する。
-- `db` サービスは PostgreSQL 15 (ユーザー `crm_user`, DB `crm_db`) を起動する。
-
-## 🧾 環境変数 (.env)
-
-| 変数名 | 説明 | デフォルト例 |
-| --- | --- | --- |
-| `NODE_ENV` | 実行環境 (development/test/production) | `development` |
-| `PORT` | API ポート | `4000` |
-| `LOG_LEVEL` | pino ログレベル | `debug` |
-| `DATABASE_URL` | PostgreSQL 接続 URL | `postgresql://crm_user:crm_pass@localhost:5432/crm_db?schema=public` |
-| `SHADOW_DATABASE_URL` | Prisma マイグレーションの Shadow DB (任意) | `postgresql://crm_user:crm_pass@localhost:5432/crm_db_shadow?schema=public` |
-| `JWT_SECRET` | 認証トークン用シークレット (後続 WS で使用) | `please-change-me` |
-| `JWT_EXPIRES_IN` | JWT の有効期限 | `1d` |
-| `BCRYPT_SALT_ROUNDS` | パスワードハッシュの cost | `12` |
-| `RATE_LIMIT_WINDOW_MS` | レートリミットの時間窓 (ミリ秒) | `60000` |
-| `RATE_LIMIT_MAX` | 窓あたりの最大リクエスト数 (IP単位) | `100` |
-| `SEED_USER_PASSWORD` | シードユーザーの平文パスワード | `ChangeMe123!` |
-
-Docker Compose では `.env` の値が `api` サービスに渡され、`db` サービスは定義済みの資格情報 (ユーザー/パスワード) を利用する。
-
-## 🗄️ Prisma / Database ワークフロー
-
-1. `docker compose up -d db` で PostgreSQL を起動 (初回は `postgres_data` ボリュームが作成される)。
-2. `npm --prefix apps/api run db:migrate` でローカル DB にマイグレーションを適用。
-3. `npm --prefix apps/api run db:seed` でサンプルユーザー/アカウント/案件データを投入。
-4. Prisma Studio を確認したい場合は `npm --prefix apps/api run db:studio`。
-
-> 💡 **TIP:** `npm --prefix apps/api …` 系コマンドはリポジトリ直下で実行し、`apps/api` から参照できる `.env` (例: `DOTENV_CONFIG_PATH=../../.env npm --prefix apps/api run db:migrate` または `apps/api/.env` を用意) に `DATABASE_URL` が設定されていることを確認してください。`apps/api` ディレクトリ内で同コマンドを実行すると `apps/api/apps/api/package.json` を探しに行くため失敗します。
-
-### マイグレーションの生成
-
-- 新しいスキーマを記述したら `npm --prefix apps/api run db:migrate -- --name <migration_name>` を実行し、PostgreSQL が起動していることを確認する。
-- DB を起動せずにスクリプトだけ生成したい場合は `npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/<timestamp>_<name>/migration.sql` を使用できる。
-
-### シードデータ
-
-- `prisma/seed.ts` は Prisma Client を使ってパイプラインステージ、管理者/マネージャーユーザー、代表的なアカウント・案件・活動・タスクを作成する。
-- `prisma.config.ts` の設定により `npm --prefix apps/api run db:seed` で `ts-node --project tsconfig.prisma.json prisma/seed.ts` が実行される。
-- サンプル認証情報: `admin@crm.local` / `manager@crm.local` （共通パスワードは `SEED_USER_PASSWORD` で上書き可、デフォルトは `ChangeMe123!`）。
-- 2025-11-19 以降のシードでは RFC 4122 準拠の UUID (例: `11111111-1111-4111-8111-111111111111`) を割り当てているため、既存 DB に旧 ID が残っている場合は `cd apps/api && npx prisma migrate reset --force` → `npm --prefix apps/api run db:seed` で初期化してから利用する。
-
-### 認証 API エンドポイント
-
-| Method | Path | 説明 |
-| --- | --- | --- |
-| `POST` | `/api/auth/signup` | 新規ユーザー登録 (email/password/任意の氏名) |
-| `POST` | `/api/auth/login` | 既存ユーザーのログイン。JWT を返却 |
-| `GET` | `/api/auth/me` | Bearer JWT を用いた現在ユーザー情報取得 |
-
-`Authorization: Bearer <token>` ヘッダーが必要なルートでは、サーバー側でロールを検証した上で `req.user` に `{ id, email, role }` を格納する。
-
-### アカウント / コンタクト API（WS4 範囲）
-
-#### Accounts
-
-| Method | Path | 説明 |
-| --- | --- | --- |
-| `GET` | `/api/accounts` | クエリ `search`, `status`, `page`, `pageSize` をサポートする一覧取得 |
-| `GET` | `/api/accounts/:id` | 単一アカウント詳細 |
-| `POST` | `/api/accounts` | 企業情報の作成 (名前必須、その他任意) |
-| `PUT` | `/api/accounts/:id` | 企業情報の更新 (部分更新可) |
-| `DELETE` | `/api/accounts/:id` | ソフトデリート ( `deletedAt` を設定 ) |
-
-#### Contacts
-
-| Method | Path | 説明 |
-| --- | --- | --- |
-| `GET` | `/api/contacts` | クエリ `search`, `accountId`, `page`, `pageSize` をサポートする一覧取得 |
-| `GET` | `/api/contacts/:id` | 単一コンタクト詳細 (関連アカウント含む) |
-| `POST` | `/api/contacts` | アカウント紐付け必須でコンタクト作成 |
-| `PUT` | `/api/contacts/:id` | コンパクトな部分更新、アカウント再割当も可 |
-| `DELETE` | `/api/contacts/:id` | ソフトデリート |
-
-#### Pipeline Stages
-
-| Method | Path | 説明 |
-| --- | --- | --- |
-| `GET` | `/api/pipeline-stages` | ステージ一覧 (order 昇順) |
-| `POST` | `/api/pipeline-stages` | ステージの新規作成 (name/order/probability 等) |
-| `GET` | `/api/pipeline-stages/:id` | 単一ステージ詳細 |
-| `PUT` | `/api/pipeline-stages/:id` | ステージの部分更新 (probability/isWon/isLost など) |
-| `DELETE` | `/api/pipeline-stages/:id` | 依存する案件がない場合のみ削除 |
-
-#### Opportunities
-
-| Method | Path | 説明 |
-| --- | --- | --- |
-| `GET` | `/api/opportunities` | クエリ `search`, `status`, `stageId`, `ownerId`, `accountId`, `page`, `pageSize` をサポート |
-| `GET` | `/api/opportunities/:id` | 取引詳細 (Account/Owner/Stage/Contact を含む) |
-| `POST` | `/api/opportunities` | Account+Owner+Stage を必須として案件作成。Stage から status/probability を推測 |
-| `PUT` | `/api/opportunities/:id` | 部分更新 (ステージ変更時は監査ログを記録し、必要なら status/probability を自動更新) |
-| `DELETE` | `/api/opportunities/:id` | ソフトデリート。監査ログ `DELETE` を記録 |
-
-ステージ変更時には自動で Activity (type: NOTE) と follow-up Task (3 日後の期限) が作成され、営業担当にリマインダーを通知します。
-
-#### Activities
-
-| Method | Path | 説明 |
-| --- | --- | --- |
-| `GET` | `/api/activities` | `type`, `userId`, `accountId`, `contactId`, `opportunityId`, `from`, `to`, `page`, `pageSize` によるフィルタ |
-| `GET` | `/api/activities/:id` | 活動詳細 (user/account/contact/opportunity を含む) |
-| `POST` | `/api/activities` | 必須: `type`, `subject`, `userId`。関連エンティティが存在するか検証 |
-| `PUT` | `/api/activities/:id` | 部分更新、関連エンティティ差し替え可 |
-| `DELETE` | `/api/activities/:id` | 活動削除 |
-
-#### Tasks
-
-| Method | Path | 説明 |
-| --- | --- | --- |
-| `GET` | `/api/tasks` | `status`, `ownerId`, `accountId`, `opportunityId`, `activityId`, `dueBefore`, `dueAfter`, `page`, `pageSize` をサポート |
-| `GET` | `/api/tasks/:id` | タスク詳細 (owner/account/opportunity/activity/contact) |
-| `POST` | `/api/tasks` | タスク作成。owner 必須、関連エンティティ存在チェック、`status` 未指定なら OPEN |
-| `PUT` | `/api/tasks/:id` | 部分更新。`status` を COMPLETED にすると `completedAt` を自動で設定 |
-| `DELETE` | `/api/tasks/:id` | タスク削除 |
-
-#### Audit Logs
-
-| Method | Path | 説明 |
-| --- | --- | --- |
-| `GET` | `/api/audit-logs` | `entityType`, `entityId`, `userId`, `opportunityId`, `action`, `from`, `to`, `page`, `pageSize` でフィルタ可能。管理者/マネージャーのみアクセス可 |
-
-#### Reports
-
-| Method | Path | 説明 |
-| --- | --- | --- |
-| `GET` | `/api/reports/pipeline-stage` | ステージごとの案件数・金額合計。管理者/マネージャー限定 |
-| `GET` | `/api/reports/owner` | 担当者ごとのパイプライン合計と件数。管理者/マネージャー限定 |
-
-すべてのビジネス系 API は JWT 認証必須で、一覧応答は `data` と `meta` (ページング情報) を持つ統一フォーマットです。
 
 ## 🧪 テスト
 
-```
-npm run test
-```
+### API (Jest)
+- **Unit**:  
+  ```bash
+  DATABASE_URL_TEST="file:/Users/<you>/work/crm/apps/api/prisma/test.db" \
+    npm --prefix apps/api run test
+  ```
+- **E2E**:  
+  ```bash
+  DATABASE_URL_TEST="file:/Users/<you>/work/crm/apps/api/prisma/test.db" \
+    npm --prefix apps/api run test:e2e
+  ```
+  - GlobalSetup が `sqlite3` + migration SQL + seed で DB を再生成
+  - `DATABASE_URL_TEST` は必ず絶対パスで指定
 
-`test` スクリプトは ESLint と Jest (ts-jest) を実行します。ユニットテストは `tests/` 以下に TypeScript で配置します。
+### Web (Playwright)
+- `npm run test:e2e` ※ `PLAYWRIGHT_BASE_URL` (デフォルト http://localhost:3000) を `.env` で管理
+- 失敗時は `test-results/` のスクショ/動画/trace を確認
+
+---
+
+## 🗂️ ExecPlan / ドキュメント
+
+- `.agent/execplans/api_hono_migration.md` — Hono/D1 以降の計画と進捗ログ
+- `.agent/PLANS.md` — ExecPlan のルール
+- `docs/` — 追加ガイド (必要に応じて更新)
+
+作業時は必ず ExecPlan を更新し、`Progress` / `Surprises` / `Decision Log` / `Outcomes` を最新に保ちます。
+
+---
+
+## 🤝 コントリビュート時の注意
+
+1. `git status` で不要ファイル (例: `apps/api/apps/...`) が出ていないか確認
+2. 環境固有ファイル/DB (`*.db`, `.wrangler/`) は `.gitignore` に含める
+3. CI と同じコマンド (`npm --prefix apps/api run test`, `npm --prefix apps/api run test:e2e`, `npm run test:e2e`) をローカルで通してから PR
+4. Cloudflare Secrets/Bindings は PR に含めない (`wrangler secret put ...` / Dashbord 上で設定)
+
+これで Cloudflare Workers (Hono) + D1 + Next.js の最新構成が README に反映されています。必要な手順・注意点を追加したい場合はこのファイルを更新してください。

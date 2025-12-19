@@ -1,8 +1,6 @@
-import type { NextFunction, Request, Response } from 'express';
-import createError from 'http-errors';
+import type { AppContext } from '../types/runtime';
+import { errorResponse } from '../utils/response';
 
-const notFoundHandler = (req: Request, _res: Response, next: NextFunction): void => {
-  next(createError(404, `Route ${req.method} ${req.originalUrl} not found`));
-};
-
-export default notFoundHandler;
+export function handleNotFound(c: AppContext) {
+  return c.json(errorResponse(`Route ${c.req.method} ${c.req.path} not found`), 404);
+}

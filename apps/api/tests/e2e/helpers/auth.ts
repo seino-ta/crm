@@ -1,3 +1,4 @@
+import { expectApiSuccess } from './response';
 import { api } from './supertest';
 
 type LoginResult = { token: string };
@@ -10,9 +11,10 @@ export async function loginAsAdmin(): Promise<LoginResult> {
     .post('/api/auth/login')
     .send({ email, password });
 
-  if (res.status !== 200 || !res.body?.data?.token) {
+  if (res.status !== 200) {
     throw new Error(`Login failed: ${res.status} ${res.text}`);
   }
 
-  return { token: res.body.data.token };
+  const body = expectApiSuccess<{ token: string }>(res);
+  return { token: body.data.token };
 }

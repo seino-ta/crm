@@ -2,7 +2,7 @@ import type { UserRole } from '@prisma/client';
 import { sign, verify, type Secret, type SignOptions } from 'jsonwebtoken';
 import type { StringValue } from 'ms';
 
-import env from '../config/env';
+import { getRuntimeConfig } from '../config/runtime';
 
 export type TokenPayload = {
   sub: string;
@@ -11,6 +11,7 @@ export type TokenPayload = {
 };
 
 export function signAccessToken(user: { id: string; email: string; role: UserRole }): string {
+  const env = getRuntimeConfig();
   const payload: TokenPayload = {
     sub: user.id,
     email: user.email,
@@ -24,5 +25,6 @@ export function signAccessToken(user: { id: string; email: string; role: UserRol
 }
 
 export function verifyAccessToken(token: string): TokenPayload {
+  const env = getRuntimeConfig();
   return verify(token, env.jwt.secret as Secret) as TokenPayload;
 }

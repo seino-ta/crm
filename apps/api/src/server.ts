@@ -1,25 +1,31 @@
+import { serve } from '@hono/node-server';
+
 import app from './app';
-import env from './config/env';
+import { initNodeRuntimeConfig } from './config/node';
 import logger from './lib/logger';
 
-function startServer(): void {
-  const server = app.listen(env.port, () => {
-    logger.info({ port: env.port, env: env.nodeEnv }, 'Server started');
+const config = initNodeRuntimeConfig();
+
+const server = serve(
+  {
+    fetch: app.fetch,
+    port: config.port,
+  },
+  (info) => {
+    logger.info({ port: info.port, env: config.nodeEnv }, 'Server started');
+  }
+);
+
+const shutdown = (signal: NodeJS.Signals) => {
+  logger.info({ signal }, 'Gracefully shutting down');
+  server.close((err) => {
+    if (err) {
+      logger.error({ err }, 'Error during shutdown');
+      process.exit(1);
+    }
+    process.exit(0);
   });
+};
 
-  const shutdown = (signal: NodeJS.Signals) => {
-    logger.info({ signal }, 'Gracefully shutting down');
-    server.close((err) => {
-      if (err) {
-        logger.error({ err }, 'Error during shutdown');
-        process.exit(1);
-      }
-      process.exit(0);
-    });
-  };
-
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
-}
-
-startServer();
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);

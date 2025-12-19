@@ -1,3 +1,4 @@
+import { expectApiError, expectApiSuccess } from './helpers/response';
 import { api } from './helpers/supertest';
 
 describe('auth login', () => {
@@ -10,7 +11,8 @@ describe('auth login', () => {
       .send({ email, password });
 
     expect(res.status).toBe(200);
-    expect(res.body?.data?.token).toBeTruthy();
+    const body = expectApiSuccess<{ token: string }>(res);
+    expect(body.data.token).toBeTruthy();
   });
 
   it('rejects invalid credentials', async () => {
@@ -19,5 +21,7 @@ describe('auth login', () => {
       .send({ email: 'admin@crm.local', password: 'wrongpass' });
 
     expect(res.status).toBe(401);
+    const body = expectApiError(res);
+    expect(body.error.message).toBeTruthy();
   });
 });

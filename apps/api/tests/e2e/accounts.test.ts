@@ -1,5 +1,10 @@
-import { api } from './helpers/supertest';
+import type { Account } from '@prisma/client';
+
 import { loginAsAdmin } from './helpers/auth';
+import { expectApiSuccess } from './helpers/response';
+import { api } from './helpers/supertest';
+
+type AccountResponse = Pick<Account, 'id' | 'name' | 'phone' | 'deletedAt'>;
 
 describe('accounts e2e', () => {
   let token: string;
@@ -18,7 +23,8 @@ describe('accounts e2e', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ name, industry: 'Software' });
     expect(createRes.status).toBe(201);
-    const accountId = createRes.body?.data?.id as string;
+    const createBody = expectApiSuccess<AccountResponse>(createRes);
+    const accountId = createBody.data.id;
     expect(accountId).toBeTruthy();
 
     // get
@@ -26,7 +32,8 @@ describe('accounts e2e', () => {
       .get(`/api/accounts/${accountId}`)
       .set('Authorization', `Bearer ${token}`);
     expect(getRes.status).toBe(200);
-    expect(getRes.body?.data?.name).toBe(name);
+    const getBody = expectApiSuccess<AccountResponse>(getRes);
+    expect(getBody.data.name).toBe(name);
 
     // update
     const updatedName = `${name} Updated`;
@@ -35,8 +42,9 @@ describe('accounts e2e', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ name: updatedName, phone: '+1-555-0101' });
     expect(updateRes.status).toBe(200);
-    expect(updateRes.body?.data?.name).toBe(updatedName);
-    expect(updateRes.body?.data?.phone).toBe('+1-555-0101');
+    const updateBody = expectApiSuccess<AccountResponse>(updateRes);
+    expect(updateBody.data.name).toBe(updatedName);
+    expect(updateBody.data.phone).toBe('+1-555-0101');
 
     // soft delete
     const deleteRes = await api()
@@ -49,14 +57,16 @@ describe('accounts e2e', () => {
       .get(`/api/accounts/${accountId}`)
       .set('Authorization', `Bearer ${token}`);
     expect(archivedRes.status).toBe(200);
-    expect(archivedRes.body?.data?.deletedAt).toBeTruthy();
+    const archivedBody = expectApiSuccess<AccountResponse>(archivedRes);
+    expect(archivedBody.data.deletedAt).toBeTruthy();
 
     // restore
     const restoreRes = await api()
       .post(`/api/accounts/${accountId}/restore`)
       .set('Authorization', `Bearer ${token}`);
     expect(restoreRes.status).toBe(200);
-    expect(restoreRes.body?.data?.deletedAt).toBeNull();
+    const restoreBody = expectApiSuccess<AccountResponse>(restoreRes);
+    expect(restoreBody.data.deletedAt).toBeNull();
 
     // search list should contain restored account
     const listRes = await api()
@@ -64,7 +74,8 @@ describe('accounts e2e', () => {
       .set('Authorization', `Bearer ${token}`)
       .query({ search: name.split(' ')[1] });
     expect(listRes.status).toBe(200);
-    const ids = (listRes.body?.data ?? []).map((a: any) => a.id);
+    const listBody = expectApiSuccess<AccountResponse[]>(listRes);
+    const ids = listBody.data.map((a) => a.id);
     expect(ids).toContain(accountId);
   });
 });

@@ -1,30 +1,22 @@
-import { UserRole } from '@prisma/client';
-import { Router } from 'express';
+import { Hono } from 'hono';
 
 import { authenticate } from '../middleware/auth';
 import { ownerPipelineReport, stageSummaryReport } from '../modules/report/report.service';
+import type { AppEnv } from '../types/runtime';
 import { successResponse } from '../utils/response';
 
-const router = Router();
+const router = new Hono<AppEnv>();
 
-router.use(authenticate());
+router.use('*', authenticate());
 
-router.get('/pipeline-stage', async (_req, res, next) => {
-  try {
-    const data = await stageSummaryReport();
-    res.json(successResponse(data));
-  } catch (error) {
-    next(error);
-  }
+router.get('/pipeline-stage', async (c) => {
+  const data = await stageSummaryReport();
+  return c.json(successResponse(data));
 });
 
-router.get('/owner', async (_req, res, next) => {
-  try {
-    const data = await ownerPipelineReport();
-    res.json(successResponse(data));
-  } catch (error) {
-    next(error);
-  }
+router.get('/owner', async (c) => {
+  const data = await ownerPipelineReport();
+  return c.json(successResponse(data));
 });
 
 export default router;

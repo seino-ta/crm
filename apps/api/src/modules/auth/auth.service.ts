@@ -2,7 +2,7 @@ import { UserRole, type User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import createError from 'http-errors';
 
-import env from '../../config/env';
+import { getRuntimeConfig } from '../../config/runtime';
 import prisma from '../../lib/prisma';
 import { signAccessToken } from '../../utils/jwt';
 
@@ -22,7 +22,8 @@ export async function signupUser(payload: SignupInput) {
     throw createError(409, 'Email is already registered');
   }
 
-  const passwordHash = await bcrypt.hash(payload.password, env.security.bcryptSaltRounds);
+  const { security } = getRuntimeConfig();
+  const passwordHash = await bcrypt.hash(payload.password, security.bcryptSaltRounds);
 
   const user = await prisma.user.create({
     data: {
