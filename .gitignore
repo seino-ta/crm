@@ -28,3 +28,4 @@ apps/api/prisma/*.db
 apps/api/prisma/*.db-journal
 .wrangler
 apps/api/.wrangler
+apps/api/wrangler.toml
