@@ -137,7 +137,8 @@ crm/
 
 - `.agent/execplans/api_hono_migration.md` — Hono/D1 以降の計画と進捗ログ
 - `.agent/PLANS.md` — ExecPlan のルール
-- `docs/` — 追加ガイド (必要に応じて更新)
+- `docs/deployment/cloudflare.md` — Cloudflare 無料枠でのデプロイ手順
+- `docs/` 配下の他ガイド — 補足資料（テスト手順など）
 
 作業時は必ず ExecPlan を更新し、`Progress` / `Surprises` / `Decision Log` / `Outcomes` を最新に保ちます。
 
