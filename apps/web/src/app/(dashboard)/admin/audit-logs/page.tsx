@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import type { AuditAction } from '@/types/crm';
+import { AUDIT_ACTIONS, type AuditAction } from '@/types/crm';
 
 import { Card } from '@/components/ui/card';
 import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';
@@ -13,7 +13,7 @@ import { getServerTranslations } from '@/lib/i18n/server';
 import Link from 'next/link';
 import { createTranslator } from '@/lib/i18n/translator';
 
-const auditActionOptions = Object.values(AuditAction);
+const auditActionOptions = AUDIT_ACTIONS;
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 

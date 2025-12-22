@@ -7,3 +7,4 @@ export type AuditAction =
   | 'DELETE'
   | 'STATUS_CHANGE'
   | 'STAGE_CHANGE';
+export const AUDIT_ACTIONS: AuditAction[] = ['CREATE', 'UPDATE', 'DELETE', 'STATUS_CHANGE', 'STAGE_CHANGE'];
