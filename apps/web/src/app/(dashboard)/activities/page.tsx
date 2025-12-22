@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { ActivityForm } from './activity-form';
-import type { ActivityType } from '@/types/crm';
+import { ACTIVITY_TYPES, type ActivityType } from '@/types/crm';
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/auth';
 import { listAccounts, listActivities, listOpportunities } from '@/lib/data';
@@ -109,7 +109,7 @@ export default async function ActivitiesPage({ searchParams }: { searchParams: P
             />
             <FloatingSelect name="type" label={locale === 'ja' ? '活動タイプ' : 'Type'} defaultValue={type} forceFloatLabel>
               <option value="">{locale === 'ja' ? 'すべて' : 'All'}</option>
-              {Object.values(ActivityType).map((value) => (
+              {ACTIVITY_TYPES.map((value) => (
                 <option key={value} value={value}>
                   {getActivityTypeLabel(value, locale)}
                 </option>
