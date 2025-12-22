@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import { AuditAction } from '@prisma/client';
+import { AuditAction } from '@/types/crm';
 
 import { Card } from '@/components/ui/card';
 import { FloatingInput, FloatingSelect } from '@/components/ui/floating-field';

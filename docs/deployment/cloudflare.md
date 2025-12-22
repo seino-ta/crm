@@ -32,6 +32,8 @@ cp wrangler.example.toml wrangler.toml
 # ファイルを開き、database_id を自分の値に書き換え
 ```
 
+> `database_id` を忘れた場合は `npx wrangler d1 list` や `npx wrangler d1 info crm-api`、または Cloudflare ダッシュボード（Workers & Pages → D1 → 対象 DB）で再確認できます。
+
 ローカル開発用に `wrangler d1 migrations apply crm-api --local` を一度実行すると、`.wrangler/` 配下にエミュレーション DB が作られます。
 
 ---
@@ -101,9 +103,9 @@ Route を追加（例: `api.example.com/*`）すればカスタムドメイン�
 
 1. Cloudflare Pages で新規プロジェクト → 「Connect to Git」→ リポジトリ選択
 2. Build settings  
-   - Build command: `npm install && npm run build`
-   - Build output: `apps/web/.next`
-   - Root Dir: （空、もしくは `/`）
+   - Build command: `npm --prefix apps/web install && npm --prefix apps/web run build`
+   - Build output: （空欄で OK。Next.js が `.next` を自動検出）
+   - Root Dir: 空欄（リポジトリ直下）
 3. Environmental variables  
    - `NODE_VERSION=20`
    - `NEXT_PUBLIC_API_BASE_URL=https://api.example.com/api`

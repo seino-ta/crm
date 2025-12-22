@@ -40,15 +40,23 @@ crm/
    ```
 
 2. **環境変数**
-   - ルート: `cp .env.example .env`
-   - Web: `cp apps/web/.env.local.example apps/web/.env.local`
-   - 主要項目
-     | 変数 | 説明 |
-     | --- | --- |
-    | `DATABASE_URL` | `file:/Users/<you>/work/crm/apps/api/prisma/dev.db` のように **絶対パス** で設定。`$(pwd)` を使う場合は `DATABASE_URL="file:$(pwd)/apps/api/prisma/dev.db"` のように記述し、Wrangler/seed/テスト全てで同じ値を使う。 |
-    | `JWT_SECRET` | HMAC シークレット。Workers 環境では `wrangler secret put JWT_SECRET` で投入。 |
-    | `BCRYPT_SALT_ROUNDS` | `12` を推奨。 |
-    | `API_BASE_URL` / `NEXT_PUBLIC_API_BASE_URL` | Node ローカルなら `http://localhost:4000/api`、Workers dev なら `http://localhost:8787/api`。 |
+   - ローカル: `.env` / `apps/web/.env.local`
+      | 変数 | 推奨値 |
+      | --- | --- |
+      | `DATABASE_URL` | `file:/Users/<you>/work/crm/apps/api/prisma/dev.db` |
+      | `API_BASE_URL` / `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:4000/api` |
+      | `JWT_SECRET` / `JWT_EXPIRES_IN` / `BCRYPT_SALT_ROUNDS` | 任意のローカル値 |
+   - Workers (apps/api)
+      | 変数 | 例 |
+      | --- | --- |
+      | `JWT_SECRET` | `wrangler secret put JWT_SECRET` で投入 |
+      | `API_BASE_URL` | `https://api.<domain>/api` (`wrangler --var` or `[vars]`) |
+      | 他 (`JWT_EXPIRES_IN`, `BCRYPT_SALT_ROUNDS`) | Secrets に登録 |
+   - Pages (apps/web)
+      | 変数 | 例 |
+      | --- | --- |
+      | `NEXT_PUBLIC_API_BASE_URL` | `https://api.<domain>/api` |
+      | `API_BASE_URL` (SSR が必要なら) | `https://api.<domain>/api` |
 
    - Cloudflare D1 の `database_id` は Git に含めない運用。`apps/api/wrangler.example.toml` を `apps/api/wrangler.toml` にコピーし、自分の `database_id` を記述してください（`.gitignore` 済み）。
 
