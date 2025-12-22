@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 import { AUDIT_ACTIONS, type AuditAction } from '@/types/crm';
 
