@@ -46,7 +46,8 @@ crm/
      | 変数 | 説明 |
      | --- | --- |
     | `DATABASE_URL` | `file:/Users/<you>/work/crm/apps/api/prisma/dev.db` のように **絶対パス** で設定。`$(pwd)` を使う場合は `DATABASE_URL="file:$(pwd)/apps/api/prisma/dev.db"` のように記述し、Wrangler/seed/テスト全てで同じ値を使う。 |
-     | `JWT_SECRET` | HMAC シークレット。Workers 環境では `wrangler secret put JWT_SECRET` で投入。 |
+    | `D1_DATABASE_ID` | Cloudflare D1 作成時に発行される UUID。`export D1_DATABASE_ID=...` と設定すると `wrangler dev/deploy` が参照する。リポジトリには値をコミットしない。 |
+    | `JWT_SECRET` | HMAC シークレット。Workers 環境では `wrangler secret put JWT_SECRET` で投入。 |
      | `BCRYPT_SALT_ROUNDS` | `12` を推奨。 |
      | `API_BASE_URL` / `NEXT_PUBLIC_API_BASE_URL` | Node ローカルなら `http://localhost:4000/api`、Workers dev なら `http://localhost:8787/api`。 |
 

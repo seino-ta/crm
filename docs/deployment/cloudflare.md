@@ -24,7 +24,16 @@ npx wrangler login
 npx wrangler d1 create crm-api
 ```
 
-コマンド出力に表示される `database_id` を `apps/api/wrangler.toml` の `[[d1_databases]].database_id` に反映します。
+作成時に表示される `uuid`（= database_id）を環境変数 `D1_DATABASE_ID` に控えておきます。  
+シェルで永続化する例:
+
+```bash
+echo 'export D1_DATABASE_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' >> ~/.zshrc
+source ~/.zshrc
+```
+
+`apps/api/wrangler.toml` は `database_id = "${D1_DATABASE_ID}"` と記述しているため、  
+`cf:dev` や `cf:deploy` のたびにこの環境変数が参照されます。
 
 ローカル開発用に `wrangler d1 migrations apply crm-api --local` を一度実行すると、`.wrangler/` 配下にエミュレーション DB が作られます。
 
@@ -74,6 +83,7 @@ Workers（API）は `wrangler secrets`、Pages（Web）はプロジェクト設�
 ```bash
 cd apps/api
 npm install  # 初回のみ
+export D1_DATABASE_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 npm run build
 npm run cf:deploy
 ```
@@ -81,7 +91,8 @@ npm run cf:deploy
 デプロイ後、Cloudflare ダッシュボード → Workers & Pages → 該当 Worker → Settings から  
 Route を追加（例: `api.example.com/*`）すればカスタムドメインで公開できます。
 
-ローカル確認は `DATABASE_URL="file:/Users/<you>/work/crm/apps/api/prisma/dev.db" npm run cf:dev`。
+ローカル確認は `export D1_DATABASE_ID=...` を設定した上で  
+`DATABASE_URL="file:/Users/<you>/work/crm/apps/api/prisma/dev.db" npm run cf:dev`。
 
 ---
 
