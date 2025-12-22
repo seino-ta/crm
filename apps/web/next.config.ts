@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import path from 'node:path';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -7,6 +8,11 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+  },
+  turbopack: {
+    // Cloudflare Pages では `node_modules` がモノレポ直下に置かれるため、
+    // Turbopack にリポジトリルートを明示する
+    root: path.join(__dirname, '../..'),
   },
 };
 
