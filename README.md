@@ -106,6 +106,7 @@ crm/
 | `npm --prefix apps/api run test` | lint + unit |
 | `npm --prefix apps/api run test:e2e` | Jest E2E (SQLite DB を `sqlite3` + seed で生成) |
 | `npm --prefix apps/web run dev` | Web dev server |
+| `npm --prefix apps/web run build:cf-pages` | Cloudflare Pages 用ビルド（`.vercel/output` を生成） |
 | `npm run test:e2e` | Playwright (Web) |
 
 > **注意**: Prisma CLI (migrate reset など) は SQLite + Workers では動かないため、ローカルでは `sqlite3 < migration.sql` で直接適用します。本番 D1 では `wrangler d1 migrations apply` を利用してください。

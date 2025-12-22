@@ -103,10 +103,12 @@ Route を追加（例: `api.example.com/*`）すればカスタムドメイン�
 
 1. Cloudflare Pages で新規プロジェクト → 「Connect to Git」→ リポジトリ選択
 2. Build settings  
-   - Build command: `npm --prefix apps/web install && npm --prefix apps/web run build`
-   - Build output: （空欄で OK。Next.js が `.next` を自動検出）
-   - Root Dir: 空欄（リポジトリ直下）
-3. Environmental variables  
+   - Framework preset: `Next.js`
+   - Root Dir: `apps/web`
+   - Build command: `npm install && npm run build:cf-pages`
+   - Build output: `.vercel/output` （UI が自動で先頭に `/` を付けるが、`apps/web/.vercel/output` が参照される）
+   - `npm run build:cf-pages` は内部で `npx @cloudflare/next-on-pages@1 --experimental-minify` を実行し、`.vercel/output` を生成します。Next.js 本来の `next build` だけでは `.vercel/output` が作られないため、このコマンドを必ず使ってください。
+3. Environment variables  
    - `NODE_VERSION=20`
    - `NEXT_PUBLIC_API_BASE_URL=https://api.example.com/api`
    - `API_BASE_URL` が必要なら同値で設定（SSR fetch 用）
