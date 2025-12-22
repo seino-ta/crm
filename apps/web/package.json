@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev -p ${WEB_PORT:-3000}",
     "build": "next build",
-    "build:cf-pages": "npx @cloudflare/next-on-pages@1 --experimental-minify",
+    "build:cf-pages": "NEXT_ON_PAGES_PROJECT_DIR=${NEXT_ON_PAGES_PROJECT_DIR:-.} npx @cloudflare/next-on-pages@1",
     "start": "next start -p ${WEB_PORT:-3000}",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "npm run lint",

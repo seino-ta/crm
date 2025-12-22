@@ -107,7 +107,7 @@ Route を追加（例: `api.example.com/*`）すればカスタムドメイン�
    - Root Dir: `apps/web`
    - Build command: `npm install && npm run build:cf-pages`
    - Build output: `.vercel/output` （UI が自動で先頭に `/` を付けるが、`apps/web/.vercel/output` が参照される）
-   - `npm run build:cf-pages` は内部で `npx @cloudflare/next-on-pages@1 --experimental-minify` を実行し、`.vercel/output` を生成します。Next.js 本来の `next build` だけでは `.vercel/output` が作られないため、このコマンドを必ず使ってください。
+   - `npm run build:cf-pages` は内部で `NEXT_ON_PAGES_PROJECT_DIR=. npx @cloudflare/next-on-pages@1` を実行し、`.vercel/output` を生成します。Cloudflare Pages 環境でも常にカレントディレクトリを `apps/web` に固定したまま Next.js アダプタを走らせるための設定です。
 3. Environment variables  
    - `NODE_VERSION=20`
    - `NEXT_PUBLIC_API_BASE_URL=https://api.example.com/api`
