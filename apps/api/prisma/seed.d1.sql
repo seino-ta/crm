@@ -1,5 +1,4 @@
 PRAGMA foreign_keys = ON;
-BEGIN TRANSACTION;
 
 INSERT INTO "PipelineStage" ("id","name","order","probability","isWon","isLost")
 VALUES
@@ -114,5 +113,3 @@ VALUES (
   'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
 )
 ON CONFLICT("id") DO NOTHING;
-
-COMMIT;

@@ -58,6 +58,8 @@ cd apps/api
 npx wrangler d1 execute crm-api --remote --file prisma/seed.d1.sql
 ```
 
+> Cloudflare D1 (remote) は `BEGIN TRANSACTION` を含むスクリプトを受け付けないため、`seed.d1.sql` では単一ステートメントを順番に流す構成にしています。自作スクリプトも同様にトランザクション句を入れないでください。
+
 パスワードを変えたい場合は SQL 内の `passwordHash` を書き換えるか、別途 API でユーザー作成してください。
 
 ---
