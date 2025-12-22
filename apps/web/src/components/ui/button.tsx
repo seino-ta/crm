@@ -1,5 +1,6 @@
 'use client';
 
+import { Slot } from '@radix-ui/react-slot';
 import { forwardRef } from 'react';
 import clsx from 'clsx';
 
@@ -22,14 +23,18 @@ export type ButtonVariant = keyof typeof variants;
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: keyof typeof sizes;
+  asChild?: boolean;
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = 'primary', size = 'md', className, children, ...props }, ref) => (
-    <button ref={ref} className={clsx(baseClasses, sizes[size], variants[variant], className)} {...props}>
-      {children}
-    </button>
-  )
+  ({ variant = 'primary', size = 'md', className, children, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : 'button';
+    return (
+      <Comp ref={ref} className={clsx(baseClasses, sizes[size], variants[variant], className)} {...props}>
+        {children}
+      </Comp>
+    );
+  }
 );
 
 Button.displayName = 'Button';
