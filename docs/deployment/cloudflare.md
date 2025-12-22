@@ -43,6 +43,9 @@ source ~/.zshrc
 
 ### スキーマ（マイグレーション）
 
+`apps/api/wrangler.toml` では `migrations_dir = "prisma/migrations"` を指定済みです。  
+必ず `apps/api/prisma/migrations/` に最新 SQL がある状態で以下を実行します。
+
 ```bash
 cd apps/api
 npx wrangler d1 migrations apply crm-api --remote
