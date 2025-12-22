@@ -22,6 +22,7 @@ export const metadata: Metadata = {
   description: 'Next.js UI for the CRM (Express + Prisma backend)',
 };
 
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

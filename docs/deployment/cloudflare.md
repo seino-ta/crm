@@ -108,6 +108,8 @@ Route を追加（例: `api.example.com/*`）すればカスタムドメイン�
    - Build command: `npm install && npm run build:cf-pages`
    - Build output: `.vercel/output` （UI が自動で先頭に `/` を付けるが、`apps/web/.vercel/output` が参照される）
    - `npm run build:cf-pages` は内部で `NEXT_ON_PAGES_PROJECT_DIR=. npx @cloudflare/next-on-pages@1` を実行し、`.vercel/output` を生成します。Cloudflare Pages 環境でも常にカレントディレクトリを `apps/web` に固定したまま Next.js アダプタを走らせるための設定です。
+   - Next.js の App Router は edge runtime 前提（`apps/web/src/app/layout.tsx` で `export const runtime = 'edge';` を指定済み）。Cloudflare の Next アダプタは Node.js runtime をサポートしていないため、サーバーアクションを edge 対応にして API 経由でデータを取得しています。
+   - モノレポ配下で Next.js プロジェクトを検出させるため、`apps/web/apps/web -> ..` というシンボリックリンクを配置しています（`apps/web/apps/web/.next` を参照しても実体は `apps/web/.next` ）。削除しないよう注意してください。
 3. Environment variables  
    - `NODE_VERSION=20`
    - `NEXT_PUBLIC_API_BASE_URL=https://api.example.com/api`
