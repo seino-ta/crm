@@ -63,6 +63,7 @@ crm/
      npx ts-node --project tsconfig.prisma.json prisma/seed.ts
    ```
    `✅ Prisma seed data created.` が出れば成功。
+   > 本番 D1 には `apps/api/d1/migrations/*.sql` を `npx wrangler d1 migrations apply crm-api --remote` で適用し、`prisma/seed.d1.sql` を `wrangler d1 execute` で流してください。手順の詳細は `docs/deployment/cloudflare.md` を参照。
 
 4. **サーバ起動**  
    ※ `file:/.../dev.db` の部分は **自分のリポジトリの絶対パス** に置き換えてください。例: `file:/Users/<you>/work/crm/apps/api/prisma/dev.db`。  

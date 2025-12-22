@@ -40,8 +40,8 @@ cp wrangler.example.toml wrangler.toml
 
 ### スキーマ（マイグレーション）
 
-`apps/api/wrangler.toml` では `migrations_dir = "prisma/migrations"` を指定済みです。  
-必ず `apps/api/prisma/migrations/` に最新 SQL がある状態で以下を実行します。
+`apps/api/wrangler.toml` では `migrations_dir = "d1/migrations"` を指定済みです。  
+`apps/api/d1/migrations/` の `0001_init.sql` など D1 用 SQL を更新したうえで以下を実行します。
 
 ```bash
 cd apps/api
