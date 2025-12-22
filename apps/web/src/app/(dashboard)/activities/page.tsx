@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { ActivityForm } from './activity-form';
-import { ActivityType } from '@/types/crm';
+import type { ActivityType } from '@/types/crm';
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/auth';
 import { listAccounts, listActivities, listOpportunities } from '@/lib/data';
