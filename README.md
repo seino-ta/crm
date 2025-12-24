@@ -45,6 +45,7 @@ crm/
       | --- | --- |
       | `DATABASE_URL` | `file:/Users/<you>/work/crm/apps/api/prisma/dev.db` |
       | `API_BASE_URL` / `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:4000/api` |
+      | `NEXT_PUBLIC_ENABLE_FULL_REPORTS` | `true`（ローカルではフルレポートを確認可能） |
       | `JWT_SECRET` / `JWT_EXPIRES_IN` / `BCRYPT_SALT_ROUNDS` | 任意のローカル値 |
    - Workers (apps/api)
       | 変数 | 例 |
@@ -57,8 +58,10 @@ crm/
       | --- | --- |
       | `NEXT_PUBLIC_API_BASE_URL` | `https://api.<domain>/api` |
       | `API_BASE_URL` (SSR が必要なら) | `https://api.<domain>/api` |
+      | `NEXT_PUBLIC_ENABLE_FULL_REPORTS` | `false`（Cloudflare Pages では Lite モード推奨） |
 
    - Cloudflare D1 の `database_id` は Git に含めない運用。`apps/api/wrangler.example.toml` を `apps/api/wrangler.toml` にコピーし、自分の `database_id` を記述してください（`.gitignore` 済み）。
+   - レポート画面は Cloudflare Pages の Worker 制限を回避するため `NEXT_PUBLIC_ENABLE_FULL_REPORTS=false`（Lite モード）が既定です。ローカルでのみ `true` に切り替えてフル機能を確認してください。
 
 3. **DB 初期化 (SQLite)**
    Cloudflare D1 互換の SQLite ファイルに直接マイグレーションを流します。

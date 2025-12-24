@@ -1,115 +1,46 @@
 import { Card } from '@/components/ui/card';
-import { PipelineChart } from '@/components/charts/pipeline-chart';
-import { OwnerChart } from '@/components/charts/owner-chart';
-import { formatCurrency, formatNumber } from '@/lib/formatters';
-import { getOwnerReport, getStageReport, listOpportunities, listPipelineStages } from '@/lib/data';
-import { getCurrencyScale } from '@/lib/chart-scale';
-import { getPipelineStageLabel } from '@/lib/labels';
+import { Badge } from '@/components/ui/badge';
 import { getServerTranslations } from '@/lib/i18n/server';
 
-export default async function ReportsPage() {
-  const { locale, t } = await getServerTranslations('reports');
-  const [stageReport, ownerReport, stages, opportunities] = await Promise.all([
-    getStageReport(),
-    getOwnerReport(),
-    listPipelineStages(),
-    listOpportunities({ pageSize: 100 }),
-  ]);
+const enableFullReports = process.env.NEXT_PUBLIC_ENABLE_FULL_REPORTS === 'true';
 
-  const stageMap = new Map(stages.map((stage) => [stage.id, stage] as const));
-  const ownerNameMap = new Map<string, string>();
-  opportunities.data.forEach((opp) => {
-    if (opp.owner) {
-      ownerNameMap.set(opp.ownerId, `${opp.owner.firstName ?? ''} ${opp.owner.lastName ?? ''}`.trim() || opp.owner.email);
-    }
+export default async function ReportsPageEntry() {
+  if (enableFullReports) {
+    const { default: FullReportsPage } = await import('./full-reports-page');
+    return <FullReportsPage />;
+  }
+
+  const { t } = await getServerTranslations('reports');
+  const title = t('disabled.title', { fallback: 'レポート機能を一時停止しています' });
+  const description = t('disabled.description', {
+    fallback:
+      'Cloudflare Pages での安定稼働を優先するため、現在この環境では軽量モードで動作しています。',
   });
-
-  const stageRows = stageReport.map((row) => {
-    const stage = stageMap.get(row.stageId);
-    const label = getPipelineStageLabel(stage?.name, locale);
-    return {
-      id: row.stageId,
-      name: label,
-      amount: Number(row._sum.amount ?? 0),
-      deals: row._count._all,
-    };
-  });
-
-  const ownerRows = ownerReport.map((row) => ({
-    name: ownerNameMap.get(row.ownerId) ?? row.ownerId.slice(0, 6),
-      amount: Number(row._sum.amount ?? 0),
-      deals: row._count._all,
-  }));
-
-  const maxStageAmount = stageRows.reduce((max, row) => Math.max(max, row.amount), 0);
-  const { divisor: stageDivisor, label: stageUnit } = getCurrencyScale(maxStageAmount, locale);
-  const stageChart = stageRows.map((row) => ({
-    stage: row.name,
-    value: Number((row.amount / stageDivisor).toFixed(2)),
-    deals: row.deals,
-  }));
 
   return (
-    <div className="space-y-10" data-testid="reports-page">
-      <div className="page-header">
-        <h1>{t('title')}</h1>
-        <p>{t('description')}</p>
+    <div className="space-y-6" data-testid="reports-disabled">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight">{t('title', { fallback: 'Reports' })}</h1>
+        <p className="text-muted-foreground">{t('subtitle', { fallback: 'Pipeline health overview' })}</p>
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <h2 className="text-lg font-semibold">{t('stage')}</h2>
-          <p className="text-xs text-slate-400 ">
-            {t('unit')}: {stageUnit}
-          </p>
-          <PipelineChart data={stageChart} unitLabel={stageUnit} locale={locale} valueLabel={t('table.amount')} />
-          <table className="mt-4 w-full text-sm">
-            <thead>
-              <tr className="text-xs uppercase text-slate-500 ">
-                <th className="px-2 py-1 text-left">{t('table.stage')}</th>
-                <th className="px-2 py-1 text-right">{t('table.amount')}</th>
-                <th className="px-2 py-1 text-right">{t('table.deals')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stageRows.map((row) => (
-                <tr key={row.id} className="border-t border-slate-100">
-                  <td className="px-2 py-2">{row.name}</td>
-                  <td className="px-2 py-2 text-right">{formatCurrency(row.amount, 'JPY', locale)}</td>
-                  <td className="px-2 py-2 text-right">{formatNumber(row.deals, locale)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
-        <Card>
-          <h2 className="text-lg font-semibold">{t('owner')}</h2>
-          <OwnerChart
-            data={ownerRows.map((row) => ({ owner: row.name, amount: row.amount }))}
-            locale={locale}
-            unitHeader={t('charts.unitHeader')}
-            axisLabel={t('charts.axisLabel')}
-            tooltipLabel={t('table.amount')}
-          />
-          <table className="mt-4 w-full text-sm">
-            <thead>
-              <tr className="text-xs uppercase text-slate-500 ">
-                <th className="px-2 py-1 text-left">{t('table.owner')}</th>
-                <th className="px-2 py-1 text-right">{t('table.amount')}</th>
-                <th className="px-2 py-1 text-right">{t('table.deals')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ownerRows.map((row) => (
-                <tr key={row.name} className="border-t border-slate-100">
-                  <td className="px-2 py-2">{row.name}</td>
-                  <td className="px-2 py-2 text-right">{formatCurrency(row.amount, 'JPY', locale)}</td>
-                  <td className="px-2 py-2 text-right">{formatNumber(row.deals, locale)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
-      </div>
+
+      <Card className="space-y-4 p-6">
+        <div className="flex items-center gap-2">
+          <Badge variant="neutral">Lite Mode</Badge>
+          <p className="text-lg font-medium">{title}</p>
+        </div>
+        <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+        <div className="rounded-md bg-muted p-4 text-sm leading-relaxed">
+          <p className="font-medium">フル版レポートを再有効化するには:</p>
+          <ol className="list-decimal space-y-2 pl-5 pt-2">
+            <li>
+              環境変数 <code className="font-mono text-xs">NEXT_PUBLIC_ENABLE_FULL_REPORTS</code> を{' '}
+              <code className="font-mono text-xs">true</code> に設定します。
+            </li>
+            <li>Next.js を再ビルドして再デプロイします（Cloudflare Pages では値が false のまま推奨）。</li>
+          </ol>
+        </div>
+      </Card>
     </div>
   );
 }

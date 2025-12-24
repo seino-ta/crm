@@ -76,6 +76,7 @@ Workers（API）は `wrangler secrets`、Pages（Web）はプロジェクト設�
 | `BCRYPT_SALT_ROUNDS` | ✅（12 推奨） | ❌ | 変更しない場合は既定 12 |
 | `API_BASE_URL` | ✅ | ✅ | Pages から API を叩く URL (`https://api.example.com/api`) |
 | `NEXT_PUBLIC_API_BASE_URL` | ✅(Workers dev の場合) | ✅ | フロントエンド fetch 用 |
+| `NEXT_PUBLIC_ENABLE_FULL_REPORTS` | ⚠️（ローカルのみ推奨） | ✅ | `false` を推奨。`true` にするとレポート画面がフル機能になるが、Cloudflare Pages では 25 MiB 制限を超える恐れあり |
 | `PLAYWRIGHT_*` | オプション | 📄 `.env` 参照 | CI 用 |
 
 `DATABASE_URL` はローカル専用（`file:/abs/path/.../dev.db`）。Workers では D1 バインディング (`env.DB`) を使うため不要です。
@@ -114,7 +115,10 @@ Route を追加（例: `api.example.com/*`）すればカスタムドメイン�
    - `NODE_VERSION=20`
    - `NEXT_PUBLIC_API_BASE_URL=https://api.example.com/api`
    - `API_BASE_URL` が必要なら同値で設定（SSR fetch 用）
+   - `NEXT_PUBLIC_ENABLE_FULL_REPORTS=false`（Lite モードが既定。`true` にすると Next.js Edge Worker が 25 MiB を超えるため Cloudflare では非推奨）
 4. Deploy を実行
+
+> Reports 画面は Lite モードを既定としています。どうしても Cloudflare Pages 上でフル機能を有効にしたい場合は `NEXT_PUBLIC_ENABLE_FULL_REPORTS=true` で再ビルドしてください（Worker サイズが 25 MiB を超えるとデプロイ失敗する点に注意）。
 
 Preview で問題なければ Custom domain から `www.example.com` などを割り当てます。
 
